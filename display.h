@@ -1,5 +1,5 @@
 #include "virt_file.h"
-#include "bviplus_windows.h"
+#include "windows.h"
 
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__

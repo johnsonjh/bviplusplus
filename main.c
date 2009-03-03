@@ -7,7 +7,7 @@
 #include <ctype.h> /* isprint */
 #include "virt_file.h"
 #include "menus.h"
-#include "bviplus_windows.h"
+#include "windows.h"
 #include "key_handler.h"
 #include "display.h"
 #include "user_prefs.h"

@@ -1,5 +1,5 @@
 #include "key_handler.h"
-#include "bviplus_windows.h"
+#include "windows.h"
 #include "user_prefs.h"
 #include "display.h"
 #include "actions.h"

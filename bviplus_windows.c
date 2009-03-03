@@ -1,4 +1,4 @@
-#include "bviplus_windows.h"
+#include "windows.h"
 #include "display.h"
 #include "user_prefs.h"
 
