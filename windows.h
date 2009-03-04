@@ -14,8 +14,13 @@
 #define ADDR_BOX_X    0
 #define ADDR_BOX_Y    MENU_BOX_H
 #define ADDR_BOX_W    (ADDR_DIGITS + 1)
-#define ADDR_BOX_H_   (LINES - MENU_BOX_H)
+#define ADDR_BOX_H_   (LINES - MENU_BOX_H - WINDOW_STATUS_H)
 #define ADDR_BOX_H    (ADDR_BOX_H_ > 3 ? ADDR_BOX_H_ : 3)
+
+#define WINDOW_STATUS_H 1
+#define WINDOW_STATUS_W COLS
+#define WINDOW_STATUS_Y MENU_BOX_H + ADDR_BOX_H
+#define WINDOW_STATUS_X 0
 
 #define BYTE_DIGITS   (user_prefs.display_binary ? 8 : 2)
 
@@ -44,6 +49,8 @@
 #define HEX_COLS        (display_info.max_cols == 0 ? MAX_HEX_COLS : MAX_HEX_COLS > display_info.max_cols ? display_info.max_cols : MAX_HEX_COLS)
 #define BYTES_PER_LINE  (HEX_COLS * user_prefs.grouping)
 #define HEX_LINES       (HEX_BOX_H - 2)
+
+#define PAGE_END (display_info.page_start + (HEX_LINES * BYTES_PER_LINE))
 
 typedef enum window_e
 {

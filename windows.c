@@ -67,6 +67,9 @@ off_t get_addr_from_xy(int x, int y)
   y--; /* top border */
   x--; /* left border */
 
+  if (x > (BYTES_PER_GROUP * HEX_COLS) - BYTES_PER_GROUP)
+    return -1;
+
   if (display_info.page_start < user_prefs.grouping_offset)
   {
     if (y)
@@ -84,7 +87,7 @@ off_t get_addr_from_xy(int x, int y)
   addr += y * HEX_COLS * user_prefs.grouping;
   addr += (x / BYTES_PER_GROUP) * user_prefs.grouping;
 
-  if (addr > display_info.page_end)
+  if (addr > display_info.page_end - 1 || addr > display_info.file_size - 1)
     return -1;
 
   return addr;
@@ -104,11 +107,13 @@ void create_screen()
   window_list[WINDOW_ADDR]  = newwin( ADDR_BOX_H,  ADDR_BOX_W,  ADDR_BOX_Y,  ADDR_BOX_X);
   window_list[WINDOW_HEX]   = newwin(  HEX_BOX_H,   HEX_BOX_W,   HEX_BOX_Y,   HEX_BOX_X);
   window_list[WINDOW_ASCII] = newwin(ASCII_BOX_H, ASCII_BOX_W, ASCII_BOX_Y, ASCII_BOX_X);
+  window_list[WINDOW_STATUS] = newwin(WINDOW_STATUS_H, WINDOW_STATUS_W, WINDOW_STATUS_Y, WINDOW_STATUS_X);
 
   panel_list[WINDOW_MENU]  = new_panel(window_list[WINDOW_MENU]);
   panel_list[WINDOW_ADDR]  = new_panel(window_list[WINDOW_ADDR]);
   panel_list[WINDOW_HEX]   = new_panel(window_list[WINDOW_HEX]);
   panel_list[WINDOW_ASCII] = new_panel(window_list[WINDOW_ASCII]);
+  panel_list[WINDOW_STATUS] = new_panel(window_list[WINDOW_STATUS]);
 
   keypad(window_list[WINDOW_MENU], TRUE);
   keypad(window_list[WINDOW_HEX], TRUE);

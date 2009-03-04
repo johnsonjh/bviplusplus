@@ -31,22 +31,22 @@ int main(int argc, char **argv)
   noecho();
   attrset(A_NORMAL);
 
-  display_info.file_size = vfstat.file_size;
-  display_info.page_start = 0;
-  display_info.page_end = 256;
-  display_info.cursor_addr = 0;
-  display_info.cursor_window = WINDOW_HEX;
-  display_info.max_cols = 0;
-  display_info.has_color = has_colors();
-
   app_state.quit = FALSE;
 
   user_prefs.display_binary = FALSE;
   user_prefs.little_endian = FALSE;
-  user_prefs.grouping = 4;
+  user_prefs.grouping = 1;
   user_prefs.grouping_offset = 0;
-  user_prefs.blob_grouping = 0;
+  user_prefs.blob_grouping = 20;
   user_prefs.blob_grouping_offset = 0;
+
+  display_info.file_size = vfstat.file_size;
+  display_info.page_start = 0;
+  display_info.page_end = (PAGE_END > display_info.file_size ? display_info.file_size : PAGE_END);
+  display_info.cursor_addr = 0;
+  display_info.cursor_window = WINDOW_HEX;
+  display_info.max_cols = 0;
+  display_info.has_color = has_colors();
 
   start_color();      /* Start color      */
   init_pair(1, COLOR_YELLOW, COLOR_BLACK);
@@ -62,7 +62,6 @@ int main(int argc, char **argv)
   getch();
 #endif
 
-
   create_screen();
   print_screen(display_info.page_start);
   place_cursor(display_info.page_start);
@@ -77,17 +76,6 @@ int main(int argc, char **argv)
     doupdate();
     wmove(window_list[WINDOW_HEX], y, x);
     c = wgetch(window_list[WINDOW_HEX]); /* wgetch =( */
-    handle_key(c);
-    getyx(window_list[WINDOW_HEX], y, x);
-    a = get_addr_from_xy(x, y);
-    xx = get_x_from_addr(a);
-    yy = get_y_from_addr(a);
-    if (c == 'q')
-      app_state.quit = TRUE;
-
-    //wclear(window_list[WINDOW_MENU]);
-    getyx(window_list[WINDOW_HEX], y, x);
-    mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x  a = %x, x = %d, y = %d", c, a, xx, yy);
     if (c == KEY_RESIZE)
     {
       destroy_screen();
@@ -96,6 +84,20 @@ int main(int argc, char **argv)
       mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x      KEY_RESIZE");
       print_screen(display_info.page_start);
     }
+    else
+    {
+      handle_key(c);
+    }
+    getyx(window_list[WINDOW_HEX], y, x);
+    a = get_addr_from_xy(x, y);
+    xx = get_x_from_addr(a);
+    yy = get_y_from_addr(a);
+    if (c == 'q')
+      app_state.quit = TRUE;
+
+    wclear(window_list[WINDOW_MENU]);
+    getyx(window_list[WINDOW_HEX], y, x);
+    mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x  a = %x, x = %d, y = %d", c, a, xx, yy);
   }
 
   destroy_screen();
