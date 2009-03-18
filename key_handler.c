@@ -306,4 +306,24 @@ void handle_key(int c)
   }
 }
 
+/* global for vis select on,
+ * modify screen print so that:
+ * if (cursor < vis_byte) {
+ *   if (byte >= cursor && byte <= vis_byte)
+ *      set highlight on
+ *   else
+ *      set highlight off
+ * }
+ * else {
+ *   if (byte <= cursor && byte >= vis_byte) {
+ *      set highlight on
+ *   else
+ *      set highlight off
+ *   }
+ * }
+ * Define separate actions for each thing (cut, copy, etc.) if vis select is on (operate on range)
+ * Or, always operate on range, and if vis select is set update range every time the cursor moves
+ * fix up/down in case of going off the screen!
+ * use buffering for the screen mem, will help for doing group inserts
+ */
 
