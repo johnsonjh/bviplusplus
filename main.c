@@ -95,7 +95,7 @@ int main(int argc, char **argv)
     if (c == 'q')
       app_state.quit = TRUE;
 
-    wclear(window_list[WINDOW_MENU]);
+    werase(window_list[WINDOW_MENU]);
     getyx(window_list[WINDOW_HEX], y, x);
     mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x  a = %x, x = %d, y = %d", c, a, xx, yy);
   }

@@ -1,3 +1,5 @@
+#include <ncurses.h>
+#include <string.h>
 #include "key_handler.h"
 #include "windows.h"
 #include "user_prefs.h"
@@ -281,6 +283,72 @@ action_code_t action_block_visual_select_off(void)
 {
 }
 
+action_code_t cmd_parse(int *cbuff, int count)
+{
+  int i = 0;
+  for (i=0; i<count; i++)
+    mvwaddch(window_list[WINDOW_STATUS], 0, 50+i, cbuff[i]);
+}
+
+action_code_t do_cmd_line(int c)
+{
+#define MAX_CMD_BUF 256
+#define CR      '\r'
+#define NL      '\n'
+#define ESC     27
+#define BVICTRL(n)    (n&0x1f)
+
+  int cbuff[MAX_CMD_BUF];
+  int i = 0, count = 0, position = 0;
+
+  werase(window_list[WINDOW_STATUS]);
+  mvwaddch(window_list[WINDOW_STATUS], 0, 0, c);
+
+  do
+  {
+    update_panels();
+    doupdate();
+    c = getch();
+    switch(c)
+    {
+      case ESC:
+        return E_NO_ACTION;
+      case BVICTRL('H'):
+      case KEY_BACKSPACE:
+        mvwaddch(window_list[WINDOW_STATUS], 0, position, ' ');
+        wmove(window_list[WINDOW_STATUS], 0, position);
+        position--;
+        count--;
+        break;
+      case KEY_LEFT:
+        wmove(window_list[WINDOW_STATUS], 0, position);
+        position--;
+        break;
+      case KEY_RIGHT:
+        position++;
+        break;
+      case NL:
+      case CR:
+      case KEY_ENTER:
+        break;
+      default:
+        for (i=count; i>=position; i--)
+          cbuff[i+1] = cbuff[i];
+        cbuff[position] = c;
+        count++;
+        for (i=position; i<count; i++)
+          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, cbuff[i]);
+        position++;
+        wmove(window_list[WINDOW_STATUS], 0, position+1);
+        break;
+    }
+  } while(c != NL && c != CR && c != KEY_ENTER);
+
+  cmd_parse(cbuff, count);
+
+  return E_SUCCESS;
+}
+
 void handle_key(int c)
 {
   int x, y;
@@ -289,17 +357,24 @@ void handle_key(int c)
   mvwprintw(window_list[WINDOW_STATUS], 0, 100, "HEX_COLS = %d, BYTES_PER_GROUP = %d, a*b = %d", HEX_COLS, BYTES_PER_GROUP, (HEX_COLS * BYTES_PER_GROUP));
   switch (c)
   {
+    case 'j':
     case KEY_DOWN:
       action_cursor_move_down();
       break;
+    case 'k':
     case KEY_UP:
       action_cursor_move_up();
       break;
+    case 'h':
     case KEY_LEFT:
       action_cursor_move_left();
       break;
+    case 'l':
     case KEY_RIGHT:
       action_cursor_move_right();
+      break;
+    case ':':
+      do_cmd_line(c);
       break;
     default:
       break;
