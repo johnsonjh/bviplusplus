@@ -92,8 +92,6 @@ int main(int argc, char **argv)
     a = get_addr_from_xy(x, y);
     xx = get_x_from_addr(a);
     yy = get_y_from_addr(a);
-    if (c == 'q')
-      app_state.quit = TRUE;
 
     werase(window_list[WINDOW_MENU]);
     getyx(window_list[WINDOW_HEX], y, x);

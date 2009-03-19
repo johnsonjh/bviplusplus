@@ -5,6 +5,7 @@
 #include "user_prefs.h"
 #include "display.h"
 #include "actions.h"
+#include "app_state.h"
 
 typedef enum action_code_e
 {
@@ -286,23 +287,37 @@ action_code_t action_block_visual_select_off(void)
 {
 }
 
-action_code_t cmd_parse(int *cbuff, int count)
-{
-  int i = 0;
-  for (i=0; i<count; i++)
-    mvwaddch(window_list[WINDOW_STATUS], 0, 50+i, cbuff[i]);
-}
 
-action_code_t do_cmd_line(int c)
-{
 #define MAX_CMD_BUF 256
 #define CR      '\r'
 #define NL      '\n'
 #define ESC     27
 #define BVICTRL(n)    (n&0x1f)
 
-  int cbuff[MAX_CMD_BUF];
-  int i = 0, count = 0, position = 0;
+action_code_t cmd_parse(char *cbuff)
+{
+  char *tok;
+  const char delimiters[] = " =";
+  int i = 0;
+
+  tok = strtok(cbuff, delimiters);
+  while (tok != NULL)
+  {
+    if (strncmp(tok, "q", MAX_CMD_BUF) == 0)
+    {
+      app_state.quit = TRUE;
+    }
+    mvwaddstr(window_list[WINDOW_STATUS], 0, 50+i, tok);
+    i += strlen(tok);
+    tok = strtok(NULL, delimiters);
+  }
+  return 0;
+}
+
+action_code_t do_cmd_line(int c)
+{
+  char cbuff[MAX_CMD_BUF];
+  int i = 0, count = 0, position = 0, tab_complete_len = 0;
 
   werase(window_list[WINDOW_STATUS]);
   mvwaddch(window_list[WINDOW_STATUS], 0, 0, c);
@@ -340,7 +355,7 @@ action_code_t do_cmd_line(int c)
       default:
         for (i=count; i>=position; i--)
           cbuff[i+1] = cbuff[i];
-        cbuff[position] = c;
+        cbuff[position] = (char)c;
         count++;
         for (i=position; i<count; i++)
           mvwaddch(window_list[WINDOW_STATUS], 0, i+1, cbuff[i]);
@@ -350,7 +365,9 @@ action_code_t do_cmd_line(int c)
     }
   } while(c != NL && c != CR && c != KEY_ENTER);
 
-  cmd_parse(cbuff, count);
+  cbuff[count] = '\0';
+
+  cmd_parse(cbuff);
 
   return E_SUCCESS;
 }
