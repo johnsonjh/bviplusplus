@@ -261,13 +261,16 @@ action_code_t action_open_file(void)
 action_code_t action_exit(void)
 {
 }
-action_code_t action_move_to_hex(void)
+action_code_t action_cursor_to_hex(void)
 {
 }
-action_code_t action_move_to_ascii(void)
+action_code_t action_cursor_to_ascii(void)
 {
 }
-action_code_t action_toggle_hex_ascii(void)
+action_code_t action_cursor_toggle_hex_ascii(void)
+{
+}
+action_code_t action_cursor_move_address(void)
 {
 }
 action_code_t action_visual_select_on(void)
@@ -321,11 +324,14 @@ action_code_t do_cmd_line(int c)
         count--;
         break;
       case KEY_LEFT:
-        wmove(window_list[WINDOW_STATUS], 0, position);
-        position--;
+        if (--position < 0)
+          position++;
+        wmove(window_list[WINDOW_STATUS], 0, position+1);
         break;
       case KEY_RIGHT:
-        position++;
+        if (++position > count)
+          position--;
+        wmove(window_list[WINDOW_STATUS], 0, position+1);
         break;
       case NL:
       case CR:
