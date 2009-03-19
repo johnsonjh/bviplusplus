@@ -103,7 +103,7 @@ action_code_t _action_cursor_move_left(int *y, int *x)
   window_t w;
   action_code_t error = E_SUCCESS;
 
-  tmp = (HEX_COLS * BYTES_PER_GROUP) - (user_prefs.grouping * BYTE_DIGITS);
+  tmp = (HEX_COLS * BYTES_PER_GROUP) - (user_prefs[GROUPING].current_value * BYTE_DIGITS);
   w = display_info.cursor_window;
 
   switch (w)
@@ -423,5 +423,6 @@ void handle_key(int c)
  * Or, always operate on range, and if vis select is set update range every time the cursor moves
  * fix up/down in case of going off the screen!
  * use buffering for the screen mem, will help for doing group inserts
+ * Remember to add tab completion, marks, macros, and a good system for command line parsing, and a good system for settings and .rc files
  */
 

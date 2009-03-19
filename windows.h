@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <panel.h>
 #include <unistd.h>
+#include "user_prefs.h"
 
 #ifndef __BVIPLUS_WINDOWS_H__
 #define __BVIPLUS_WINDOWS_H__
@@ -22,10 +23,10 @@
 #define WINDOW_STATUS_Y MENU_BOX_H + ADDR_BOX_H
 #define WINDOW_STATUS_X 0
 
-#define BYTE_DIGITS   (user_prefs.display_binary ? 8 : 2)
+#define BYTE_DIGITS   (user_prefs[DISPLAY_BINARY].current_value ? 8 : 2)
 
 /* each byte is represented in hex by two digits, plus each grouping has one trailing space */
-#define BYTES_PER_GROUP ((user_prefs.grouping * BYTE_DIGITS) + 1)
+#define BYTES_PER_GROUP ((user_prefs[GROUPING].current_value * BYTE_DIGITS) + 1)
 
 /* width of hex box + ascii box */
 #define SHARED_WIDTH (COLS - ADDR_BOX_W)
@@ -33,21 +34,21 @@
 #define HEX_BOX_X     (ADDR_BOX_X + ADDR_BOX_W)
 #define HEX_BOX_Y     MENU_BOX_H
 //#define HEX_BOX_W     ((SHARED_WIDTH * BYTES_PER_GROUP) / (BYTES_PER_GROUP + user_prefs.grouping))
-//#define HEX_BOX_W     ((((SHARED_WIDTH - 2) * BYTES_PER_GROUP) + 2 * user_prefs.grouping) / (BYTES_PER_GROUP + user_prefs.grouping))
-#define HEX_BOX_W_    ((((SHARED_WIDTH - 2) * BYTES_PER_GROUP) + 2 * user_prefs.grouping) / (BYTES_PER_GROUP + user_prefs.grouping))
+//#define HEX_BOX_W     ((((SHARED_WIDTH - 2) * BYTES_PER_GROUP) + 2 * user_prefs[GROUPING].current_value) / (BYTES_PER_GROUP + user_prefs[GROUPING].current_value))
+#define HEX_BOX_W_    ((((SHARED_WIDTH - 2) * BYTES_PER_GROUP) + 2 * user_prefs[GROUPING].current_value) / (BYTES_PER_GROUP + user_prefs[GROUPING].current_value))
 #define HEX_BOX_W     (HEX_BOX_W_ > (BYTES_PER_GROUP + 2) ? HEX_BOX_W_ : (BYTES_PER_GROUP + 2))
 #define HEX_BOX_H     ADDR_BOX_H
 
 #define ASCII_BOX_X   (HEX_BOX_X + HEX_BOX_W)
 #define ASCII_BOX_Y   MENU_BOX_H
 #define ASCII_BOX_W_  (SHARED_WIDTH - HEX_BOX_W)
-#define ASCII_BOX_W   (ASCII_BOX_W_ > (user_prefs.grouping + 2) ? ASCII_BOX_W_ : (user_prefs.grouping + 2))
+#define ASCII_BOX_W   (ASCII_BOX_W_ > (user_prefs[GROUPING].current_value + 2) ? ASCII_BOX_W_ : (user_prefs[GROUPING].current_value + 2))
 #define ASCII_BOX_H   ADDR_BOX_H
 
 //#define MAX_HEX_COLS    ((HEX_BOX_W - 3) / BYTES_PER_GROUP)
 #define MAX_HEX_COLS    ((HEX_BOX_W - 2) / BYTES_PER_GROUP)
 #define HEX_COLS        (display_info.max_cols == 0 ? MAX_HEX_COLS : MAX_HEX_COLS > display_info.max_cols ? display_info.max_cols : MAX_HEX_COLS)
-#define BYTES_PER_LINE  (HEX_COLS * user_prefs.grouping)
+#define BYTES_PER_LINE  (HEX_COLS * user_prefs[GROUPING].current_value)
 #define HEX_LINES       (HEX_BOX_H - 2)
 
 #define PAGE_END (display_info.page_start + (HEX_LINES * BYTES_PER_LINE))

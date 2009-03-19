@@ -3,16 +3,23 @@
 #ifndef __USER_PREFS_H__
 #define __USER_PREFS_H__
 
-typedef struct user_prefs_s
+typedef struct user_pref_s
 {
-  BOOL    display_binary;
-  BOOL    little_endian;
-  int     grouping;
-  int     grouping_offset;
-  int     blob_grouping;
-  int     blob_grouping_offset;
-} user_prefs_t;
+  char *name;
+  long current_value;
+  long default_value;
+} user_pref_t;
 
-extern user_prefs_t   user_prefs;
+typedef enum
+{
+  DISPLAY_BINARY,
+  LIL_ENDIAN,
+  GROUPING,
+  GROUPING_OFFSET,
+  BLOB_GROUPING,
+  BLOB_GROUPING_OFFSET
+} user_pref_e;
+
+extern user_pref_t user_prefs[];
 
 #endif /* __USER_PREFS_H__ */

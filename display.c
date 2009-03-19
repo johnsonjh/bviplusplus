@@ -63,18 +63,18 @@ int print_line(off_t addr, int y)
 
   y++; /* line 0 is the box border */
 
-  if (addr < user_prefs.grouping_offset)
+  if (addr < user_prefs[GROUPING_OFFSET].current_value)
   {
     /* print address */
     sprintf(addr_text, "%08X", addr);
     mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
     /* print hex and ascii */
-    x = ((HEX_COLS) * BYTES_PER_GROUP) - (user_prefs.grouping_offset * BYTE_DIGITS);
-    for (i=0; i<user_prefs.grouping_offset; i++)
+    x = ((HEX_COLS) * BYTES_PER_GROUP) - (user_prefs[GROUPING_OFFSET].current_value * BYTE_DIGITS);
+    for (i=0; i<user_prefs[GROUPING_OFFSET].current_value; i++)
     {
-      if (user_prefs.little_endian)
-        byte_addr = addr - 1 + ((BYTES_PER_GROUP - (user_prefs.grouping_offset * BYTE_DIGITS)) - i);
+      if (user_prefs[LIL_ENDIAN].current_value)
+        byte_addr = addr - 1 + ((BYTES_PER_GROUP - (user_prefs[GROUPING_OFFSET].current_value * BYTE_DIGITS)) - i);
       else
         byte_addr = addr + i;
 
@@ -83,20 +83,20 @@ int print_line(off_t addr, int y)
 
       c = vf_get_char(&file_manager, &result, byte_addr);
 
-      if (user_prefs.blob_grouping_offset > byte_addr)
+      if (user_prefs[BLOB_GROUPING_OFFSET].current_value > byte_addr)
       {
         blob_standout(TRUE);
       }
       else
       {
-        if (user_prefs.blob_grouping &&
-           (((byte_addr - user_prefs.blob_grouping_offset) / user_prefs.blob_grouping) & 1))
+        if (user_prefs[BLOB_GROUPING].current_value &&
+           (((byte_addr - user_prefs[BLOB_GROUPING_OFFSET].current_value) / user_prefs[BLOB_GROUPING].current_value) & 1))
         {
           blob_standout(TRUE);
         }
       }
 
-      if (user_prefs.display_binary)
+      if (user_prefs[DISPLAY_BINARY].current_value)
       {
         snprintf(bin_text, 8, "%b", c);
         for (k=0; k<8; k++)
@@ -119,10 +119,10 @@ int print_line(off_t addr, int y)
       if (!isprint(c))
         c = '.';
 
-      if (user_prefs.little_endian)
-        mvwaddch(window_list[WINDOW_ASCII], y, 1-i+((HEX_COLS+1) * user_prefs.grouping - user_prefs.grouping_offset), c);
+      if (user_prefs[LIL_ENDIAN].current_value)
+        mvwaddch(window_list[WINDOW_ASCII], y, 1-i+((HEX_COLS+1) * user_prefs[GROUPING].current_value - user_prefs[GROUPING_OFFSET].current_value), c);
       else
-        mvwaddch(window_list[WINDOW_ASCII], y, 1+i+(HEX_COLS * user_prefs.grouping - user_prefs.grouping_offset), c);
+        mvwaddch(window_list[WINDOW_ASCII], y, 1+i+(HEX_COLS * user_prefs[GROUPING].current_value - user_prefs[GROUPING_OFFSET].current_value), c);
 
       blob_standout(FALSE);
 
@@ -137,32 +137,32 @@ int print_line(off_t addr, int y)
     mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
     /* print hex and ascii */
-    for (j=0; j<user_prefs.grouping; j++)
+    for (j=0; j<user_prefs[GROUPING].current_value; j++)
     {
-      if (user_prefs.little_endian)
-        byte_addr = addr - 1 + (i*user_prefs.grouping) + (user_prefs.grouping - j);
+      if (user_prefs[LIL_ENDIAN].current_value)
+        byte_addr = addr - 1 + (i*user_prefs[GROUPING].current_value) + (user_prefs[GROUPING].current_value - j);
       else
-        byte_addr = addr + (i*user_prefs.grouping) + j;
+        byte_addr = addr + (i*user_prefs[GROUPING].current_value) + j;
 
       if (byte_addr >= display_info.file_size)
         break;
 
       c = vf_get_char(&file_manager, &result, byte_addr);
 
-      if (user_prefs.blob_grouping_offset > byte_addr)
+      if (user_prefs[BLOB_GROUPING_OFFSET].current_value > byte_addr)
       {
         blob_standout(TRUE);
       }
       else
       {
-        if (user_prefs.blob_grouping &&
-           (((byte_addr - user_prefs.blob_grouping_offset) / user_prefs.blob_grouping) & 1))
+        if (user_prefs[BLOB_GROUPING].current_value &&
+           (((byte_addr - user_prefs[BLOB_GROUPING_OFFSET].current_value) / user_prefs[BLOB_GROUPING].current_value) & 1))
         {
           blob_standout(TRUE);
         }
       }
 
-      if (user_prefs.display_binary)
+      if (user_prefs[DISPLAY_BINARY].current_value)
       {
         snprintf(bin_text, 8, "%b", c);
         for (k=0; k<8; k++)
@@ -185,10 +185,10 @@ int print_line(off_t addr, int y)
       if (!isprint(c))
         c = '.';
 
-      if (user_prefs.little_endian)
-        mvwaddch(window_list[WINDOW_ASCII], y, (1+i)*user_prefs.grouping-j, c);
+      if (user_prefs[LIL_ENDIAN].current_value)
+        mvwaddch(window_list[WINDOW_ASCII], y, (1+i)*user_prefs[GROUPING].current_value-j, c);
       else
-        mvwaddch(window_list[WINDOW_ASCII], y, 1+i*user_prefs.grouping+j, c);
+        mvwaddch(window_list[WINDOW_ASCII], y, 1+i*user_prefs[GROUPING].current_value+j, c);
 
       blob_standout(FALSE);
 
@@ -196,7 +196,7 @@ int print_line(off_t addr, int y)
     x++;
   }
 
-  return ((i-1) * user_prefs.grouping) + j;
+  return ((i-1) * user_prefs[GROUPING].current_value) + j;
 }
 
 void place_cursor(off_t addr)

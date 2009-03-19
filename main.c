@@ -10,7 +10,6 @@
 #include "windows.h"
 #include "key_handler.h"
 #include "display.h"
-#include "user_prefs.h"
 #include "app_state.h"
 
 #define MILISECONDS(x) ((x) * 1000)
@@ -32,13 +31,6 @@ int main(int argc, char **argv)
   attrset(A_NORMAL);
 
   app_state.quit = FALSE;
-
-  user_prefs.display_binary = FALSE;
-  user_prefs.little_endian = FALSE;
-  user_prefs.grouping = 1;
-  user_prefs.grouping_offset = 0;
-  user_prefs.blob_grouping = 20;
-  user_prefs.blob_grouping_offset = 0;
 
   display_info.file_size = vfstat.file_size;
   display_info.page_start = 0;
