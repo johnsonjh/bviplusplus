@@ -56,7 +56,6 @@ int main(int argc, char **argv)
 
   create_screen();
   print_screen(display_info.page_start);
-  place_cursor(display_info.page_start);
 
   while (app_state.quit == FALSE)
   {
@@ -66,7 +65,7 @@ int main(int argc, char **argv)
 
     update_panels();
     doupdate();
-    wmove(window_list[WINDOW_HEX], y, x);
+    place_cursor(display_info.cursor_addr);
     c = wgetch(window_list[WINDOW_HEX]); /* wgetch =( */
     if (c == KEY_RESIZE)
     {
@@ -86,7 +85,6 @@ int main(int argc, char **argv)
     yy = get_y_from_addr(a);
 
     werase(window_list[WINDOW_MENU]);
-    getyx(window_list[WINDOW_HEX], y, x);
     mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x  a = %x, x = %d, y = %d", c, a, xx, yy);
   }
 

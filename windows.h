@@ -67,6 +67,7 @@ typedef enum window_e
 extern WINDOW *window_list[MAX_WINDOWS];
 extern PANEL *panel_list[MAX_WINDOWS];
 
+off_t address_invalid(off_t addr);
 int get_y_from_addr(off_t addr);
 int get_x_from_addr(off_t addr);
 off_t get_addr_from_xy(int x, int y);

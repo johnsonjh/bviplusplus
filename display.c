@@ -201,7 +201,15 @@ int print_line(off_t addr, int y)
 
 void place_cursor(off_t addr)
 {
-  wmove(window_list[display_info.cursor_window], 1, 1);
+  int x, y;
+
+  if (address_invalid(addr) == 0)
+  {
+    x = get_x_from_addr(addr);
+    y = get_y_from_addr(addr);
+    wmove(window_list[display_info.cursor_window], y, x);
+    display_info.cursor_addr = addr;
+  }
 }
 
 

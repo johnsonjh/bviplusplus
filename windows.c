@@ -5,6 +5,18 @@
 WINDOW *window_list[MAX_WINDOWS];
 PANEL *panel_list[MAX_WINDOWS];
 
+off_t address_invalid(off_t addr)
+{
+  off_t dist_past_range = 0;
+
+  if (addr < 0)
+    dist_past_range = addr;
+  if (addr >= display_info.file_size)
+    dist_past_range = (addr - display_info.file_size) + 1;
+
+  return dist_past_range;
+}
+
 int get_y_from_addr(off_t addr)
 {
   off_t offset, page_size;

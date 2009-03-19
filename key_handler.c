@@ -15,199 +15,73 @@ typedef enum action_code_e
 } action_code_t;
 
 /** UP **/
-action_code_t _action_cursor_move_up(int *y, int *x)
-{
-  window_t w;
-  action_code_t error = E_SUCCESS;
-
-  w = display_info.cursor_window;
-
-  switch (w)
-  {
-    case WINDOW_HEX:
-    case WINDOW_ASCII:
-      if (get_addr_from_xy(*x, (*y) - 1) == -1)
-        error = E_NO_ACTION;
-      else
-        *y = *y - 1;
-      break;
-    default:
-      error = E_INVALID;
-      break;
-  }
-
-  return error;
-}
 action_code_t action_cursor_move_up(void)
 {
-  int x, y;
-  window_t w;
   action_code_t error = E_SUCCESS;
+  off_t a;
 
-  w = display_info.cursor_window;
-  getyx(window_list[w], y, x);
+  a = display_info.cursor_addr;
+  a -= BYTES_PER_LINE;
 
-  error = _action_cursor_move_up(&y, &x);
-
-  if (error == E_SUCCESS)
-    wmove(window_list[w], y, x);
+  if (address_invalid(a) == 0)
+    place_cursor(a);
+  else
+    error = E_NO_ACTION;
 
   return error;
 }
 
 /** DOWN **/
-action_code_t _action_cursor_move_down(int *y, int *x)
-{
-  window_t w;
-  action_code_t error = E_SUCCESS;
-
-  w = display_info.cursor_window;
-
-  switch (w)
-  {
-    case WINDOW_HEX:
-    case WINDOW_ASCII:
-      if (get_addr_from_xy(*x, (*y) + 1) == -1)
-        error = E_NO_ACTION;
-      else
-        (*y) = *y + 1;
-      break;
-    default:
-      error = E_INVALID;
-      break;
-  }
-
-  return error;
-}
 action_code_t action_cursor_move_down(void)
 {
-  int x,y;
-  window_t w;
   action_code_t error = E_SUCCESS;
+  off_t a;
 
-  w = display_info.cursor_window;
-  getyx(window_list[w], y, x);
+  a = display_info.cursor_addr;
+  a += BYTES_PER_LINE;
 
-  error = _action_cursor_move_down(&y, &x);
-
-  if (error == E_SUCCESS)
-    wmove(window_list[w], y, x);
+  if (address_invalid(a) == 0)
+    place_cursor(a);
+  else
+    error = E_NO_ACTION;
 
   return error;
 }
 
 /** LEFT **/
-action_code_t _action_cursor_move_left(int *y, int *x)
-{
-  int tmp;
-  window_t w;
-  action_code_t error = E_SUCCESS;
-
-  tmp = (HEX_COLS * BYTES_PER_GROUP) - (user_prefs[GROUPING].current_value * BYTE_DIGITS);
-  w = display_info.cursor_window;
-
-  switch (w)
-  {
-    case WINDOW_HEX:
-      if (get_addr_from_xy(*x - BYTES_PER_GROUP, *y) == -1)
-      {
-        error = _action_cursor_move_up(y, &tmp);
-        if (error == E_SUCCESS)
-          *x = tmp;
-      }
-      else
-        *x = *x - BYTES_PER_GROUP;
-      break;
-    case WINDOW_ASCII:
-      *x = *x - BYTES_PER_GROUP;
-      if (get_addr_from_xy(*x - BYTES_PER_GROUP, *y) == -1)
-      {
-        error = _action_cursor_move_up(y, &tmp);
-        if (error == E_SUCCESS)
-          *x = tmp;
-      }
-      break;
-    default:
-      error = E_INVALID;
-  }
-
-  return error;
-}
 action_code_t action_cursor_move_left(void)
 {
-  int x,y;
-  window_t w;
   action_code_t error = E_SUCCESS;
+  off_t a;
 
-  w = display_info.cursor_window;
-  getyx(window_list[w], y, x);
+  a = display_info.cursor_addr;
+  a -= 1;
 
-  error = _action_cursor_move_left(&y, &x);
-
-  if (error == E_SUCCESS)
-    wmove(window_list[w], y, x);
+  if (address_invalid(a) == 0)
+    place_cursor(a);
+  else
+    error = E_NO_ACTION;
 
   return error;
 }
 
 /** RIGHT **/
-action_code_t _action_cursor_move_right(int *y, int *x)
+action_code_t action_cursor_move_right(void)
 {
-  int tmp;
-  window_t w;
   action_code_t error = E_SUCCESS;
+  off_t a;
 
-  tmp = 1;
-  w = display_info.cursor_window;
+  a = display_info.cursor_addr;
+  a += 1;
 
-  switch (w)
-  {
-    case WINDOW_HEX:
-      if (get_addr_from_xy(*x + BYTES_PER_GROUP, *y) == -1)
-      {
-        error = _action_cursor_move_down(y, &tmp);
-        if (error == E_SUCCESS)
-          *x = tmp;
-      }
-      else
-        *x = *x + BYTES_PER_GROUP;
-      break;
-    case WINDOW_ASCII:
-      x+=BYTES_PER_GROUP;
-      if (*x > (HEX_COLS * BYTES_PER_GROUP))
-      {
-        error = _action_cursor_move_down(y, &tmp);
-        if (error == E_SUCCESS)
-          *x=1;
-        else
-          error = E_NO_ACTION;
-      }
-      break;
-    default:
-      error = E_INVALID;
-  }
+  if (address_invalid(a) == 0)
+    place_cursor(a);
+  else
+    error = E_NO_ACTION;
 
   return error;
 }
-action_code_t action_cursor_move_right(void)
-{
-  int x,y,tmp = 1;
-  window_t w;
-  action_code_t error = E_SUCCESS;
 
-  w = display_info.cursor_window;
-  getyx(window_list[w], y, x);
-
-  mvwprintw(window_list[WINDOW_STATUS], 0, 10, "%03d", x);
-  error = _action_cursor_move_right(&y, &x);
-  mvwprintw(window_list[WINDOW_STATUS], 0, 20, "%03d", x);
-  mvwprintw(window_list[WINDOW_STATUS], 0, 30, "page_end = %d, PAGE_END = %d", display_info.page_end, PAGE_END);
-
-  if (error == E_SUCCESS)
-    wmove(window_list[w], y, x);
-
-  return E_SUCCESS;
-}
 action_code_t action_page_down(void)
 {
 }
@@ -424,5 +298,7 @@ void handle_key(int c)
  * fix up/down in case of going off the screen!
  * use buffering for the screen mem, will help for doing group inserts
  * Remember to add tab completion, marks, macros, and a good system for command line parsing, and a good system for settings and .rc files
+ * Add options: columns, search hl, search ignorecase
+ * Check bvi man page for min list of command line commands to support
  */
 
