@@ -24,7 +24,7 @@ action_code_t action_cursor_move_up(void)
   a -= BYTES_PER_LINE;
 
   if (address_invalid(a) == 0)
-    place_cursor(a);
+    place_cursor(a, CALIGN_NONE);
   else
     error = E_NO_ACTION;
 
@@ -41,7 +41,7 @@ action_code_t action_cursor_move_down(void)
   a += BYTES_PER_LINE;
 
   if (address_invalid(a) == 0)
-    place_cursor(a);
+    place_cursor(a, CALIGN_NONE);
   else
     error = E_NO_ACTION;
 
@@ -55,10 +55,10 @@ action_code_t action_cursor_move_left(void)
   off_t a;
 
   a = display_info.cursor_addr;
-  a -= 1;
+  a -= user_prefs[GROUPING].current_value;
 
   if (address_invalid(a) == 0)
-    place_cursor(a);
+    place_cursor(a, CALIGN_NONE);
   else
     error = E_NO_ACTION;
 
@@ -72,10 +72,10 @@ action_code_t action_cursor_move_right(void)
   off_t a;
 
   a = display_info.cursor_addr;
-  a += 1;
+  a += user_prefs[GROUPING].current_value;
 
   if (address_invalid(a) == 0)
-    place_cursor(a);
+    place_cursor(a, CALIGN_NONE);
   else
     error = E_NO_ACTION;
 
@@ -93,12 +93,15 @@ action_code_t action_jump_to(void)
 }
 action_code_t action_align_top(void)
 {
+  place_cursor(display_info.cursor_addr, CALIGN_TOP);
 }
 action_code_t action_align_middle(void)
 {
+  place_cursor(display_info.cursor_addr, CALIGN_MIDDLE);
 }
 action_code_t action_align_bottom(void)
 {
+  place_cursor(display_info.cursor_addr, CALIGN_BOTTOM);
 }
 action_code_t action_delete(void)
 {
@@ -138,12 +141,32 @@ action_code_t action_exit(void)
 }
 action_code_t action_cursor_to_hex(void)
 {
+  action_code_t error = E_SUCCESS;
+
+  display_info.cursor_window = WINDOW_HEX;
+  place_cursor(display_info.cursor_addr, CALIGN_NONE);
+
+  return error;
 }
 action_code_t action_cursor_to_ascii(void)
 {
+  action_code_t error = E_SUCCESS;
+
+  display_info.cursor_window = WINDOW_ASCII;
+  place_cursor(display_info.cursor_addr, CALIGN_NONE);
+
+  return error;
 }
 action_code_t action_cursor_toggle_hex_ascii(void)
 {
+  action_code_t error = E_SUCCESS;
+
+  if (display_info.cursor_window == WINDOW_HEX)
+    error = action_cursor_to_ascii();
+  else
+    error = action_cursor_to_hex();
+
+  return error;
 }
 action_code_t action_cursor_move_address(void)
 {
@@ -166,6 +189,7 @@ action_code_t action_block_visual_select_off(void)
 #define CR      '\r'
 #define NL      '\n'
 #define ESC     27
+#define TAB     9
 #define BVICTRL(n)    (n&0x1f)
 
 action_code_t cmd_parse(char *cbuff)
@@ -269,6 +293,9 @@ void handle_key(int c)
     case 'l':
     case KEY_RIGHT:
       action_cursor_move_right();
+      break;
+    case TAB:
+      action_cursor_toggle_hex_ascii();
       break;
     case ':':
       do_cmd_line(c);

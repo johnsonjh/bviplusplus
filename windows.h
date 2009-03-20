@@ -51,7 +51,12 @@
 #define BYTES_PER_LINE  (HEX_COLS * user_prefs[GROUPING].current_value)
 #define HEX_LINES       (HEX_BOX_H - 2)
 
-#define PAGE_END (display_info.page_start + (HEX_LINES * BYTES_PER_LINE))
+#define _PAGE_SIZE ((display_info.page_start < user_prefs[GROUPING_OFFSET].current_value) ?          \
+                   ((HEX_LINES - 1) * BYTES_PER_LINE) + user_prefs[GROUPING_OFFSET].current_value : \
+                   (HEX_LINES * BYTES_PER_LINE))
+#define PAGE_SIZE (_PAGE_SIZE - 1)
+#define _PAGE_END (display_info.page_start + PAGE_SIZE)
+#define PAGE_END  (_PAGE_END > display_info.file_size ? display_info.file_size : _PAGE_END)
 
 typedef enum window_e
 {

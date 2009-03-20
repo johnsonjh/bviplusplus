@@ -58,19 +58,28 @@ int print_line(off_t addr, int y)
        addr_text[ADDR_DIGITS + 1],
        bin_text[9];
 
-  if (addr < 0 || addr > display_info.file_size)
+  if (address_invalid(addr))
     return 0;
 
   y++; /* line 0 is the box border */
 
   if (addr < user_prefs[GROUPING_OFFSET].current_value)
   {
-    /* print address */
-    sprintf(addr_text, "%08X", addr);
+    /* print blank address */
+    sprintf(addr_text, "        ");
     mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
-    /* print hex and ascii */
+    /* find start of print area */
     x = ((HEX_COLS) * BYTES_PER_GROUP) - (user_prefs[GROUPING_OFFSET].current_value * BYTE_DIGITS);
+
+    /* erase blank run in */
+    for (i=1; i<x; i++)
+    {
+      mvwaddch(window_list[WINDOW_HEX], y, i, ' ');
+      mvwaddch(window_list[WINDOW_ASCII], y, 1 + (i/2) + (i/user_prefs[GROUPING].current_value), ' ');
+    }
+
+    /* print dangling group */
     for (i=0; i<user_prefs[GROUPING_OFFSET].current_value; i++)
     {
       if (user_prefs[LIL_ENDIAN].current_value)
@@ -78,7 +87,7 @@ int print_line(off_t addr, int y)
       else
         byte_addr = addr + i;
 
-      if (byte_addr >= display_info.file_size)
+      if (address_invalid(byte_addr))
         break;
 
       c = vf_get_char(&file_manager, &result, byte_addr);
@@ -144,7 +153,7 @@ int print_line(off_t addr, int y)
       else
         byte_addr = addr + (i*user_prefs[GROUPING].current_value) + j;
 
-      if (byte_addr >= display_info.file_size)
+      if (address_invalid(byte_addr))
         break;
 
       c = vf_get_char(&file_manager, &result, byte_addr);
@@ -199,12 +208,30 @@ int print_line(off_t addr, int y)
   return ((i-1) * user_prefs[GROUPING].current_value) + j;
 }
 
-void place_cursor(off_t addr)
+void place_cursor(off_t addr, cursor_alignment_e calign)
 {
   int x, y;
+  off_t new_screen_addr;
 
   if (address_invalid(addr) == 0)
   {
+    if (addr < display_info.page_start)
+    {
+      new_screen_addr = (display_info.page_start - addr) / BYTES_PER_LINE;
+      if ((display_info.page_start - addr) % BYTES_PER_LINE)
+        new_screen_addr++;
+      new_screen_addr = display_info.page_start - (new_screen_addr * BYTES_PER_LINE);
+      print_screen(new_screen_addr);
+    }
+    if (addr > display_info.page_end)
+    {
+      new_screen_addr = (addr - display_info.page_end) / BYTES_PER_LINE;
+      if ((addr - display_info.page_end) % BYTES_PER_LINE)
+        new_screen_addr++;
+      new_screen_addr = display_info.page_start + (new_screen_addr * BYTES_PER_LINE);
+      print_screen(new_screen_addr);
+    }
+
     x = get_x_from_addr(addr);
     y = get_y_from_addr(addr);
     wmove(window_list[display_info.cursor_window], y, x);
@@ -217,9 +244,13 @@ void print_screen(off_t addr)
 {
   int i;
   off_t line_addr = addr;
+
+  display_info.page_start = addr;
+  display_info.page_end = PAGE_END;
+
   for (i=0; i<HEX_LINES; i++)
   {
-    if (line_addr > display_info.file_size)
+    if (address_invalid(line_addr))
       break;
     line_addr += print_line(line_addr, i);
   }

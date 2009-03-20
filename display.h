@@ -17,13 +17,21 @@ typedef struct display_info_s
   BOOL     has_color;
 } display_info_t;
 
+typedef enum cursor_alignment
+{
+  CALIGN_TOP,
+  CALIGN_MIDDLE,
+  CALIGN_BOTTOM,
+  CALIGN_NONE,
+} cursor_alignment_e;
+
 
 extern display_info_t display_info;
 
 void search_hl(BOOL on);
 void blob_standout(BOOL on);
 int print_line(off_t addr, int y);
-void place_cursor(off_t addr);
+void place_cursor(off_t addr, cursor_alignment_e calign);
 void print_screen(off_t addr);
 
 #endif /* __DISPLAY_H__ */

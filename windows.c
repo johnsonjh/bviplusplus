@@ -60,7 +60,10 @@ int get_x_from_addr(off_t addr)
   offset = addr - display_info.page_start;
   offset -= y * HEX_COLS * user_prefs[GROUPING].current_value;
 
-  x = 1 + (offset / user_prefs[GROUPING].current_value) * BYTES_PER_GROUP;
+  if (display_info.cursor_window == WINDOW_HEX)
+    x = 1 + (offset / user_prefs[GROUPING].current_value) * BYTES_PER_GROUP;
+  else
+    x = 1 + offset;
 
   return x;
 
@@ -99,7 +102,7 @@ off_t get_addr_from_xy(int x, int y)
   addr += y * HEX_COLS * user_prefs[GROUPING].current_value;
   addr += (x / BYTES_PER_GROUP) * user_prefs[GROUPING].current_value;
 
-  if (addr > display_info.page_end - 1 || addr > display_info.file_size - 1)
+  if (addr > display_info.page_end || address_invalid(addr))
     return -1;
 
   return addr;

@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
   display_info.file_size = vfstat.file_size;
   display_info.page_start = 0;
-  display_info.page_end = (PAGE_END > display_info.file_size ? display_info.file_size : PAGE_END);
+  display_info.page_end = PAGE_END;
   display_info.cursor_addr = 0;
   display_info.cursor_window = WINDOW_HEX;
   display_info.max_cols = 0;
@@ -43,6 +43,7 @@ int main(int argc, char **argv)
   start_color();      /* Start color      */
   init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 
+#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
   printw("COLS = %d\n", COLS);
   printw("SHARED_WIDTH = %d\n", SHARED_WIDTH);
@@ -50,6 +51,9 @@ int main(int argc, char **argv)
   printw("a = (SHARED_WIDTH * BYTES_PER_GROUP) = %d\n", (SHARED_WIDTH * BYTES_PER_GROUP));
   printw("b = ((3 * BYTES_PER_GROUP) + 1) = %d\n", ((3 * BYTES_PER_GROUP) + 1));
   printw("a/b = HEX_BOX_W = %d\n", HEX_BOX_W);
+  printw("PAGE_SIZE = %d\n", PAGE_SIZE);
+  printw("_PAGE_END = %d\n", _PAGE_END);
+  printw("PAGE_END = %d\n", PAGE_END);
   printw("PRESS ANY KEY TO CONTINUE\n", HEX_BOX_W);
   getch();
 #endif
@@ -59,30 +63,26 @@ int main(int argc, char **argv)
 
   while (app_state.quit == FALSE)
   {
-    int x, y;
     int xx, yy;
     off_t a;
 
     update_panels();
     doupdate();
-    place_cursor(display_info.cursor_addr);
-    c = wgetch(window_list[WINDOW_HEX]); /* wgetch =( */
+    place_cursor(display_info.cursor_addr, CALIGN_NONE);
+    c = wgetch(window_list[display_info.cursor_window]); /* wgetch =( */
     if (c == KEY_RESIZE)
     {
       destroy_screen();
       create_screen();
-      getyx(window_list[WINDOW_HEX], y, x);
-      mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x      KEY_RESIZE");
       print_screen(display_info.page_start);
     }
     else
     {
       handle_key(c);
     }
-    getyx(window_list[WINDOW_HEX], y, x);
-    a = get_addr_from_xy(x, y);
-    xx = get_x_from_addr(a);
-    yy = get_y_from_addr(a);
+    xx = get_x_from_addr(display_info.cursor_addr);
+    yy = get_y_from_addr(display_info.cursor_addr);
+    a = get_addr_from_xy(xx, yy);
 
     werase(window_list[WINDOW_MENU]);
     mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x  a = %x, x = %d, y = %d", c, a, xx, yy);
