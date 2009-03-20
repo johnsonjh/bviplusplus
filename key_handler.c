@@ -390,6 +390,8 @@ action_code_t cmd_parse(char *cbuff)
   char *tok;
   const char delimiters[] = " =";
 
+  //msg_box("%s", cbuff);
+
   tok = strtok(cbuff, delimiters);
   while (tok != NULL)
   {
@@ -407,13 +409,28 @@ action_code_t cmd_parse(char *cbuff)
   return error;
 }
 
-action_code_t do_cmd_line(int c)
+#define MAX_CMD_HISTORY 100
+typedef struct cmd_hist_s
 {
   char cbuff[MAX_CMD_BUF];
-  int i = 0, count = 0, position = 0, tab_complete_len = 0;
+  int position;
+  int count;
+} cmd_hist_t;
+
+action_code_t do_cmd_line(int s)
+{
+  static cmd_hist_t cmd_hist[MAX_CMD_HISTORY] = { 0 };
+  cmd_hist_t tmp_cmd;
+  static int hist_index = 0;
+  char cmd[MAX_CMD_BUF];
+  int entry_hist_index, tmp_hist_index, i = 0, c;
 
   werase(window_list[WINDOW_STATUS]);
-  mvwaddch(window_list[WINDOW_STATUS], 0, 0, c);
+  mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
+
+  entry_hist_index = hist_index;
+  tmp_cmd.count = 0;
+  tmp_cmd.position = 0;
 
   do
   {
@@ -422,45 +439,104 @@ action_code_t do_cmd_line(int c)
     c = getch();
     switch(c)
     {
+      case KEY_UP:
+        tmp_hist_index = hist_index-1;
+        if (tmp_hist_index < 0)
+          tmp_hist_index = MAX_CMD_HISTORY - 1;
+        if (tmp_hist_index == entry_hist_index)
+          break;
+        if (cmd_hist[tmp_hist_index].count == 0)
+          break;
+
+        hist_index = tmp_hist_index;
+
+        strncpy(tmp_cmd.cbuff, cmd_hist[hist_index].cbuff, MAX_CMD_BUF);
+        tmp_cmd.count = cmd_hist[hist_index].count;
+        tmp_cmd.position = cmd_hist[hist_index].position;
+
+        werase(window_list[WINDOW_STATUS]);
+        mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
+
+        for (i=0; i<tmp_cmd.count; i++)
+          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, tmp_cmd.cbuff[i]);
+        tmp_cmd.position = tmp_cmd.count;
+        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
+        break;
+      case KEY_DOWN:
+        if (hist_index == entry_hist_index)
+          break;
+        tmp_hist_index = hist_index+1;
+        tmp_hist_index = tmp_hist_index % MAX_CMD_HISTORY;
+
+        hist_index = tmp_hist_index;
+
+        strncpy(tmp_cmd.cbuff, cmd_hist[hist_index].cbuff, MAX_CMD_BUF);
+        tmp_cmd.count = cmd_hist[hist_index].count;
+        tmp_cmd.position = cmd_hist[hist_index].position;
+
+        werase(window_list[WINDOW_STATUS]);
+        mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
+
+        for (i=0; i<tmp_cmd.count; i++)
+          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, tmp_cmd.cbuff[i]);
+        tmp_cmd.position = tmp_cmd.count;
+        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
+        break;
       case ESC:
         return E_NO_ACTION;
       case BVICTRL('H'):
       case KEY_BACKSPACE:
-        mvwaddch(window_list[WINDOW_STATUS], 0, position, ' ');
-        wmove(window_list[WINDOW_STATUS], 0, position);
-        position--;
-        count--;
+        if (tmp_cmd.position == 0)
+          break;
+        mvwaddch(window_list[WINDOW_STATUS], 0, tmp_cmd.position, ' ');
+        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position);
+        tmp_cmd.position--;
+        tmp_cmd.count--;
         break;
       case KEY_LEFT:
-        if (--position < 0)
-          position++;
-        wmove(window_list[WINDOW_STATUS], 0, position+1);
+        if (--tmp_cmd.position < 0)
+          tmp_cmd.position++;
+        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
         break;
       case KEY_RIGHT:
-        if (++position > count)
-          position--;
-        wmove(window_list[WINDOW_STATUS], 0, position+1);
+        if (++tmp_cmd.position > tmp_cmd.count)
+          tmp_cmd.position--;
+        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
         break;
       case NL:
       case CR:
       case KEY_ENTER:
         break;
       default:
-        for (i=count; i>=position; i--)
-          cbuff[i+1] = cbuff[i];
-        cbuff[position] = (char)c;
-        count++;
-        for (i=position; i<count; i++)
-          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, cbuff[i]);
-        position++;
-        wmove(window_list[WINDOW_STATUS], 0, position+1);
+        if (tmp_cmd.count >= MAX_CMD_BUF)
+          break;
+        for (i=tmp_cmd.count; i>=tmp_cmd.position; i--)
+          tmp_cmd.cbuff[i+1] = tmp_cmd.cbuff[i];
+        tmp_cmd.cbuff[tmp_cmd.position] = (char)c;
+        tmp_cmd.count++;
+        for (i=tmp_cmd.position; i<tmp_cmd.count; i++)
+          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, tmp_cmd.cbuff[i]);
+        tmp_cmd.position++;
+        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
         break;
     }
   } while(c != NL && c != CR && c != KEY_ENTER);
 
-  cbuff[count] = '\0';
+  tmp_cmd.cbuff[tmp_cmd.count] = '\0';
 
-  cmd_parse(cbuff);
+  if (tmp_cmd.count)
+  {
+    strncpy(cmd, tmp_cmd.cbuff, MAX_CMD_BUF);
+    strncpy(cmd_hist[entry_hist_index].cbuff, tmp_cmd.cbuff, MAX_CMD_BUF);
+    cmd_hist[entry_hist_index].count = tmp_cmd.count;
+    cmd_hist[entry_hist_index].position = tmp_cmd.position;
+    cmd_parse(cmd);
+    hist_index = (entry_hist_index+1) % MAX_CMD_HISTORY;
+  }
+  else
+  {
+    hist_index = entry_hist_index;
+  }
 
   return E_SUCCESS;
 }
