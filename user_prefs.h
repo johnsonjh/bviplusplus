@@ -6,7 +6,7 @@
 typedef struct user_pref_s
 {
   char *name;
-  long current_value;
+  long value;
   long default_value;
 } user_pref_t;
 

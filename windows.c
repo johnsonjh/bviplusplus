@@ -31,7 +31,7 @@ int get_y_from_addr(off_t addr)
   if (offset > page_size)
     return -1;
 
-  z = (HEX_COLS * user_prefs[GROUPING].current_value);
+  z = (HEX_COLS * user_prefs[GROUPING].value);
   y += offset / z;
 
   return y;
@@ -49,10 +49,10 @@ int get_x_from_addr(off_t addr)
   y--;
 
   offset = addr - display_info.page_start;
-  offset -= y * HEX_COLS * user_prefs[GROUPING].current_value;
+  offset -= y * HEX_COLS * user_prefs[GROUPING].value;
 
   if (display_info.cursor_window == WINDOW_HEX)
-    x = 1 + (offset / user_prefs[GROUPING].current_value) * BYTES_PER_GROUP;
+    x = 1 + (offset / user_prefs[GROUPING].value) * BYTES_PER_GROUP;
   else
     x = 1 + offset;
 
@@ -76,8 +76,8 @@ off_t get_addr_from_xy(int x, int y)
   if (x > (BYTES_PER_GROUP * HEX_COLS) - BYTES_PER_GROUP)
     return -1;
 
-  addr += y * HEX_COLS * user_prefs[GROUPING].current_value;
-  addr += (x / BYTES_PER_GROUP) * user_prefs[GROUPING].current_value;
+  addr += y * HEX_COLS * user_prefs[GROUPING].value;
+  addr += (x / BYTES_PER_GROUP) * user_prefs[GROUPING].value;
 
   if (addr > display_info.page_end || address_invalid(addr))
     return -1;

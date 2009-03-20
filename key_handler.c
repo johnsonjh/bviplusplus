@@ -55,7 +55,7 @@ action_code_t action_cursor_move_left(void)
   off_t a;
 
   a = display_info.cursor_addr;
-  a -= user_prefs[GROUPING].current_value;
+  a -= user_prefs[GROUPING].value;
 
   if (address_invalid(a) == 0)
     place_cursor(a, CALIGN_NONE);
@@ -73,7 +73,7 @@ action_code_t action_cursor_move_right(void)
 
   a = display_info.cursor_addr;
   mvwprintw(window_list[WINDOW_STATUS], 0, 10, "%04x", a);
-  a += user_prefs[GROUPING].current_value;
+  a += user_prefs[GROUPING].value;
   mvwprintw(window_list[WINDOW_STATUS], 0, 16, "%04x", a);
 
   if (address_invalid(a) == 0)
