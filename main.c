@@ -19,9 +19,6 @@ int main(int argc, char **argv)
 {
   int i, c;
 
-  vf_init(&file_manager, "test.bin");
-  vf_stat(&file_manager, &vfstat);
-
   initscr();
   keypad(stdscr, TRUE);
   scrollok(stdscr, TRUE);
@@ -29,21 +26,14 @@ int main(int argc, char **argv)
   cbreak();
   noecho();
   attrset(A_NORMAL);
-
-  app_state.quit = FALSE;
-
-  display_info.file_size = vfstat.file_size;
-  display_info.page_start = 0;
-  display_info.page_end = PAGE_END;
-  display_info.cursor_addr = 0;
-  display_info.cursor_window = WINDOW_HEX;
-  display_info.max_cols = 0;
-  display_info.has_color = has_colors();
-
   start_color();      /* Start color      */
   init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 
-#define SHOW_DEBUG_SCREEN
+  app_state.quit = FALSE;
+  vf_init(&file_manager, "test.bin");
+  update_display_info();
+
+//#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
   printw("COLS = %d\n", COLS);
   printw("SHARED_WIDTH = %d\n", SHARED_WIDTH);

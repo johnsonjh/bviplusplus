@@ -3,11 +3,21 @@
 #ifndef __USER_PREFS_H__
 #define __USER_PREFS_H__
 
+typedef enum
+{
+  P_NONE,
+  P_BOOL,
+  P_LONG,
+} p_flags_e;
+
 typedef struct user_pref_s
 {
   char *name;
+  char *short_name;
   long value;
-  long default_value;
+  long min;
+  long max;
+  p_flags_e flags;
 } user_pref_t;
 
 typedef enum

@@ -5,6 +5,11 @@
 #define __DISPLAY_H__
 
 #define HEX(x) ((x) < 0xA ? '0' + (x) : 'a' + (x) - 0xa)
+#define MSG_BOX_H 8
+#define MSG_BOX_W 50
+#define MSG_BOX_Y (((HEX_BOX_H - MSG_BOX_H) / 2) + HEX_BOX_Y)
+#define MSG_BOX_X (((HEX_BOX_W - MSG_BOX_W) / 2) + HEX_BOX_X)
+#define MAX_MSG_BOX_LEN ((MSG_BOX_H - 3) * (MSG_BOX_W - 2))
 
 typedef struct display_info_s
 {
@@ -28,6 +33,7 @@ typedef enum cursor_alignment
 
 extern display_info_t display_info;
 
+void msg_box(char *fmt, ...);
 void search_hl(BOOL on);
 void blob_standout(BOOL on);
 int print_line(off_t addr, int y);

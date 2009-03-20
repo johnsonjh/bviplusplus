@@ -102,11 +102,13 @@ action_code_t action_cursor_move_line_start(void)
 action_code_t action_cursor_move_file_start(void)
 {
   action_code_t error = E_SUCCESS;
+  place_cursor(0, CALIGN_NONE);
   return error;
 }
 action_code_t action_cursor_move_file_end(void)
 {
   action_code_t error = E_SUCCESS;
+  place_cursor(display_info.file_size, CALIGN_NONE);
   return error;
 }
 
@@ -128,11 +130,31 @@ action_code_t action_cursor_move_line_end(void)
 action_code_t action_page_down(void)
 {
   action_code_t error = E_SUCCESS;
+  off_t a;
+
+  a = display_info.cursor_addr;
+  a += BYTES_PER_LINE * HEX_LINES;
+
+  if (address_invalid(a))
+    a = (display_info.file_size - 1);
+
+  place_cursor(a, CALIGN_NONE);
+
   return error;
 }
 action_code_t action_page_up(void)
 {
   action_code_t error = E_SUCCESS;
+  off_t a;
+
+  a = display_info.cursor_addr;
+  a -= BYTES_PER_LINE * HEX_LINES;
+
+  if (address_invalid(a))
+    a = 0;
+
+  place_cursor(a, CALIGN_NONE);
+
   return error;
 }
 action_code_t action_jump_to(void)
@@ -281,22 +303,105 @@ action_code_t action_block_visual_select_off(void)
 #define TAB     9
 #define BVICTRL(n)    (n&0x1f)
 
+action_code_t show_set(void)
+{
+  action_code_t error = E_SUCCESS;
+  msg_box("show set");
+  return error;
+}
+
+action_code_t do_set(void)
+{
+  action_code_t error = E_SUCCESS;
+  char *tok;
+  const char delimiters[] = " =";
+  int option, set = 1;
+  long value;
+
+  tok = strtok(NULL, delimiters);
+
+  if (tok == NULL)
+  {
+    error = show_set();
+    return error;
+  }
+
+  if (strncmp(tok, "no", 2) == 0)
+  {
+    tok += 2;
+    set = 0;
+  }
+
+  option = 0;
+  while (strncmp(user_prefs[option].name, "", MAX_CMD_BUF))
+  {
+    if (strncmp(user_prefs[option].name,        tok, MAX_CMD_BUF) == 0 ||
+        strncmp(user_prefs[option].short_name,  tok, MAX_CMD_BUF) == 0)
+    {
+
+      if (user_prefs[option].flags == P_BOOL)
+      {
+        user_prefs[option].value = set;
+        break;
+      }
+
+      if (user_prefs[option].flags == P_LONG)
+      {
+        tok = strtok(NULL, delimiters);
+
+        if (tok == NULL)
+        {
+          msg_box("Not enough parameters to 'set %s'",
+                  user_prefs[option].name);
+          return E_INVALID;
+        }
+
+        value = atol(tok);
+
+        if ((value < user_prefs[option].min && user_prefs[option].min) ||
+            (value > user_prefs[option].max && user_prefs[option].max))
+        {
+          msg_box("Value out of range for 'set %s' (min = %d, max = %d)",
+                  user_prefs[option].name,
+                  user_prefs[option].min,
+                  user_prefs[option].max);
+          return E_INVALID;
+        }
+
+        user_prefs[option].value = value;
+        break;
+      }
+
+    }
+
+    option++;
+
+  }
+
+  update_display_info();
+  print_screen(display_info.page_start);
+
+  return error;
+}
+
 action_code_t cmd_parse(char *cbuff)
 {
   action_code_t error = E_SUCCESS;
   char *tok;
   const char delimiters[] = " =";
-  int i = 0;
 
   tok = strtok(cbuff, delimiters);
   while (tok != NULL)
   {
+    if (strncmp(tok, "set", MAX_CMD_BUF) == 0)
+    {
+      error = do_set();
+    }
     if (strncmp(tok, "q", MAX_CMD_BUF) == 0)
     {
       app_state.quit = TRUE;
     }
-    mvwaddstr(window_list[WINDOW_STATUS], 0, 50+i, tok);
-    i += strlen(tok);
+
     tok = strtok(NULL, delimiters);
   }
   return error;
@@ -394,6 +499,14 @@ void handle_key(int c)
       break;
     case TAB:
       action_cursor_toggle_hex_ascii();
+      break;
+    case BVICTRL('f'):
+    case KEY_NPAGE:
+      action_page_down();
+      break;
+    case BVICTRL('b'):
+    case KEY_PPAGE:
+      action_page_up();
       break;
     case ':':
       do_cmd_line(c);

@@ -1,8 +1,86 @@
+#include <string.h>
 #include "display.h"
 #include "user_prefs.h"
 #include "app_state.h"
+#include "virt_file.h"
 
 display_info_t display_info;
+
+void msg_box(char *fmt, ...)
+{
+  WINDOW *msgbox;
+  char *tok;
+  char msgbox_str[MAX_MSG_BOX_LEN];
+  char msgbox_line[MAX_MSG_BOX_LEN];
+  const char delimiters[] = " \t";
+  int x = 1, y = 1, len = 0;
+  va_list args;
+
+  memset(msgbox_str, 0, MAX_MSG_BOX_LEN);
+  memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+
+  msgbox = newwin(MSG_BOX_H, MSG_BOX_W, MSG_BOX_Y, MSG_BOX_X);
+  box(msgbox, 0, 0);
+
+  va_start(args, fmt);
+  vsnprintf(msgbox_str, MAX_MSG_BOX_LEN, fmt, args);
+  va_end(args);
+  len = strlen(msgbox_str);
+
+  tok = strtok(msgbox_str, delimiters);
+  while(tok)
+  {
+    if ((strlen(tok) + strlen(msgbox_line)) < (MSG_BOX_W - 2))
+    {
+      if (strlen(msgbox_line))
+        strncat(msgbox_line, " ", MAX_MSG_BOX_LEN);
+      strncat(msgbox_line, tok, MAX_MSG_BOX_LEN);
+    }
+    else
+    {
+      x = 1 + ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+      mvwaddstr(msgbox, y, x, msgbox_line);
+      y++;
+      if (y > (MSG_BOX_H - 2))
+        return;
+      memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+      strncat(msgbox_line, tok, MAX_MSG_BOX_LEN);
+    }
+
+    tok = strtok(NULL, delimiters);
+  }
+
+  if (strlen(msgbox_line))
+  {
+    x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+    mvwaddstr(msgbox, y, x, msgbox_line);
+    y++;
+    if (y > (MSG_BOX_H - 2))
+      return;
+    memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+  }
+
+  strncat(msgbox_line, "[PRESS ANY KEY]", MAX_MSG_BOX_LEN);
+  x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+  mvwaddstr(msgbox, MSG_BOX_H - 2, x, msgbox_line);
+
+  wrefresh(msgbox);
+  getch();
+  delwin(msgbox);
+  print_screen(display_info.page_start);
+}
+
+void update_display_info(void)
+{
+  vf_stat(&file_manager, &vfstat);
+  display_info.file_size = vfstat.file_size;
+  display_info.page_start = 0;
+  display_info.page_end = PAGE_END;
+  display_info.cursor_addr = 0;
+  display_info.cursor_window = WINDOW_HEX;
+  display_info.max_cols = 0;
+  display_info.has_color = has_colors();
+}
 
 void search_hl(BOOL on)
 {
@@ -78,14 +156,7 @@ int print_line(off_t addr, int y)
         byte_addr = addr + (i*user_prefs[GROUPING].value) + j;
 
       if (address_invalid(byte_addr))
-      {
-        for (k=x; k<(HEX_BOX_W-1); k++)
-        {
-          mvwaddch(window_list[WINDOW_HEX], y, k, ' ');
-          mvwaddch(window_list[WINDOW_ASCII], y, k/2 - 2, ' ');
-        }
         break;
-      }
 
       c = vf_get_char(&file_manager, &result, byte_addr);
 
@@ -178,6 +249,11 @@ void print_screen(off_t addr)
 
   display_info.page_start = addr;
   display_info.page_end = PAGE_END;
+
+  werase(window_list[WINDOW_HEX]);
+  werase(window_list[WINDOW_ASCII]);
+  box(window_list[WINDOW_HEX], 0, 0);
+  box(window_list[WINDOW_ASCII], 0, 0);
 
   for (i=0; i<HEX_LINES; i++)
   {
