@@ -84,62 +84,139 @@ action_code_t action_cursor_move_right(void)
   return error;
 }
 
+action_code_t action_cursor_move_line_start(void)
+{
+  action_code_t error = E_SUCCESS;
+  int x, y;
+  off_t a;
+
+  y = get_y_from_addr(display_info.cursor_addr);
+  x = 1;
+
+  a = get_addr_from_xy(x, y);
+  place_cursor(a, CALIGN_NONE);
+
+  return error;
+}
+
+action_code_t action_cursor_move_file_start(void)
+{
+  action_code_t error = E_SUCCESS;
+  return error;
+}
+action_code_t action_cursor_move_file_end(void)
+{
+  action_code_t error = E_SUCCESS;
+  return error;
+}
+
+action_code_t action_cursor_move_line_end(void)
+{
+  action_code_t error = E_SUCCESS;
+  int x, y;
+  off_t a;
+
+  y = get_y_from_addr(display_info.cursor_addr);
+  x = ((HEX_COLS - 1) * BYTES_PER_GROUP) + 1;
+
+  a = get_addr_from_xy(x, y);
+  place_cursor(a, CALIGN_NONE);
+
+  return error;
+}
+
 action_code_t action_page_down(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_page_up(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_jump_to(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_align_top(void)
 {
+  action_code_t error = E_SUCCESS;
   place_cursor(display_info.cursor_addr, CALIGN_TOP);
+  return error;
 }
 action_code_t action_align_middle(void)
 {
+  action_code_t error = E_SUCCESS;
   place_cursor(display_info.cursor_addr, CALIGN_MIDDLE);
+  return error;
 }
 action_code_t action_align_bottom(void)
 {
+  action_code_t error = E_SUCCESS;
   place_cursor(display_info.cursor_addr, CALIGN_BOTTOM);
+  return error;
 }
 action_code_t action_delete(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_insert_before(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_insert_after(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_append(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_replace(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_replace_insert(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_save(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_save_as(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_discard_changes(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_close_file(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_open_file(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_exit(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_cursor_to_hex(void)
 {
@@ -172,18 +249,28 @@ action_code_t action_cursor_toggle_hex_ascii(void)
 }
 action_code_t action_cursor_move_address(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_visual_select_on(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_visual_select_off(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_block_visual_select_on(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 action_code_t action_block_visual_select_off(void)
 {
+  action_code_t error = E_SUCCESS;
+  return error;
 }
 
 
@@ -196,6 +283,7 @@ action_code_t action_block_visual_select_off(void)
 
 action_code_t cmd_parse(char *cbuff)
 {
+  action_code_t error = E_SUCCESS;
   char *tok;
   const char delimiters[] = " =";
   int i = 0;
@@ -211,7 +299,7 @@ action_code_t cmd_parse(char *cbuff)
     i += strlen(tok);
     tok = strtok(NULL, delimiters);
   }
-  return 0;
+  return error;
 }
 
 action_code_t do_cmd_line(int c)
@@ -295,6 +383,14 @@ void handle_key(int c)
     case 'l':
     case KEY_RIGHT:
       action_cursor_move_right();
+      break;
+    case '$':
+    case KEY_END:
+      action_cursor_move_line_end();
+      break;
+    case '0':
+    case KEY_HOME:
+      action_cursor_move_line_start();
       break;
     case TAB:
       action_cursor_toggle_hex_ascii();
