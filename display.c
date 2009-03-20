@@ -63,88 +63,12 @@ int print_line(off_t addr, int y)
 
   y++; /* line 0 is the box border */
 
-  if (addr < user_prefs[GROUPING_OFFSET].current_value)
-  {
-    /* print blank address */
-    sprintf(addr_text, "        ");
-    mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
-
-    /* find start of print area */
-    x = ((HEX_COLS) * BYTES_PER_GROUP) - (user_prefs[GROUPING_OFFSET].current_value * BYTE_DIGITS);
-
-    /* erase blank run in */
-    for (i=1; i<x; i++)
-    {
-      mvwaddch(window_list[WINDOW_HEX], y, i, ' ');
-      mvwaddch(window_list[WINDOW_ASCII], y, 1 + (i/2) + (i/user_prefs[GROUPING].current_value), ' ');
-    }
-
-    /* print dangling group */
-    for (i=0; i<user_prefs[GROUPING_OFFSET].current_value; i++)
-    {
-      if (user_prefs[LIL_ENDIAN].current_value)
-        byte_addr = addr - 1 + ((BYTES_PER_GROUP - (user_prefs[GROUPING_OFFSET].current_value * BYTE_DIGITS)) - i);
-      else
-        byte_addr = addr + i;
-
-      if (address_invalid(byte_addr))
-        break;
-
-      c = vf_get_char(&file_manager, &result, byte_addr);
-
-      if (user_prefs[BLOB_GROUPING_OFFSET].current_value > byte_addr)
-      {
-        blob_standout(TRUE);
-      }
-      else
-      {
-        if (user_prefs[BLOB_GROUPING].current_value &&
-           (((byte_addr - user_prefs[BLOB_GROUPING_OFFSET].current_value) / user_prefs[BLOB_GROUPING].current_value) & 1))
-        {
-          blob_standout(TRUE);
-        }
-      }
-
-      if (user_prefs[DISPLAY_BINARY].current_value)
-      {
-        snprintf(bin_text, 8, "%b", c);
-        for (k=0; k<8; k++)
-        {
-          if ((c >> (7 - k)) & 1)
-            mvwaddch(window_list[WINDOW_HEX], y, x, '1');
-          else
-            mvwaddch(window_list[WINDOW_HEX], y, x, '0');
-          x++;
-        }
-      }
-      else
-      {
-        mvwaddch(window_list[WINDOW_HEX], y, x, HEX(c>>4&0xF));
-        x++;
-        mvwaddch(window_list[WINDOW_HEX], y, x, HEX(c>>0&0xF));
-        x++;
-      }
-
-      if (!isprint(c))
-        c = '.';
-
-      if (user_prefs[LIL_ENDIAN].current_value)
-        mvwaddch(window_list[WINDOW_ASCII], y, 1-i+((HEX_COLS+1) * user_prefs[GROUPING].current_value - user_prefs[GROUPING_OFFSET].current_value), c);
-      else
-        mvwaddch(window_list[WINDOW_ASCII], y, 1+i+(HEX_COLS * user_prefs[GROUPING].current_value - user_prefs[GROUPING_OFFSET].current_value), c);
-
-      blob_standout(FALSE);
-
-    }
-    return i;
-  }
+  /* print address */
+  sprintf(addr_text, "%08X", addr);
+  mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
   for (i=0; i<HEX_COLS; i++)
   {
-    /* print address */
-    sprintf(addr_text, "%08X", addr);
-    mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
-
     /* print hex and ascii */
     for (j=0; j<user_prefs[GROUPING].current_value; j++)
     {
@@ -154,7 +78,14 @@ int print_line(off_t addr, int y)
         byte_addr = addr + (i*user_prefs[GROUPING].current_value) + j;
 
       if (address_invalid(byte_addr))
+      {
+        for (k=x; k<(HEX_BOX_W-1); k++)
+        {
+          mvwaddch(window_list[WINDOW_HEX], y, k, ' ');
+          mvwaddch(window_list[WINDOW_ASCII], y, k/2 - 2, ' ');
+        }
         break;
+      }
 
       c = vf_get_char(&file_manager, &result, byte_addr);
 

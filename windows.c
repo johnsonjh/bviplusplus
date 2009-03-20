@@ -28,17 +28,8 @@ int get_y_from_addr(off_t addr)
   offset = addr - display_info.page_start;
   page_size = display_info.page_end - display_info.page_start;
 
-  if (offset < user_prefs[GROUPING_OFFSET].current_value)
-    return 1; /* valid - first line */
-
   if (offset > page_size)
     return -1;
-
-  if (display_info.page_start < user_prefs[GROUPING_OFFSET].current_value)
-  {
-    offset -= user_prefs[GROUPING_OFFSET].current_value;
-    y++;
-  }
 
   z = (HEX_COLS * user_prefs[GROUPING].current_value);
   y += offset / z;
@@ -84,20 +75,6 @@ off_t get_addr_from_xy(int x, int y)
 
   if (x > (BYTES_PER_GROUP * HEX_COLS) - BYTES_PER_GROUP)
     return -1;
-
-  if (display_info.page_start < user_prefs[GROUPING_OFFSET].current_value)
-  {
-    if (y)
-    {
-      addr += user_prefs[GROUPING_OFFSET].current_value;
-      y--;
-    }
-    else
-    {
-      /* only one valid address on the first line if there is a grouping offset */
-      return display_info.page_start;
-    }
-  }
 
   addr += y * HEX_COLS * user_prefs[GROUPING].current_value;
   addr += (x / BYTES_PER_GROUP) * user_prefs[GROUPING].current_value;
