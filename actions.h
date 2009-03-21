@@ -1,3 +1,5 @@
+#include "virt_file.h"
+
 #ifndef __ACTIONS_H__
 #define __ACTIONS_H__
 
@@ -8,17 +10,17 @@ typedef enum action_code_e
   E_INVALID,
 } action_code_t;
 
-action_code_t action_cursor_move_up(void);
-action_code_t action_cursor_move_down(void);
-action_code_t action_cursor_move_left(void);
-action_code_t action_cursor_move_right(void);
+action_code_t action_cursor_move_up(int count);
+action_code_t action_cursor_move_down(int count);
+action_code_t action_cursor_move_left(int count);
+action_code_t action_cursor_move_right(int count);
 action_code_t action_cursor_move_line_start(void);
 action_code_t action_cursor_move_file_start(void);
 action_code_t action_cursor_move_file_end(void);
 action_code_t action_cursor_move_line_end(void);
 action_code_t action_page_down(void);
 action_code_t action_page_up(void);
-action_code_t action_jump_to(void);
+action_code_t action_jump_to(off_t jump_addr);
 action_code_t action_align_top(void);
 action_code_t action_align_middle(void);
 action_code_t action_align_bottom(void);
@@ -42,5 +44,9 @@ action_code_t action_visual_select_on(void);
 action_code_t action_visual_select_off(void);
 action_code_t action_block_visual_select_on(void);
 action_code_t action_block_visual_select_off(void);
+action_code_t action_search_highlight(void);
+action_code_t action_clear_search_highlight(void);
+off_t action_get_mark(int m);
+action_code_t action_set_mark(int m);
 
 #endif /* __ACTIONS_H__ */

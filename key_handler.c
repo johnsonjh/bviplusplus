@@ -64,9 +64,10 @@ action_code_t do_set(void)
 
         if (tok == NULL)
         {
-          msg_box("Not enough parameters to 'set %s'",
-                  user_prefs[option].name);
-          return E_INVALID;
+          msg_box("Not enough parameters to 'set %s', using default value: %d",
+                  user_prefs[option].name, user_prefs[option].def);
+          user_prefs[option].value = user_prefs[option].def;
+          break;
         }
 
         value = atol(tok);
@@ -255,33 +256,71 @@ action_code_t do_cmd_line(int s)
 
 void handle_key(int c)
 {
-  int x, y;
+  int x, y, int_c, mark;
+  static int multiplier = 0;
+  static int esc_count = 0;
+  static off_t jump_addr = -1;
 
   mvwprintw(window_list[WINDOW_STATUS], 0, 0, "%c", c);
-  mvwprintw(window_list[WINDOW_STATUS], 0, 100, "HEX_COLS = %d, BYTES_PER_GROUP = %d, a*b = %d", HEX_COLS, BYTES_PER_GROUP, (HEX_COLS * BYTES_PER_GROUP));
+
+  if (c >= '0' && c <= '9')
+  {
+    int_c = c - '0';
+
+    if (multiplier == 0 && int_c == 0)
+      action_cursor_move_line_start();
+
+    multiplier *= 10;
+    multiplier += int_c;
+
+    if (jump_addr == -1)
+      jump_addr = 0;
+    else
+      jump_addr *= 10;
+    jump_addr += int_c;
+
+    mvwprintw(window_list[WINDOW_STATUS], 0, 100, "jump_addr = %d (%x)",
+              jump_addr, jump_addr);
+  }
+
   switch (c)
   {
+    case '`':
+      mark = getch();
+      jump_addr = action_get_mark(mark);
+      action_jump_to(jump_addr);
+      break;
+    case 'm':
+      mark = getch();
+      action_set_mark(mark);
+      break;
+    case 'G':
+      if (jump_addr == -1)
+        action_cursor_move_file_end();
+      else
+        action_jump_to(jump_addr);
+      jump_addr = -1;
+      break;
     case 'j':
     case KEY_DOWN:
-      action_cursor_move_down();
+      action_cursor_move_down(multiplier);
       break;
     case 'k':
     case KEY_UP:
-      action_cursor_move_up();
+      action_cursor_move_up(multiplier);
       break;
     case 'h':
     case KEY_LEFT:
-      action_cursor_move_left();
+      action_cursor_move_left(multiplier);
       break;
     case 'l':
     case KEY_RIGHT:
-      action_cursor_move_right();
+      action_cursor_move_right(multiplier);
       break;
     case '$':
     case KEY_END:
       action_cursor_move_line_end();
       break;
-    case '0':
     case KEY_HOME:
       action_cursor_move_line_start();
       break;
@@ -299,8 +338,27 @@ void handle_key(int c)
     case ':':
       do_cmd_line(c);
       break;
+    case ESC:
+      if (esc_count)
+      {
+        action_clear_search_highlight();
+        esc_count = 0;
+      }
+      else
+      {
+        esc_count ++;
+      }
+      multiplier = 0;
+      jump_addr = -1;
+      break;
     default:
       break;
+  }
+
+  if (c < '0' || c > '9')
+  {
+    jump_addr = -1;
+    multiplier = 0;
   }
 }
 
@@ -321,10 +379,10 @@ void handle_key(int c)
  * }
  * Define separate actions for each thing (cut, copy, etc.) if vis select is on (operate on range)
  * Or, always operate on range, and if vis select is set update range every time the cursor moves
- * fix up/down in case of going off the screen!
  * use buffering for the screen mem, will help for doing group inserts
  * Remember to add tab completion, marks, macros, and a good system for command line parsing, and a good system for settings and .rc files
  * Add options: columns, search hl, search ignorecase
  * Check bvi man page for min list of command line commands to support
+ * Fix jump to end of line in case of last line where bytes do not go to end (and for cols pref is set?)
  */
 

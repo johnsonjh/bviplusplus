@@ -15,6 +15,7 @@ typedef struct user_pref_s
   char *name;
   char *short_name;
   long value;
+  long def;
   long min;
   long max;
   p_flags_e flags;
@@ -26,7 +27,8 @@ typedef enum
   LIL_ENDIAN,
   GROUPING,
   BLOB_GROUPING,
-  BLOB_GROUPING_OFFSET
+  BLOB_GROUPING_OFFSET,
+  MAX_COLS
 } user_pref_e;
 
 extern user_pref_t user_prefs[];

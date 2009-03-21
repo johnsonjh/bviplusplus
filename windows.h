@@ -47,7 +47,7 @@
 
 //#define MAX_HEX_COLS    ((HEX_BOX_W - 3) / BYTES_PER_GROUP)
 #define MAX_HEX_COLS    ((HEX_BOX_W - 2) / BYTES_PER_GROUP)
-#define HEX_COLS        (display_info.max_cols == 0 ? MAX_HEX_COLS : MAX_HEX_COLS > display_info.max_cols ? display_info.max_cols : MAX_HEX_COLS)
+#define HEX_COLS        (user_prefs[MAX_COLS].value == 0 ? MAX_HEX_COLS : MAX_HEX_COLS > user_prefs[MAX_COLS].value ? user_prefs[MAX_COLS].value : MAX_HEX_COLS)
 #define BYTES_PER_LINE  (HEX_COLS * user_prefs[GROUPING].value)
 #define HEX_LINES       (HEX_BOX_H - 2)
 
