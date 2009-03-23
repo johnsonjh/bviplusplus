@@ -70,7 +70,7 @@ void msg_box(char *fmt, ...)
   print_screen(display_info.page_start);
 }
 
-void update_display_info(void)
+void reset_display_info(void)
 {
   vf_stat(current_file, &vfstat);
   display_info.file_size = vfstat.file_size;
@@ -80,9 +80,32 @@ void update_display_info(void)
   display_info.cursor_window = WINDOW_HEX;
   display_info.max_cols = 0;
   display_info.has_color = has_colors();
+  display_info.visual_select_addr = -1;
+}
+
+void update_display_info(void)
+{
+  vf_stat(current_file, &vfstat);
+  display_info.file_size = vfstat.file_size;
+  display_info.page_end = PAGE_END;
+  display_info.has_color = has_colors();
 }
 
 void search_hl(BOOL on)
+{
+  if (on)
+  {
+    wattron(window_list[WINDOW_HEX], A_STANDOUT);
+    wattron(window_list[WINDOW_ASCII], A_STANDOUT);
+  }
+  else
+  {
+    wattroff(window_list[WINDOW_HEX], A_STANDOUT);
+    wattroff(window_list[WINDOW_ASCII], A_STANDOUT);
+  }
+}
+
+void visual_select_hl(BOOL on)
 {
   if (on)
   {
@@ -126,6 +149,28 @@ void blob_standout(BOOL on)
   }
 }
 
+int is_visual_on(void)
+{
+  if (display_info.visual_select_addr == -1)
+    return 0;
+  else
+    return 1;
+}
+int visual_span(void)
+{
+  if (display_info.cursor_addr < display_info.visual_select_addr)
+    return (display_info.visual_select_addr - display_info.cursor_addr) + 1;
+  else
+    return (display_info.cursor_addr - display_info.visual_select_addr) + 1;
+}
+off_t visual_addr(void)
+{
+  if (display_info.cursor_addr < display_info.visual_select_addr)
+    return display_info.cursor_addr;
+  else
+    return display_info.visual_select_addr;
+}
+
 /* returns the number of bytes displayed on that line */
 int print_line(off_t addr, int y)
 {
@@ -159,6 +204,21 @@ int print_line(off_t addr, int y)
         break;
 
       c = vf_get_char(current_file, &result, byte_addr);
+
+      if (is_visual_on())
+      {
+        if ((display_info.visual_select_addr <= byte_addr &&
+             display_info.cursor_addr >= byte_addr)          ||
+            (display_info.cursor_addr <= byte_addr        &&
+             display_info.visual_select_addr >= byte_addr))
+        {
+          visual_select_hl(TRUE);
+        }
+        else
+        {
+          visual_select_hl(FALSE);
+        }
+      }
 
       if (user_prefs[BLOB_GROUPING_OFFSET].value > byte_addr)
       {
@@ -204,9 +264,10 @@ int print_line(off_t addr, int y)
       blob_standout(FALSE);
 
     }
-    x++;
+    mvwaddch(window_list[WINDOW_HEX], y, x++, ' ');
   }
 
+  visual_select_hl(FALSE);
   return ((i-1) * user_prefs[GROUPING].value) + j;
 }
 
@@ -239,6 +300,10 @@ void place_cursor(off_t addr, cursor_alignment_e calign)
     wmove(window_list[display_info.cursor_window], y, x);
     display_info.cursor_addr = addr;
   }
+
+  if (is_visual_on())
+    print_screen(display_info.page_start);
+
 }
 
 

@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   app_state.quit = FALSE;
   vf_init(&file_manager, "test.bin");
   current_file = &file_manager;
-  update_display_info();
+  reset_display_info();
 
 //#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     update_panels();
     doupdate();
     place_cursor(display_info.cursor_addr, CALIGN_NONE);
-    c = wgetch(window_list[display_info.cursor_window]); /* wgetch =( */
+    c = wgetch(window_list[display_info.cursor_window]);
     if (c == KEY_RESIZE)
     {
       destroy_screen();

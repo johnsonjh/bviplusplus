@@ -7,15 +7,6 @@
 #include "actions.h"
 #include "app_state.h"
 
-
-#define MAX_CMD_BUF 256
-#define MAX_CMD_HISTORY 100
-#define CR      '\r'
-#define NL      '\n'
-#define ESC     27
-#define TAB     9
-#define BVICTRL(n)    (n&0x1f)
-
 action_code_t show_set(void)
 {
   action_code_t error = E_SUCCESS;
@@ -339,12 +330,52 @@ void handle_key(int c)
       action_cursor_move_left(multiplier);
       /* no break */
     case 'x':
+      action_yank(multiplier);
       action_delete(multiplier);
+      break;
+    case 'v':
+      action_visual_select_toggle();
+      break;
+/**/
+    case 'i':
+    case 'I':
+      //action_insert_before(multiplier);
+      break;
+    case 'a':
+    case 'A':
+      //action_insert_after(multiplier);
+      break;
+    case 'p':
+      action_paste_after(multiplier);
+      break;
+    case 'P':
+      action_paste_before(multiplier);
+      break;
+    case 'y': /* no separate behavior from Y, right now */
+    case 'Y':
+      action_yank(multiplier);
+      break;
+    case 'r':
+      action_replace(multiplier);
+      break;
+    case 'R':
+      action_overwrite(multiplier);
+      break;
+    case 'c':
+    case 'C':
+    case 's':
+    case 'S':
+      action_replace_insert(multiplier);
+/**/
+      break;
+    case 'u':
+      action_undo(multiplier);
       break;
     case ':':
       do_cmd_line(c);
       break;
     case ESC:
+      action_visual_select_off();
       if (esc_count)
       {
         action_clear_search_highlight();
@@ -367,7 +398,8 @@ void handle_key(int c)
     multiplier = 0;
   }
 
-  mvwprintw(window_list[WINDOW_STATUS], 0, 30, "addr = %08x", display_info.cursor_addr);
+  mvwprintw(window_list[WINDOW_STATUS], 0, 30, "addr = %08x, vaddr = %08x",
+            display_info.cursor_addr, visual_addr());
 
 }
 

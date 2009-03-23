@@ -202,21 +202,122 @@ action_code_t action_align_bottom(void)
 action_code_t action_delete(int count)
 {
   action_code_t error = E_SUCCESS;
+  off_t addr;
 
-  if (count == 0)
-    count = 1;
+  if (is_visual_on())
+  {
+    count = visual_span();
+    addr = visual_addr();
+    action_visual_select_off();
+    place_cursor(addr, CALIGN_NONE);
+  }
+  else
+  {
+    if (count == 0)
+      count = 1;
+    addr = display_info.cursor_addr;
+  }
 
-  vf_delete(current_file, display_info.cursor_addr, count);
+  vf_delete(current_file, addr, count);
+  update_display_info();
   print_screen(display_info.page_start);
 
   return error;
 }
-action_code_t action_insert_before(void)
+action_code_t action_insert_before(int count, char *buf, int len)
+{
+  action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
+  vf_insert_before(current_file, buf, display_info.cursor_addr, len);
+  place_cursor(display_info.cursor_addr + len - 1, CALIGN_NONE);
+  print_screen(display_info.page_start);
+  return error;
+}
+
+#define DEFAULT_INSERT_BUF_SIZE 512
+int is_bin(c)
+{
+  if (c != '0' && c != '1')
+    return 0;
+  return 1;
+}
+int is_hex(int c)
+{
+  c = toupper(c);
+
+  if (c < '0')
+    return 0;
+  if (c > '9' && c < 'A')
+    return 0;
+  if (c > 'F')
+    return 0;
+
+  return 1;
+
+#if 0
+  action_code_t error = E_SUCCESS;
+  char *buf, *screen, tmp_buf[MAX_CMD_BUF];
+  int c, buf_size = DEFAULT_INSERT_BUF_SIZE, insert_len = 0, screen_size;
+
+  buf = (char *)malloc(buf_size);
+  screen_size = HEX_COLS * user_prefs[GROUPING].value * HEX_LINES;
+  screen = (char *)malloc(screen_size);
+
+  vf_get_buf(current_file, screen, display_info.page_start, screen_size);
+
+  /* create a blank at addr and move the rest of the screen down a byte */
+
+  c = getch();
+  while (c != ESC && c != KEY_ENTER)
+  {
+    if (display_info.cursor_window == WINDOW_HEX)
+    {
+      if (user_prefs[DISPLAY_BINARY].value)
+      {
+        if (is_bin(c))
+      }
+      else
+      {
+        if (is_hex(c))
+          mvwaddch(window_list[WINDOW_HEX], y, x, c);
+      }
+    }
+  }
+#endif
+
+
+}
+action_code_t action_insert_after(int count, char *buf, int len)
+{
+  action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
+  vf_insert_after(current_file, buf, display_info.cursor_addr, len);
+  place_cursor(display_info.cursor_addr + len, CALIGN_NONE);
+  print_screen(display_info.page_start);
+  return error;
+}
+action_code_t action_paste_before(int count)
+{
+  action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
+  return error;
+}
+action_code_t action_paste_after(int count)
+{
+  action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
+  return error;
+}
+action_code_t action_yank(int count)
 {
   action_code_t error = E_SUCCESS;
   return error;
 }
-action_code_t action_insert_after(void)
+action_code_t action_cut(int count)
 {
   action_code_t error = E_SUCCESS;
   return error;
@@ -224,14 +325,21 @@ action_code_t action_insert_after(void)
 action_code_t action_append(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
-action_code_t action_replace(void)
+action_code_t action_replace(int count)
 {
   action_code_t error = E_SUCCESS;
   return error;
 }
-action_code_t action_replace_insert(void)
+action_code_t action_replace_insert(int count)
+{
+  action_code_t error = E_SUCCESS;
+  return error;
+}
+action_code_t action_overwrite(int count)
 {
   action_code_t error = E_SUCCESS;
   return error;
@@ -239,31 +347,43 @@ action_code_t action_replace_insert(void)
 action_code_t action_save(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_save_as(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_discard_changes(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_close_file(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_open_file(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_exit(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_cursor_to_hex(void)
@@ -303,31 +423,39 @@ action_code_t action_cursor_move_address(void)
 action_code_t action_visual_select_on(void)
 {
   action_code_t error = E_SUCCESS;
+  display_info.visual_select_addr = display_info.cursor_addr;
   return error;
 }
 action_code_t action_visual_select_off(void)
 {
   action_code_t error = E_SUCCESS;
+  display_info.visual_select_addr = -1;
+  print_screen(display_info.page_start);
   return error;
 }
-action_code_t action_block_visual_select_on(void)
+action_code_t action_visual_select_toggle(void)
 {
   action_code_t error = E_SUCCESS;
-  return error;
-}
-action_code_t action_block_visual_select_off(void)
-{
-  action_code_t error = E_SUCCESS;
+
+  if (display_info.visual_select_addr == -1)
+    error = action_visual_select_on();
+  else
+    error = action_visual_select_off();
+
   return error;
 }
 action_code_t action_search_highlight(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 action_code_t action_clear_search_highlight(void)
 {
   action_code_t error = E_SUCCESS;
+  if (is_visual_on())
+    return E_INVALID;
   return error;
 }
 
@@ -365,6 +493,22 @@ action_code_t action_set_mark(int m)
   else
     mark_list[index] = display_info.cursor_addr;;
 
+  return error;
+}
+action_code_t action_undo(int count)
+{
+  action_code_t error = E_SUCCESS;
+  off_t caddr;
+
+  if (is_visual_on())
+    return E_INVALID;
+
+  if (count == 0)
+    count = 1;
+
+  vf_undo(current_file, count, &caddr);
+  place_cursor(caddr, CALIGN_NONE);
+  print_screen(display_info.page_start);
   return error;
 }
 
