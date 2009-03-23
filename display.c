@@ -72,7 +72,7 @@ void msg_box(char *fmt, ...)
 
 void update_display_info(void)
 {
-  vf_stat(&file_manager, &vfstat);
+  vf_stat(current_file, &vfstat);
   display_info.file_size = vfstat.file_size;
   display_info.page_start = 0;
   display_info.page_end = PAGE_END;
@@ -158,7 +158,7 @@ int print_line(off_t addr, int y)
       if (address_invalid(byte_addr))
         break;
 
-      c = vf_get_char(&file_manager, &result, byte_addr);
+      c = vf_get_char(current_file, &result, byte_addr);
 
       if (user_prefs[BLOB_GROUPING_OFFSET].value > byte_addr)
       {

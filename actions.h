@@ -24,7 +24,7 @@ action_code_t action_jump_to(off_t jump_addr);
 action_code_t action_align_top(void);
 action_code_t action_align_middle(void);
 action_code_t action_align_bottom(void);
-action_code_t action_delete(void);
+action_code_t action_delete(int count);
 action_code_t action_insert_before(void);
 action_code_t action_insert_after(void);
 action_code_t action_append(void);

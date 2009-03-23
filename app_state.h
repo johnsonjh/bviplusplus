@@ -9,6 +9,7 @@ typedef struct app_state_s
 } app_state_t;
 
 extern app_state_t    app_state;
+extern file_manager_t *current_file;
 extern file_manager_t file_manager;
 extern vf_stat_t vfstat;
 

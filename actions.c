@@ -1,6 +1,7 @@
 #include "actions.h"
 #include "display.h"
 #include "virt_file.h"
+#include "app_state.h"
 
 #define MARK_LIST_SIZE (26*2)
 off_t mark_list[MARK_LIST_SIZE ];
@@ -116,13 +117,16 @@ action_code_t action_cursor_move_line_start(void)
 action_code_t action_cursor_move_line_end(void)
 {
   action_code_t error = E_SUCCESS;
-  int x, y;
+  int y;
   off_t a;
 
   y = get_y_from_addr(display_info.cursor_addr);
-  x = ((HEX_COLS - 1) * BYTES_PER_GROUP) + 1;
+  a = get_addr_from_xy(1, y);
+  a += (HEX_COLS-1) * user_prefs[GROUPING].value;
 
-  a = get_addr_from_xy(x, y);
+  if (address_invalid(a))
+    a = display_info.file_size - 1;
+
   place_cursor(a, CALIGN_NONE);
 
   return error;
@@ -195,9 +199,16 @@ action_code_t action_align_bottom(void)
   place_cursor(display_info.cursor_addr, CALIGN_BOTTOM);
   return error;
 }
-action_code_t action_delete(void)
+action_code_t action_delete(int count)
 {
   action_code_t error = E_SUCCESS;
+
+  if (count == 0)
+    count = 1;
+
+  vf_delete(current_file, display_info.cursor_addr, count);
+  print_screen(display_info.page_start);
+
   return error;
 }
 action_code_t action_insert_before(void)

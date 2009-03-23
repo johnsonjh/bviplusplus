@@ -31,6 +31,7 @@ int main(int argc, char **argv)
 
   app_state.quit = FALSE;
   vf_init(&file_manager, "test.bin");
+  current_file = &file_manager;
   update_display_info();
 
 //#define SHOW_DEBUG_SCREEN

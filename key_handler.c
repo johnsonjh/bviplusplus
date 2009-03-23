@@ -335,6 +335,12 @@ void handle_key(int c)
     case KEY_PPAGE:
       action_page_up();
       break;
+    case 'X':
+      action_cursor_move_left(multiplier);
+      /* no break */
+    case 'x':
+      action_delete(multiplier);
+      break;
     case ':':
       do_cmd_line(c);
       break;
