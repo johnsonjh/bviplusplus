@@ -573,6 +573,33 @@ size_t _delete(vbuf_t * vb, off_t offset, size_t len,
         }
         break;
       case TYPE_DELETE:
+        if(tmp_offset < tmp->start)
+        {
+          if(tmp_offset + tmp_len < tmp->start)
+            insert_new_vbuf(&new, tmp, vb, tmp_offset, tmp_len, TYPE_DELETE, NULL);
+          else
+            insert_new_vbuf(&new, tmp, vb, tmp_offset, tmp->start - tmp_offset,
+                            TYPE_DELETE, NULL);
+
+          tmp_len -= new->size;
+          mod_parent_size(new->parent, new->size, FALSE);
+          mod_start_offset(new->next, new->size, FALSE);
+          if(NULL == *vb_list)
+          {
+            *vb_list = (vbuf_list_t *) malloc(sizeof(vbuf_list_t));
+            tmp_vb_list = *vb_list;
+          }
+          else
+          {
+            tmp_vb_list = *vb_list;
+            while(NULL != tmp_vb_list->next)
+              tmp_vb_list = tmp_vb_list->next;
+            tmp_vb_list->next = (vbuf_list_t *) malloc(sizeof(vbuf_list_t));
+            tmp_vb_list = tmp_vb_list->next;
+          }
+          tmp_vb_list->vb = new;
+          tmp_vb_list->next = NULL;
+        }
         break;
       default:
         break;

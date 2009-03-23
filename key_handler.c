@@ -261,7 +261,7 @@ void handle_key(int c)
   static int esc_count = 0;
   static off_t jump_addr = -1;
 
-  mvwprintw(window_list[WINDOW_STATUS], 0, 0, "%c", c);
+  mvwprintw(window_list[WINDOW_STATUS], 0, 15, "%c", c);
 
   if (c >= '0' && c <= '9')
   {
@@ -366,6 +366,9 @@ void handle_key(int c)
     jump_addr = -1;
     multiplier = 0;
   }
+
+  mvwprintw(window_list[WINDOW_STATUS], 0, 30, "addr = %08x", display_info.cursor_addr);
+
 }
 
 /* global for vis select on,
