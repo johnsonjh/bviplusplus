@@ -51,5 +51,6 @@ action_code_t action_clear_search_highlight(void);
 off_t action_get_mark(int m);
 action_code_t action_set_mark(int m);
 action_code_t action_undo(int count);
+action_code_t action_redo(int count);
 
 #endif /* __ACTIONS_H__ */

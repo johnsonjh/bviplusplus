@@ -507,6 +507,24 @@ action_code_t action_undo(int count)
     count = 1;
 
   vf_undo(current_file, count, &caddr);
+  update_display_info();
+  place_cursor(caddr, CALIGN_NONE);
+  print_screen(display_info.page_start);
+  return error;
+}
+action_code_t action_redo(int count)
+{
+  action_code_t error = E_SUCCESS;
+  off_t caddr;
+
+  if (is_visual_on())
+    return E_INVALID;
+
+  if (count == 0)
+    count = 1;
+
+  vf_redo(current_file, count, &caddr);
+  update_display_info();
   place_cursor(caddr, CALIGN_NONE);
   print_screen(display_info.page_start);
   return error;

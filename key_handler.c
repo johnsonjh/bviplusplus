@@ -92,14 +92,27 @@ action_code_t do_set(void)
 action_code_t cmd_parse(char *cbuff)
 {
   action_code_t error = E_SUCCESS;
-  char *tok;
+  char *tok = 0, *endptr = 0;
   const char delimiters[] = " =";
+  long long num = 0;
 
   //msg_box("%s", cbuff);
 
   tok = strtok(cbuff, delimiters);
   while (tok != NULL)
   {
+    if (strncmp(tok,"0x",2) == 0)
+      num = strtoll(tok, &endptr, 16);
+    else
+      num = strtoll(tok, &endptr, 10);
+    if ((endptr - tok) == strlen(tok))
+    {
+      if (address_invalid(num))
+        msg_box("Invalid jump address: %d", num);
+      else
+        action_jump_to(num);
+    }
+
     if (strncmp(tok, "set", MAX_CMD_BUF) == 0)
     {
       error = do_set();
@@ -370,6 +383,9 @@ void handle_key(int c)
       break;
     case 'u':
       action_undo(multiplier);
+      break;
+    case 'U':
+      action_redo(multiplier);
       break;
     case ':':
       do_cmd_line(c);
