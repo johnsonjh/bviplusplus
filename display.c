@@ -271,10 +271,19 @@ int print_line(off_t addr, int y)
   return ((i-1) * user_prefs[GROUPING].value) + j;
 }
 
-void place_cursor(off_t addr, cursor_alignment_e calign)
+void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 {
   int x, y;
   off_t new_screen_addr;
+
+  if (cursor == CURSOR_VIRTUAL)
+  {
+    if (address_invalid(addr) == 0)
+      display_info.virtual_cursor_addr = addr;
+    else
+      display_info.virtual_cursor_addr = display_info.cursor_addr;
+    return;
+  }
 
   if (address_invalid(addr) == 0)
   {

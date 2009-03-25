@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 
     update_panels();
     doupdate();
-    place_cursor(display_info.cursor_addr, CALIGN_NONE);
+    place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
     c = wgetch(window_list[display_info.cursor_window]);
     if (c == KEY_RESIZE)
     {

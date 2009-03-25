@@ -110,7 +110,7 @@ action_code_t cmd_parse(char *cbuff)
       if (address_invalid(num))
         msg_box("Invalid jump address: %d", num);
       else
-        action_jump_to(num);
+        action_jump_to(num, CURSOR_REAL);
     }
 
     if (strncmp(tok, "set", MAX_CMD_BUF) == 0)
@@ -272,6 +272,126 @@ action_code_t do_cmd_line(int s)
   return E_SUCCESS;
 }
 
+off_t get_next_motion_addr(void)
+{
+  int x, y, c, int_c, mark;
+  static int multiplier = 0;
+  static int esc_count = 0;
+  static off_t jump_addr = -1;
+
+  c = getch();
+  while (c != ESC)
+  {
+    if (c >= '0' && c <= '9')
+    {
+      int_c = c - '0';
+
+      if (multiplier == 0 && int_c == 0)
+      {
+        action_cursor_move_line_start(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      }
+
+      multiplier *= 10;
+      multiplier += int_c;
+
+      if (jump_addr == -1)
+        jump_addr = 0;
+      else
+        jump_addr *= 10;
+      jump_addr += int_c;
+    }
+
+    switch (c)
+    {
+      case '`':
+        mark = getch();
+        jump_addr = action_get_mark(mark);
+        action_jump_to(jump_addr, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'G':
+        if (jump_addr == -1)
+          action_cursor_move_file_end(CURSOR_VIRTUAL);
+        else
+          action_jump_to(jump_addr, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'j':
+      case KEY_DOWN:
+        action_cursor_move_down(multiplier, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'k':
+      case KEY_UP:
+        action_cursor_move_up(multiplier, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'h':
+      case KEY_LEFT:
+        action_cursor_move_left(multiplier, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'l':
+      case KEY_RIGHT:
+        action_cursor_move_right(multiplier, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case '$':
+      case KEY_END:
+        action_cursor_move_line_end(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case KEY_HOME:
+        action_cursor_move_line_start(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case BVICTRL('f'):
+      case KEY_NPAGE:
+        action_cursor_move_page_down(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case BVICTRL('b'):
+      case KEY_PPAGE:
+        action_cursor_move_page_up(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case ':':
+        do_cmd_line(c);
+        return display_info.virtual_cursor_addr;
+      case ESC:
+        return display_info.cursor_addr;
+      default:
+        break;
+    }
+
+    if (c < '0' || c > '9')
+    {
+      jump_addr = -1;
+      multiplier = 0;
+    }
+
+    flash();
+    c = getch();
+  }
+}
+
+void do_insert(int count, int c)
+{
+}
+void do_yank(int count, int c)
+{
+}
+void do_replace(int count)
+{
+}
+void do_overwrite(int count)
+{
+
+}
+
+void do_delete(int count, int c)
+{
+  off_t end_addr = INVALID_ADDR;
+
+  if (action_visual_select_check())
+    end_addr = INVALID_ADDR;
+  else
+    end_addr = get_next_motion_addr();
+
+  action_delete(count, end_addr);
+}
+
 void handle_key(int c)
 {
   int x, y, int_c, mark;
@@ -286,7 +406,7 @@ void handle_key(int c)
     int_c = c - '0';
 
     if (multiplier == 0 && int_c == 0)
-      action_cursor_move_line_start();
+      action_cursor_move_line_start(CURSOR_REAL);
 
     multiplier *= 10;
     multiplier += int_c;
@@ -306,7 +426,7 @@ void handle_key(int c)
     case '`':
       mark = getch();
       jump_addr = action_get_mark(mark);
-      action_jump_to(jump_addr);
+      action_jump_to(jump_addr, CURSOR_REAL);
       break;
     case 'm':
       mark = getch();
@@ -314,51 +434,51 @@ void handle_key(int c)
       break;
     case 'G':
       if (jump_addr == -1)
-        action_cursor_move_file_end();
+        action_cursor_move_file_end(CURSOR_REAL);
       else
-        action_jump_to(jump_addr);
+        action_jump_to(jump_addr, CURSOR_REAL);
       jump_addr = -1;
       break;
     case 'j':
     case KEY_DOWN:
-      action_cursor_move_down(multiplier);
+      action_cursor_move_down(multiplier, CURSOR_REAL);
       break;
     case 'k':
     case KEY_UP:
-      action_cursor_move_up(multiplier);
+      action_cursor_move_up(multiplier, CURSOR_REAL);
       break;
     case 'h':
     case KEY_LEFT:
-      action_cursor_move_left(multiplier);
+      action_cursor_move_left(multiplier, CURSOR_REAL);
       break;
     case 'l':
     case KEY_RIGHT:
-      action_cursor_move_right(multiplier);
+      action_cursor_move_right(multiplier, CURSOR_REAL);
       break;
     case '$':
     case KEY_END:
-      action_cursor_move_line_end();
+      action_cursor_move_line_end(CURSOR_REAL);
       break;
     case KEY_HOME:
-      action_cursor_move_line_start();
+      action_cursor_move_line_start(CURSOR_REAL);
       break;
     case TAB:
       action_cursor_toggle_hex_ascii();
       break;
     case BVICTRL('f'):
     case KEY_NPAGE:
-      action_page_down();
+      action_cursor_move_page_down(CURSOR_REAL);
       break;
     case BVICTRL('b'):
     case KEY_PPAGE:
-      action_page_up();
+      action_cursor_move_page_up(CURSOR_REAL);
       break;
     case 'X':
-      action_cursor_move_left(multiplier);
+      action_cursor_move_left(multiplier, CURSOR_REAL);
       /* no break */
     case 'x':
       action_yank(multiplier);
-      action_delete(multiplier);
+      action_delete(multiplier, INVALID_ADDR);
       break;
     case 'v':
       action_visual_select_toggle();
@@ -366,35 +486,36 @@ void handle_key(int c)
 /* These are a real problem because they do not translate well between vi/emacs modes */
     case 'i':
     case 'I':
-      //action_insert_before(multiplier);
-      break;
     case 'a':
     case 'A':
-      //action_insert_after(multiplier);
+    case 'c':
+    case 'C':
+    case 's':
+    case 'S':
+      do_insert(multiplier, c);
       break;
+    case 'y': /* no separate behavior from Y, right now */
+    case 'Y':
+      do_yank(multiplier, c);
+      break;
+    case 'r':
+      do_replace(multiplier);
+      break;
+    case 'R':
+      do_overwrite(multiplier);
+      break;
+    case 'd':
+    case 'D':
+      do_delete(multiplier, c);
+      break;
+/*************************************************************************************/
+/*************************************************************************************/
     case 'p':
       action_paste_after(multiplier);
       break;
     case 'P':
       action_paste_before(multiplier);
       break;
-    case 'y': /* no separate behavior from Y, right now */
-    case 'Y':
-      action_yank(multiplier);
-      break;
-    case 'r':
-      action_replace(multiplier);
-      break;
-    case 'R':
-      action_overwrite(multiplier);
-      break;
-    case 'c':
-    case 'C':
-    case 's':
-    case 'S':
-      action_replace_insert(multiplier);
-      break;
-/*************************************************************************************/
     case '"':
       mark = getch();
       action_set_yank_register(mark);

@@ -17,6 +17,7 @@ typedef struct display_info_s
   off_t    page_start;
   off_t    page_end;
   off_t    cursor_addr;
+  off_t    virtual_cursor_addr;
   off_t visual_select_addr;
   window_t cursor_window;
   int      max_cols;
@@ -31,6 +32,13 @@ typedef enum cursor_alignment
   CALIGN_NONE,
 } cursor_alignment_e;
 
+typedef enum cursor_e
+{
+  CURSOR_REAL,
+  CURSOR_VIRTUAL
+} cursor_t;
+
+
 
 extern display_info_t display_info;
 
@@ -43,7 +51,7 @@ int is_visual_on(void);
 int visual_span(void);
 off_t visual_addr(void);
 int print_line(off_t addr, int y);
-void place_cursor(off_t addr, cursor_alignment_e calign);
+void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor);
 void print_screen(off_t addr);
 
 #endif /* __DISPLAY_H__ */
