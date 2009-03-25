@@ -37,8 +37,6 @@ action_code_t action_clean_yank(void);
 action_code_t action_yank(int count);
 action_code_t action_append(void);
 action_code_t action_replace(int count);
-action_code_t action_replace_insert(int count);
-action_code_t action_overwrite(int count);
 action_code_t action_save(void);
 action_code_t action_save_as(void);
 action_code_t action_discard_changes(void);

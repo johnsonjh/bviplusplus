@@ -366,6 +366,26 @@ off_t get_next_motion_addr(void)
   }
 }
 
+
+int is_bin(c)
+{
+  if (c != '0' && c != '1')
+    return 0;
+  return 1;
+}
+int is_hex(int c)
+{
+  c = toupper(c);
+
+  if (c < '0')
+    return 0;
+  if (c > '9' && c < 'A')
+    return 0;
+  if (c > 'F')
+    return 0;
+
+  return 1;
+}
 void do_insert(int count, int c)
 {
 }
@@ -374,6 +394,124 @@ void do_yank(int count, int c)
 }
 void do_replace(int count)
 {
+  int hx, hy, ax, ay, c, i, char_count = 0, chars_per_byte = 0;
+  char tmp[3], tmpc;
+  char replace_buf[256];
+  off_t tmp_addr = 0;
+
+  if (count == 0)
+    count = 1;
+
+  if (display_info.cursor_window == WINDOW_HEX)
+  {
+    hy = get_y_from_addr(display_info.cursor_addr);
+    hx = get_x_from_addr(display_info.cursor_addr);
+    display_info.cursor_window = WINDOW_ASCII;
+    ay = get_y_from_addr(display_info.cursor_addr);
+    ax = get_x_from_addr(display_info.cursor_addr);
+    display_info.cursor_window = WINDOW_HEX;
+    chars_per_byte = 2;
+  }
+  else
+  {
+    display_info.cursor_window = WINDOW_HEX;
+    hy = get_y_from_addr(display_info.cursor_addr);
+    hx = get_x_from_addr(display_info.cursor_addr);
+    display_info.cursor_window = WINDOW_ASCII;
+    ay = get_y_from_addr(display_info.cursor_addr);
+    ax = get_x_from_addr(display_info.cursor_addr);
+    chars_per_byte = 1;
+  }
+
+  for (i=0; i<user_prefs[GROUPING].value; i++)
+  {
+    mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), ' ');
+    mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i)+1, ' ');
+    mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, ' ');
+  }
+  if (display_info.cursor_window == WINDOW_HEX)
+    wmove(window_list[WINDOW_HEX], hy, hx);
+  else
+    wmove(window_list[WINDOW_ASCII], ay, ax);
+
+  while(char_count < user_prefs[GROUPING].value * chars_per_byte)
+  {
+    update_panels();
+    doupdate();
+    c = getch();
+    if (c == ESC)
+      break;
+
+    if (display_info.cursor_window == WINDOW_HEX)
+    {
+      if (is_hex(c) == 0)
+      {
+        flash();
+        continue;
+      }
+      tmp[char_count % chars_per_byte] = (char)c;
+      char_count++;
+      if ((char_count % chars_per_byte) == 0)
+      {
+        tmp[2] = 0;
+        tmpc = (char)strtol(tmp, NULL, 16);
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2-1, tmp[0]);
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2,   tmp[1]);
+        if (isprint(tmpc))
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, tmpc);
+        else
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, '.');
+
+        replace_buf[char_count / chars_per_byte - 1] = tmpc;
+
+      }
+    }
+    else
+    {
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2-1, (c&0xF)<<4);
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2,   (c&0xF));
+        if (isprint(tmpc))
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, tmpc);
+        else
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, '.');
+
+        replace_buf[char_count] = (char)c;
+        char_count++;
+    }
+  }
+  if (char_count >= user_prefs[GROUPING].value * chars_per_byte)
+  {
+    if (is_visual_on())
+    {
+      if (display_info.cursor_addr > display_info.visual_select_addr)
+      {
+        tmp_addr = display_info.visual_select_addr;
+        count = display_info.cursor_addr - display_info.visual_select_addr + 1;
+      }
+      else
+      {
+        tmp_addr = display_info.cursor_addr;
+        count = display_info.visual_select_addr - display_info.cursor_addr + 1;
+      }
+      count /= user_prefs[GROUPING].value;
+      action_visual_select_off();
+    }
+    else
+    {
+      tmp_addr = display_info.cursor_addr;
+    }
+
+    for (i=0; i<count; i++)
+    {
+      if (address_invalid(tmp_addr) || address_invalid(tmp_addr + user_prefs[GROUPING].value))
+        break;
+      vf_replace(current_file, replace_buf, tmp_addr, user_prefs[GROUPING].value);
+      tmp_addr += user_prefs[GROUPING].value;
+    }
+  }
+
+  print_screen(display_info.page_start);
+
 }
 void do_overwrite(int count)
 {

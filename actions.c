@@ -276,60 +276,6 @@ action_code_t action_insert_before(int count, char *buf, int len)
   return error;
 }
 
-#define DEFAULT_INSERT_BUF_SIZE 512
-int is_bin(c)
-{
-  if (c != '0' && c != '1')
-    return 0;
-  return 1;
-}
-int is_hex(int c)
-{
-  c = toupper(c);
-
-  if (c < '0')
-    return 0;
-  if (c > '9' && c < 'A')
-    return 0;
-  if (c > 'F')
-    return 0;
-
-  return 1;
-
-#if 0
-  action_code_t error = E_SUCCESS;
-  char *buf, *screen, tmp_buf[MAX_CMD_BUF];
-  int c, buf_size = DEFAULT_INSERT_BUF_SIZE, insert_len = 0, screen_size;
-
-  buf = (char *)malloc(buf_size);
-  screen_size = HEX_COLS * user_prefs[GROUPING].value * HEX_LINES;
-  screen = (char *)malloc(screen_size);
-
-  vf_get_buf(current_file, screen, display_info.page_start, screen_size);
-
-  /* create a blank at addr and move the rest of the screen down a byte */
-
-  c = getch();
-  while (c != ESC && c != KEY_ENTER)
-  {
-    if (display_info.cursor_window == WINDOW_HEX)
-    {
-      if (user_prefs[DISPLAY_BINARY].value)
-      {
-        if (is_bin(c))
-      }
-      else
-      {
-        if (is_hex(c))
-          mvwaddch(window_list[WINDOW_HEX], y, x, c);
-      }
-    }
-  }
-#endif
-
-
-}
-
 action_code_t action_insert_after(int count, char *buf, int len)
 {
   action_code_t error = E_SUCCESS;
@@ -494,16 +440,6 @@ action_code_t action_append(void)
   return error;
 }
 action_code_t action_replace(int count)
-{
-  action_code_t error = E_SUCCESS;
-  return error;
-}
-action_code_t action_replace_insert(int count)
-{
-  action_code_t error = E_SUCCESS;
-  return error;
-}
-action_code_t action_overwrite(int count)
 {
   action_code_t error = E_SUCCESS;
   return error;
