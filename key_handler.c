@@ -117,6 +117,20 @@ action_code_t cmd_parse(char *cbuff)
     {
       error = do_set();
     }
+    if (strncmp(tok, "next", MAX_CMD_BUF) == 0)
+    {
+      current_file = vf_get_next_fm_from_ring(file_ring);
+      reset_display_info();
+      print_screen(display_info.page_start);
+    }
+    if ((strncmp(tok, "prev",     MAX_CMD_BUF) == 0) ||
+        (strncmp(tok, "previous", MAX_CMD_BUF) == 0) ||
+        (strncmp(tok, "last",     MAX_CMD_BUF) == 0))
+    {
+      current_file = vf_get_last_fm_from_ring(file_ring);
+      reset_display_info();
+      print_screen(display_info.page_start);
+    }
     if (strncmp(tok, "q", MAX_CMD_BUF) == 0)
     {
       app_state.quit = TRUE;
