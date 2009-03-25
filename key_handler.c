@@ -349,7 +349,7 @@ void handle_key(int c)
     case 'v':
       action_visual_select_toggle();
       break;
-/**/
+/* These are a real problem because they do not translate well between vi/emacs modes */
     case 'i':
     case 'I':
       //action_insert_before(multiplier);
@@ -379,7 +379,7 @@ void handle_key(int c)
     case 's':
     case 'S':
       action_replace_insert(multiplier);
-/**/
+/*************************************************************************************/
       break;
     case 'u':
       action_undo(multiplier);

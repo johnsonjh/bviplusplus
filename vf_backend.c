@@ -225,6 +225,9 @@ static void _cleanup_undo(vbuf_undo_list_t * undo_list)
   ---------------------------*/
 void cleanup(file_manager_t * f)
 {
+  if (NULL == f)
+    return;
+
   _cleanup_vbuf(f->fm.first_child);
   f->fm.first_child = NULL;
   _cleanup_undo(f->ul.last);

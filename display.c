@@ -181,14 +181,14 @@ int print_line(off_t addr, int y)
        addr_text[ADDR_DIGITS + 1],
        bin_text[9];
 
-  if (address_invalid(addr))
-    return 0;
-
   y++; /* line 0 is the box border */
 
   /* print address */
   sprintf(addr_text, "%08X", addr);
   mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
+
+  if (address_invalid(addr))
+    return 0;
 
   for (i=0; i<HEX_COLS; i++)
   {
@@ -301,6 +301,9 @@ void place_cursor(off_t addr, cursor_alignment_e calign)
     display_info.cursor_addr = addr;
   }
 
+  if (display_info.file_size == 0)
+    wmove(window_list[display_info.cursor_window], 1, 1);
+
   if (is_visual_on())
     print_screen(display_info.page_start);
 
@@ -322,9 +325,9 @@ void print_screen(off_t addr)
 
   for (i=0; i<HEX_LINES; i++)
   {
-    if (address_invalid(line_addr))
-      break;
     line_addr += print_line(line_addr, i);
+    if (address_invalid(line_addr))
+      break; /* break after print_line to print the address */
   }
 }
 

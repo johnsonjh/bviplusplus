@@ -19,6 +19,16 @@ int main(int argc, char **argv)
 {
   int i, c;
 
+  file_ring = vf_create_fm_ring();
+  for (i=1; i<argc; i++)
+  {
+    printf("argv[%d] = %s\n", i, argv[i]);
+    current_file = vf_add_fm_to_ring(file_ring);
+    if (vf_init(current_file, argv[i]) == FALSE)
+      fprintf(stderr, "Could not open %s\n", argv[i]);
+  }
+  current_file = vf_get_next_fm_from_ring(file_ring);
+
   initscr();
   keypad(stdscr, TRUE);
   scrollok(stdscr, TRUE);
@@ -29,10 +39,9 @@ int main(int argc, char **argv)
   start_color();      /* Start color      */
   init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 
-  app_state.quit = FALSE;
-  vf_init(&file_manager, "test.bin");
-  current_file = &file_manager;
   reset_display_info();
+
+  app_state.quit = FALSE;
 
 //#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
@@ -81,7 +90,9 @@ int main(int argc, char **argv)
 
   destroy_screen();
   endwin();
-  vf_term(&file_manager);
+
+  vf_destroy_fm_ring(file_ring);
+
   return 0;
 }
 

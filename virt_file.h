@@ -92,10 +92,26 @@ struct vf_stat_s
   off_t file_size;
 };
 
+typedef struct vf_ring_s vf_ring_t;
+struct vf_ring_s
+{
+  vf_ring_t *next;
+  vf_ring_t *last;
+  file_manager_t fm;
+};
+
 
 /****************
    PROTOTYPES
  ***************/
+vf_ring_t      *vf_create_fm_ring(void);
+BOOL            vf_destroy_fm_ring(vf_ring_t *r);
+file_manager_t *vf_add_fm_to_ring(vf_ring_t *r);
+BOOL vf_remove_fm_from_ring(vf_ring_t *r, file_manager_t *fm);
+file_manager_t *vf_get_next_fm_from_ring(vf_ring_t *r);
+file_manager_t *vf_get_last_fm_from_ring(vf_ring_t *r);
+file_manager_t *vf_get_current_fm_from_ring(vf_ring_t *r);
+
 BOOL   vf_init(file_manager_t * f, const char *file_name);
 void   vf_term(file_manager_t * f);
 void   vf_stat(file_manager_t * f, vf_stat_t * s);
@@ -108,6 +124,7 @@ size_t vf_delete(file_manager_t * f, off_t offset, size_t len);
 int    vf_undo(file_manager_t * f, int count, off_t * undo_addr);
 int    vf_redo(file_manager_t * f, int count, off_t * redo_addr);
 BOOL   vf_need_save(file_manager_t * f);
+BOOL   vf_create_file(file_manager_t * f, const char *file_name);
 off_t  vf_save(file_manager_t * f, char *name, int *complete);
 
 #endif /* __VIRT_FILE_H */

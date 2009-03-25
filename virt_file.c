@@ -28,6 +28,146 @@
 /****************
     FUNCTIONS
  ***************/
+vf_ring_t *vf_create_fm_ring(void)
+{
+  vf_ring_t *tmp;
+  tmp = (vf_ring_t *)calloc(1, sizeof(vf_ring_t));
+  return tmp;
+}
+BOOL vf_destroy_fm_ring(vf_ring_t *r)
+{
+  vf_ring_t *tmp, *tmp2;
+
+  if (r == NULL)
+    return FALSE;
+
+  tmp = r->next;
+
+  while(tmp != NULL)
+  {
+    vf_term(&tmp->fm);
+
+    if (tmp->next != NULL)
+      tmp->next->last = tmp->last;
+
+    if (tmp->last != NULL)
+      tmp->last->next = tmp->next;
+
+    if (tmp == tmp->next)
+      tmp2 = NULL;
+    else
+      tmp2 = tmp->next;
+
+    free(tmp);
+
+    tmp = tmp2;
+  }
+
+  free(r);
+
+  return TRUE;
+}
+file_manager_t *vf_add_fm_to_ring(vf_ring_t *r)
+{
+  vf_ring_t *tmp, *new;
+
+  new = (vf_ring_t *)calloc(1, sizeof(vf_ring_t));
+
+  if (r->next == NULL)
+  {
+    r->next = new;
+    new->next = new;
+    new->last = new;
+  }
+  else
+  {
+    tmp = r->next;
+    new->next = tmp->next;
+    new->last = tmp;
+    tmp->next->last = new;
+    tmp->next = new;
+  }
+
+  return &new->fm;
+}
+BOOL vf_remove_fm_from_ring(vf_ring_t *r, file_manager_t *fm)
+{
+  vf_ring_t *tmp;
+
+  if (r == NULL)
+    return FALSE;
+
+  if (r->next == NULL)
+    return FALSE;
+
+  tmp = r->next;
+
+  if (fm == NULL)
+  {
+    tmp->last->next = tmp->next;
+    tmp->next->last = tmp->last;
+    r->next = tmp->next;
+    vf_term(&tmp->fm);
+    free(tmp);
+    return TRUE;
+  }
+  else
+  {
+    while (tmp != NULL)
+    {
+      if (&tmp->fm == fm)
+      {
+        if (r->next == tmp)
+          r->next = tmp->next;
+        tmp->last->next = tmp->next;
+        tmp->next->last = tmp->last;
+        vf_term(fm);
+        free(tmp);
+        return TRUE;
+      }
+      tmp = tmp->next;
+      if (tmp == r->next)
+        return FALSE;
+    }
+  }
+  return FALSE;
+}
+file_manager_t *vf_get_next_fm_from_ring(vf_ring_t *r)
+{
+  if (r == NULL)
+    return NULL;
+
+  if (r->next == NULL)
+    return NULL;
+
+  r->next = r->next->next;
+
+  return &r->next->fm;
+}
+file_manager_t *vf_get_last_fm_from_ring(vf_ring_t *r)
+{
+  if (r == NULL)
+    return NULL;
+
+  if (r->next == NULL)
+    return NULL;
+
+  r->next = r->next->last;
+
+  return &r->next->fm;
+}
+file_manager_t *vf_get_current_fm_from_ring(vf_ring_t *r)
+{
+  if (r == NULL)
+    return NULL;
+
+  if (r->next == NULL)
+    return NULL;
+
+  return &r->next->fm;
+}
+
+
 /*---------------------------
 
   ---------------------------*/
@@ -61,6 +201,12 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
       f->fm.size = stat_buf.st_size;
     }
   }
+  else
+  {
+    f->fname[0] = 0;
+    f->fm.fp = NULL;
+    f->fm.size = 0;
+  }
 
   f->fm.parent = NULL;
   f->fm.first_child = NULL;
@@ -84,6 +230,10 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
   ---------------------------*/
 void vf_term(file_manager_t * f)
 {
+  if (NULL == f)
+    return;
+
+  cleanup(f);
   if (NULL != f->fm.fp)
   {
     fclose(f->fm.fp);
@@ -94,8 +244,44 @@ void vf_term(file_manager_t * f)
 
 void vf_stat(file_manager_t * f, vf_stat_t * s)
 {
+  if (s == NULL)
+    return;
+
+  s->file_size = 0;
+
+  if (f == NULL)
+    return;
+
   s->file_size = f->fm.size;
 }
+
+/*---------------------------
+Call this before saving when you have made edits to an initialized
+file_manager_t that is not linked to a file.
+  ---------------------------*/
+BOOL vf_create_file(file_manager_t * f, const char *file_name)
+{
+  struct stat stat_buf;
+
+  if (NULL == file_name)
+    return FALSE;
+
+  snprintf(f->fname, MAX_PATH_LEN - 1, "%s", file_name);
+  f->fname[MAX_PATH_LEN] = 0;
+
+  f->fm.fp = fopen(f->fname, "r");
+  if(NULL == f->fm.fp)
+    return FALSE;
+
+  if (stat(f->fname, &stat_buf))
+    return FALSE;
+  else
+    f->fm.size = stat_buf.st_size;
+
+  return FALSE;
+}
+
+
 /*---------------------------
 
   ---------------------------*/
@@ -118,6 +304,9 @@ off_t vf_save(file_manager_t * f, char *name, int *complete)
   *complete = 0;
 
   prune(&f->ul);
+
+  if (f->fm.fp == NULL)
+    return
 
   fclose(f->fm.fp);
   f->fm.fp = fopen(f->fname, "r+");

@@ -8,10 +8,10 @@ typedef struct app_state_s
   BOOL    quit;
 } app_state_t;
 
-extern app_state_t    app_state;
+extern app_state_t     app_state;
 extern file_manager_t *current_file;
-extern file_manager_t file_manager;
-extern vf_stat_t vfstat;
+vf_ring_t             *file_ring;
+extern vf_stat_t       vfstat;
 
 #endif /* __APP_STATE_H__ */
 
