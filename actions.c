@@ -218,9 +218,12 @@ action_code_t action_delete(int count)
     addr = display_info.cursor_addr;
   }
 
-  vf_delete(current_file, addr, count);
-  update_display_info();
-  print_screen(display_info.page_start);
+  if (address_invalid(addr) == 0)
+  {
+    vf_delete(current_file, addr, count);
+    update_display_info();
+    print_screen(display_info.page_start);
+  }
 
   return error;
 }
