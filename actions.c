@@ -1,10 +1,21 @@
+#include <stdlib.h>
 #include "actions.h"
 #include "display.h"
 #include "virt_file.h"
 #include "app_state.h"
 
 #define MARK_LIST_SIZE (26*2)
-off_t mark_list[MARK_LIST_SIZE ];
+#define NUM_YANK_REGISTERS (26*2 + 10)
+
+typedef struct yank_buf_s
+{
+  char *buf;
+  int len;
+} yank_buf_t;
+
+static off_t mark_list[MARK_LIST_SIZE];
+static yank_buf_t yank_buf[NUM_YANK_REGISTERS];
+static int yank_register = 0;
 
 
 /** UP **/
@@ -291,6 +302,7 @@ int is_hex(int c)
 
 
 }
+
 action_code_t action_insert_after(int count, char *buf, int len)
 {
   action_code_t error = E_SUCCESS;
@@ -301,23 +313,145 @@ action_code_t action_insert_after(int count, char *buf, int len)
   print_screen(display_info.page_start);
   return error;
 }
+
+action_code_t action_set_yank_register(int c)
+{
+  action_code_t error = E_SUCCESS;
+
+  if (c >= '0' && c <= '9')
+  {
+    c -= '0';
+    yank_register = c;
+  }
+  else if (c >= 'A' && c <= 'Z')
+  {
+    c -= 'A';
+    yank_register = c;
+  }
+  else if (c >= 'a' && c <= 'z')
+  {
+    c -= 'a';
+    c += 26;
+    yank_register = c;
+  }
+  else
+  {
+    error = E_INVALID;
+  }
+  return error;
+}
+
 action_code_t action_paste_before(int count)
 {
   action_code_t error = E_SUCCESS;
+  int i;
+
   if (is_visual_on())
     return E_INVALID;
+
+  if (address_invalid(display_info.cursor_addr))
+  {
+    if (display_info.file_size == 0)
+    {
+      for (i=0; i<count; i++)
+      {
+        vf_insert_before(current_file,
+                         yank_buf[yank_register].buf,
+                         0,
+                         yank_buf[yank_register].len);
+      }
+    }
+    else
+    {
+      error = E_INVALID;
+    }
+  }
+  else
+  {
+    for (i=0; i<count; i++)
+    {
+      vf_insert_before(current_file,
+                       yank_buf[yank_register].buf,
+                       display_info.cursor_addr,
+                       yank_buf[yank_register].len);
+    }
+  }
+
   return error;
 }
 action_code_t action_paste_after(int count)
 {
   action_code_t error = E_SUCCESS;
+  int i;
+
   if (is_visual_on())
     return E_INVALID;
+
+  if (address_invalid(display_info.cursor_addr))
+  {
+    if (display_info.file_size == 0)
+    {
+      for (i=0; i<count; i++)
+      {
+        vf_insert_before(current_file,
+                         yank_buf[yank_register].buf,
+                         0,
+                         yank_buf[yank_register].len);
+      }
+    }
+    else
+    {
+      error = E_INVALID;
+    }
+  }
+  else
+  {
+    for (i=0; i<count; i++)
+    {
+      vf_insert_after(current_file,
+                      yank_buf[yank_register].buf,
+                      display_info.cursor_addr,
+                      yank_buf[yank_register].len);
+    }
+  }
+
   return error;
 }
+
+action_code_t action_init_yank(void)
+{
+  action_code_t error = E_SUCCESS;
+  int i;
+
+  for (i=0; i<NUM_YANK_REGISTERS; i++)
+  {
+    yank_buf[i].buf = NULL;
+    yank_buf[i].len = 0;
+  }
+
+  return error;
+}
+action_code_t action_clean_yank(void)
+{
+  action_code_t error = E_SUCCESS;
+  int i;
+
+  for (i=0; i<NUM_YANK_REGISTERS; i++)
+  {
+    if (yank_buf[i].len != 0)
+      free(yank_buf[i].buf);
+
+    yank_buf[i].buf = NULL;
+    yank_buf[i].len = 0;
+  }
+
+  return error;
+}
+
 action_code_t action_yank(int count)
 {
   action_code_t error = E_SUCCESS;
+  
   return error;
 }
 action_code_t action_cut(int count)

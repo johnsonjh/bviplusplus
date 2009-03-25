@@ -393,8 +393,11 @@ void handle_key(int c)
     case 's':
     case 'S':
       action_replace_insert(multiplier);
-/*************************************************************************************/
       break;
+/*************************************************************************************/
+    case '"':
+      mark = getch();
+      action_set_yank_register(mark);
     case 'u':
       action_undo(multiplier);
       break;

@@ -27,7 +27,8 @@ int main(int argc, char **argv)
     if (vf_init(current_file, argv[i]) == FALSE)
       fprintf(stderr, "Could not open %s\n", argv[i]);
   }
-  current_file = vf_get_next_fm_from_ring(file_ring);
+  current_file = vf_get_current_fm_from_ring(file_ring);
+  action_init_yank();
 
   initscr();
   keypad(stdscr, TRUE);
@@ -91,6 +92,7 @@ int main(int argc, char **argv)
   destroy_screen();
   endwin();
 
+  action_clean_yank();
   vf_destroy_fm_ring(file_ring);
 
   return 0;
