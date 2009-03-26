@@ -455,8 +455,8 @@ void do_replace(int count)
       {
         tmp[2] = 0;
         tmpc = (char)strtol(tmp, NULL, 16);
-        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2-1, tmp[0]);
-        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2,   tmp[1]);
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count-2,  tmp[0]);
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count-1, tmp[1]);
         if (isprint(tmpc))
           mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, tmpc);
         else
@@ -486,12 +486,12 @@ void do_replace(int count)
       if (display_info.cursor_addr > display_info.visual_select_addr)
       {
         tmp_addr = display_info.visual_select_addr;
-        count = display_info.cursor_addr - display_info.visual_select_addr + 1;
+        count = display_info.cursor_addr - display_info.visual_select_addr + user_prefs[GROUPING].value;
       }
       else
       {
         tmp_addr = display_info.cursor_addr;
-        count = display_info.visual_select_addr - display_info.cursor_addr + 1;
+        count = display_info.visual_select_addr - display_info.cursor_addr + user_prefs[GROUPING].value;
       }
       count /= user_prefs[GROUPING].value;
       action_visual_select_off();

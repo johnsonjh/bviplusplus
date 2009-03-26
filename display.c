@@ -89,6 +89,7 @@ void update_display_info(void)
   display_info.file_size = vfstat.file_size;
   display_info.page_end = PAGE_END;
   display_info.has_color = has_colors();
+  place_cursor(display_info.cursor_addr - (display_info.cursor_addr % user_prefs[GROUPING].value), CALIGN_NONE, CURSOR_REAL);
 }
 
 void search_hl(BOOL on)
@@ -208,9 +209,9 @@ int print_line(off_t addr, int y)
       if (is_visual_on())
       {
         if ((display_info.visual_select_addr <= byte_addr &&
-             display_info.cursor_addr >= byte_addr)          ||
+             display_info.cursor_addr + user_prefs[GROUPING].value - 1 >= byte_addr)        ||
             (display_info.cursor_addr <= byte_addr        &&
-             display_info.visual_select_addr >= byte_addr))
+             display_info.visual_select_addr + user_prefs[GROUPING].value - 1 >= byte_addr))
         {
           visual_select_hl(TRUE);
         }
