@@ -642,22 +642,21 @@ void handle_key(int c)
     case 'S':
       do_insert(multiplier, c);
       break;
-    case 'y': /* no separate behavior from Y, right now */
-    case 'Y':
-      do_yank(multiplier, c);
+    case 'R':
+      do_overwrite(multiplier);
       break;
+/*************************************************************************************/
     case 'r':
       do_replace(multiplier);
       break;
-    case 'R':
-      do_overwrite(multiplier);
+    case 'y': /* no separate behavior from Y, right now */
+    case 'Y':
+      do_yank(multiplier, c);
       break;
     case 'd':
     case 'D':
       do_delete(multiplier, c);
       break;
-/*************************************************************************************/
-/*************************************************************************************/
     case 'p':
       action_paste_after(multiplier);
       break;
@@ -705,27 +704,10 @@ void handle_key(int c)
 
 }
 
-/* global for vis select on,
- * modify screen print so that:
- * if (cursor < vis_byte) {
- *   if (byte >= cursor && byte <= vis_byte)
- *      set highlight on
- *   else
- *      set highlight off
- * }
- * else {
- *   if (byte <= cursor && byte >= vis_byte) {
- *      set highlight on
- *   else
- *      set highlight off
- *   }
- * }
- * Define separate actions for each thing (cut, copy, etc.) if vis select is on (operate on range)
- * Or, always operate on range, and if vis select is set update range every time the cursor moves
+/*
  * use buffering for the screen mem, will help for doing group inserts
- * Remember to add tab completion, marks, macros, and a good system for command line parsing, and a good system for settings and .rc files
+ * Remember to add tab completion, macros, and a good system for command line parsing, .rc files
  * Add options: columns, search hl, search ignorecase
  * Check bvi man page for min list of command line commands to support
- * Fix jump to end of line in case of last line where bytes do not go to end (and for cols pref is set?)
  */
 
