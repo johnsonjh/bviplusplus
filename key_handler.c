@@ -391,6 +391,16 @@ void do_insert(int count, int c)
 }
 void do_yank(int count, int c)
 {
+  off_t end_addr = INVALID_ADDR;
+
+  if (action_visual_select_check())
+    end_addr = INVALID_ADDR;
+  else if (c == 'Y')
+    end_addr = display_info.cursor_addr;
+  else
+    end_addr = get_next_motion_addr();
+
+  action_yank(count, end_addr);
 }
 void do_replace(int count)
 {
@@ -615,7 +625,7 @@ void handle_key(int c)
       action_cursor_move_left(multiplier, CURSOR_REAL);
       /* no break */
     case 'x':
-      action_yank(multiplier);
+      action_yank(multiplier, INVALID_ADDR);
       action_delete(multiplier, INVALID_ADDR);
       break;
     case 'v':

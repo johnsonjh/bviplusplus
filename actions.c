@@ -248,7 +248,7 @@ action_code_t action_delete(int count, off_t end_addr)
     }
   }
 
-  if (address_invalid(addr) == 0)
+  if (address_invalid(addr) == 0 && address_invalid(addr+count) == 0)
   {
     vf_delete(current_file, addr, count);
     update_display_info();
@@ -322,6 +322,9 @@ action_code_t action_paste_before(int count)
   if (is_visual_on())
     return E_INVALID;
 
+  if (count == 0)
+    count = 1;
+
   if (address_invalid(display_info.cursor_addr))
   {
     if (display_info.file_size == 0)
@@ -350,6 +353,11 @@ action_code_t action_paste_before(int count)
     }
   }
 
+  update_display_info();
+  place_cursor(display_info.cursor_addr + yank_buf[yank_register].len - 1,
+               CALIGN_NONE, CURSOR_REAL);
+  print_screen(display_info.page_start);
+
   return error;
 }
 action_code_t action_paste_after(int count)
@@ -359,6 +367,9 @@ action_code_t action_paste_after(int count)
 
   if (is_visual_on())
     return E_INVALID;
+
+  if (count == 0)
+    count = 1;
 
   if (address_invalid(display_info.cursor_addr))
   {
@@ -387,6 +398,11 @@ action_code_t action_paste_after(int count)
                       yank_buf[yank_register].len);
     }
   }
+
+  update_display_info();
+  place_cursor(display_info.cursor_addr + yank_buf[yank_register].len,
+               CALIGN_NONE, CURSOR_REAL);
+  print_screen(display_info.page_start);
 
   return error;
 }
@@ -421,15 +437,58 @@ action_code_t action_clean_yank(void)
   return error;
 }
 
-action_code_t action_yank(int count)
+action_code_t action_yank(int count, off_t end_addr)
 {
   action_code_t error = E_SUCCESS;
-  
-  return error;
-}
-action_code_t action_cut(int count)
-{
-  action_code_t error = E_SUCCESS;
+  off_t addr;
+  int range;
+
+  if (is_visual_on())
+  {
+    count = visual_span();
+    addr = visual_addr();
+    action_visual_select_off();
+  }
+  else
+  {
+    if (count == 0)
+      count = 1;
+
+    if (end_addr != INVALID_ADDR)
+    {
+      if (end_addr > display_info.cursor_addr)
+      {
+        addr = display_info.cursor_addr;
+        range = end_addr - display_info.cursor_addr + 1;
+        count *= range;
+      }
+      else
+      {
+        addr = end_addr;
+        range = display_info.cursor_addr - end_addr + 1;
+        count *= range;
+      }
+    }
+    else
+    {
+      addr = display_info.cursor_addr;
+    }
+  }
+
+  if (address_invalid(addr) == 0 && address_invalid(addr+count) == 0)
+  {
+    if (yank_buf[yank_register].len != 0)
+      free(yank_buf[yank_register].buf);
+
+    yank_buf[yank_register].buf = malloc(count);
+    yank_buf[yank_register].len = count;
+
+    vf_get_buf(current_file, yank_buf[yank_register].buf, addr, count);
+
+    place_cursor(addr, CALIGN_NONE, CURSOR_REAL);
+
+  }
+
   return error;
 }
 action_code_t action_append(void)
