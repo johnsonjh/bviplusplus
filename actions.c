@@ -3,6 +3,7 @@
 #include "display.h"
 #include "virt_file.h"
 #include "app_state.h"
+#include "user_prefs.h"
 
 #define MARK_LIST_SIZE (26*2)
 #define NUM_YANK_REGISTERS (26*2 + 10)

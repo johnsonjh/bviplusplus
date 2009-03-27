@@ -1,7 +1,7 @@
 #include <ncurses.h>
 #include <string.h>
+#include <stdlib.h>
 #include "key_handler.h"
-#include "windows.h"
 #include "user_prefs.h"
 #include "display.h"
 #include "actions.h"
@@ -388,6 +388,43 @@ int is_hex(int c)
 }
 void do_insert(int count, int c)
 {
+  WINDOW *insbox;
+  char *ins_buf;
+  char insbox_line[MAX_INSERT_BOX_LEN];
+  int i, c2, ins_buf_size = 4, ins_size = 0;
+
+  ins_buf = (char *)calloc(1, ins_buf_size);
+
+
+  insbox = newwin(INSERT_BOX_H, INSERT_BOX_W, INSERT_BOX_Y, INSERT_BOX_X);
+  box(insbox, 0, 0);
+  snprintf(insbox_line, MAX_INSERT_BOX_LEN, "[Press ESC when done]");
+  mvwaddstr(insbox, 2, 1, insbox_line);
+  wmove(insbox, 1, 1);
+  wrefresh(insbox);
+
+  c2 = getch();
+
+  while(c2 != ESC)
+  {
+    
+    c2 = getch();
+  }
+
+  if (ins_size)
+  {
+    if (count == 0)
+      count++;
+    for(i=0; i<count; i++)
+      action_insert_before(0,ins_buf,0);
+  }
+
+  free(ins_buf);
+
+  delwin(insbox);
+  place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
+  print_screen(display_info.page_start);
+
 }
 void do_yank(int count, int c)
 {
@@ -525,7 +562,12 @@ void do_replace(int count)
 }
 void do_overwrite(int count)
 {
+  char *tmp_buf;
+  int tmp_buf_size = 4;
 
+  tmp_buf = malloc(tmp_buf_size);
+
+  free(tmp_buf);
 }
 
 void do_delete(int count, int c)

@@ -1,5 +1,7 @@
 #include "virt_file.h"
-#include "windows.h"
+#include <ncurses.h>
+#include <panel.h>
+#include <menu.h>
 
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
@@ -31,8 +33,6 @@
 
 #define HEX_BOX_X     (ADDR_BOX_X + ADDR_BOX_W)
 #define HEX_BOX_Y     MENU_BOX_H
-//#define HEX_BOX_W     ((SHARED_WIDTH * BYTES_PER_GROUP) / (BYTES_PER_GROUP + user_prefs.grouping))
-//#define HEX_BOX_W     ((((SHARED_WIDTH - 2) * BYTES_PER_GROUP) + 2 * user_prefs[GROUPING].value) / (BYTES_PER_GROUP + user_prefs[GROUPING].value))
 #define HEX_BOX_W_    ((((SHARED_WIDTH - 2) * BYTES_PER_GROUP) + 2 * user_prefs[GROUPING].value) / (BYTES_PER_GROUP + user_prefs[GROUPING].value))
 #define HEX_BOX_W     (HEX_BOX_W_ > (BYTES_PER_GROUP + 2) ? HEX_BOX_W_ : (BYTES_PER_GROUP + 2))
 #define HEX_BOX_H     ADDR_BOX_H
@@ -59,6 +59,12 @@
 #define MSG_BOX_Y (((HEX_BOX_H - MSG_BOX_H) / 2) + HEX_BOX_Y)
 #define MSG_BOX_X (((HEX_BOX_W - MSG_BOX_W) / 2) + HEX_BOX_X)
 #define MAX_MSG_BOX_LEN ((MSG_BOX_H - 3) * (MSG_BOX_W - 2))
+
+#define INSERT_BOX_H 4
+#define INSERT_BOX_W 50
+#define INSERT_BOX_Y (((HEX_BOX_H - INSERT_BOX_H) / 2) + HEX_BOX_Y)
+#define INSERT_BOX_X (((HEX_BOX_W - INSERT_BOX_W) / 2) + HEX_BOX_X)
+#define MAX_INSERT_BOX_LEN (INSERT_BOX_W - 2)
 
 typedef enum window_e
 {
