@@ -389,17 +389,21 @@ int is_hex(int c)
 void do_insert(int count, int c)
 {
   WINDOW *insbox;
-  char *ins_buf;
-  char insbox_line[MAX_INSERT_BOX_LEN];
-  int i, c2, ins_buf_size = 4, ins_size = 0;
+  char *ins_buf, *tmp_buf;
+  char insbox_line[MAX_INSERT_BOX_LEN], tmp[3], tmpc;
+  int i, c2, ins_buf_size = 4, chars_per_byte = 0;
+  int char_count = 0, byte_count = 0, print_offset = 1, print_buf_offset = 0;
+
+  if (display_info.cursor_window == WINDOW_HEX)
+    chars_per_byte = 2;
+  else
+    chars_per_byte = 1;
 
   ins_buf = (char *)calloc(1, ins_buf_size);
-
-
   insbox = newwin(INSERT_BOX_H, INSERT_BOX_W, INSERT_BOX_Y, INSERT_BOX_X);
   box(insbox, 0, 0);
   snprintf(insbox_line, MAX_INSERT_BOX_LEN, "[Press ESC when done]");
-  mvwaddstr(insbox, 2, 1, insbox_line);
+  mvwaddstr(insbox, 2, (INSERT_BOX_W - strlen(insbox_line))/2, insbox_line);
   wmove(insbox, 1, 1);
   wrefresh(insbox);
 
@@ -407,16 +411,83 @@ void do_insert(int count, int c)
 
   while(c2 != ESC)
   {
-    
+    if (display_info.cursor_window == WINDOW_HEX)
+    {
+      if (is_hex(c) == 0)
+      {
+        flash();
+        continue;
+      }
+      tmp[char_count % chars_per_byte] = (char)c;
+      char_count++;
+      mvwaddch(insbox, 1, print_offset++, c);
+      wrefresh(insbox);
+      if (print_offset >= MAX_INSERT_BOX_LEN)
+      {
+        werase(insbox);
+        box(insbox, 0, 0);
+        print_buf_offset += (MAX_INSERT_BOX_LEN/2);
+        print_offset = 0;
+        for (i=print_buf_offset; i<char_count; i++)
+        {
+           mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF)<<4);
+           mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF));
+          if (((print_buf_offset + i) % user_prefs[GROUPING].value) == 0)
+            mvwaddch(insbox, 1, print_offset++,  ' ');
+        }
+        /* print tmp[0/1] if partial fill? */
+        wrefresh(insbox);
+      }
+      if ((char_count % chars_per_byte) == 0)
+      {
+        tmp[2] = 0;
+        tmpc = (char)strtol(tmp, NULL, 16);
+        if (byte_count >= ins_buf_size)
+        {
+          tmp_buf = calloc(1, ins_buf_size * 2);
+          memcpy(tmp_buf, ins_buf, ins_buf_size);
+          free(ins_buf);
+          ins_buf = tmp_buf;
+        }
+        ins_buf[byte_count] = tmpc;
+        byte_count++;
+        if ((byte_count % user_prefs[GROUPING].value) == 0)
+        {
+          mvwaddch(insbox, 1, print_offset++,  ' ');
+          wrefresh(insbox);
+          if (print_offset >= MAX_INSERT_BOX_LEN)
+          {
+            werase(insbox);
+            box(insbox, 0, 0);
+            print_buf_offset += (MAX_INSERT_BOX_LEN/2);
+            print_offset = 0;
+            for (i=print_buf_offset; i<char_count; i++)
+            {
+               mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF)<<4);
+               mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF));
+              if (((print_buf_offset + i) % user_prefs[GROUPING].value) == 0)
+                mvwaddch(insbox, 1, print_offset++,  ' ');
+            }
+            /* print tmp[0/1] if partial fill? */
+            wrefresh(insbox);
+          }
+        }
+      }
+    }
+    else
+    {
+    }
+
+ 
     c2 = getch();
   }
 
-  if (ins_size)
+  if (byte_count)
   {
     if (count == 0)
-      count++;
-    for(i=0; i<count; i++)
-      action_insert_before(0,ins_buf,0);
+      count = 1;
+
+    action_insert_before(count,ins_buf,byte_count);
   }
 
   free(ins_buf);
