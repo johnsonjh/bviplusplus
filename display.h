@@ -43,15 +43,14 @@
 #define ASCII_BOX_W   (ASCII_BOX_W_ > (user_prefs[GROUPING].value + 2) ? ASCII_BOX_W_ : (user_prefs[GROUPING].value + 2))
 #define ASCII_BOX_H   ADDR_BOX_H
 
-//#define MAX_HEX_COLS    ((HEX_BOX_W - 3) / BYTES_PER_GROUP)
 #define MAX_HEX_COLS    ((HEX_BOX_W - 2) / BYTES_PER_GROUP)
 #define HEX_COLS        (user_prefs[MAX_COLS].value == 0 ? MAX_HEX_COLS : MAX_HEX_COLS > user_prefs[MAX_COLS].value ? user_prefs[MAX_COLS].value : MAX_HEX_COLS)
 #define BYTES_PER_LINE  (HEX_COLS * user_prefs[GROUPING].value)
 #define HEX_LINES       (HEX_BOX_H - 2)
 
-#define PAGE_SIZE ((HEX_LINES * BYTES_PER_LINE) - 1)
-#define _PAGE_END (display_info.page_start + PAGE_SIZE)
-#define PAGE_END  (_PAGE_END > display_info.file_size ? display_info.file_size : _PAGE_END)
+#define PAGE_SIZE (HEX_LINES * BYTES_PER_LINE)
+#define _PAGE_END (display_info.page_start + PAGE_SIZE - 1)
+#define PAGE_END  (_PAGE_END > display_info.file_size ? display_info.file_size - 1 : _PAGE_END)
 
 #define HEX(x) ((x) < 0xA ? '0' + (x) : 'a' + (x) - 0xa)
 #define MSG_BOX_H 8
@@ -109,6 +108,8 @@ extern WINDOW *window_list[MAX_WINDOWS];
 extern PANEL *panel_list[MAX_WINDOWS];
 
 off_t address_invalid(off_t addr);
+int get_y_from_page_offset(int offset);
+int get_x_from_page_offset(int offset);
 int get_y_from_addr(off_t addr);
 int get_x_from_addr(off_t addr);
 off_t get_addr_from_xy(int x, int y);
@@ -122,8 +123,9 @@ void blob_standout(BOOL on);
 int is_visual_on(void);
 int visual_span(void);
 off_t visual_addr(void);
-int print_line(off_t addr, int y);
+int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size);
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor);
+void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size);
 void print_screen(off_t addr);
 
 #endif /* __DISPLAY_H__ */

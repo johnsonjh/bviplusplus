@@ -221,7 +221,6 @@ action_code_t action_delete(int count, off_t end_addr)
   {
     count = visual_span();
     addr = visual_addr();
-    action_visual_select_off();
   }
   else
   {
@@ -438,7 +437,7 @@ action_code_t action_clean_yank(void)
   return error;
 }
 
-action_code_t action_yank(int count, off_t end_addr)
+action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor)
 {
   action_code_t error = E_SUCCESS;
   off_t addr;
@@ -448,7 +447,6 @@ action_code_t action_yank(int count, off_t end_addr)
   {
     count = visual_span();
     addr = visual_addr();
-    action_visual_select_off();
   }
   else
   {
@@ -486,7 +484,8 @@ action_code_t action_yank(int count, off_t end_addr)
 
     vf_get_buf(current_file, yank_buf[yank_register].buf, addr, count);
 
-    place_cursor(addr, CALIGN_NONE, CURSOR_REAL);
+    if (move_cursor)
+      place_cursor(addr, CALIGN_NONE, CURSOR_REAL);
 
   }
 

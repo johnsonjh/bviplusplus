@@ -677,65 +677,24 @@ char _get_char(vbuf_t * vb, char *result, off_t offset)
       continue;
     }
 
+    if(offset < tmp->start)
+      break;
+
     switch (tmp->buf_type)
     {
       case TYPE_INSERT:
-        if(offset < tmp->start)
-        {
-          if(TYPE_FILE == vb->buf_type)
-          {
-            fseek(vb->fp, offset + shift, SEEK_SET);
-            fread(&value, 1, 1, vb->fp);
-          }
-          else
-          {
-            value = vb->buf[offset + shift];
-          }
-          *result = 1;
-          return value;
-        }
-        else if(offset < tmp->start + tmp->size)
-        {
+        if(offset < tmp->start + tmp->size)
           return _get_char(tmp, result, offset);
-        }
+
         shift -= tmp->size;
         break;
       case TYPE_REPLACE:
-        if(offset < tmp->start)
-        {
-          if(TYPE_FILE == vb->buf_type)
-          {
-            fseek(vb->fp, offset + shift, SEEK_SET);
-            fread(&value, 1, 1, vb->fp);
-          }
-          else
-          {
-            value = vb->buf[offset + shift];
-          }
-          *result = 1;
-          return value;
-        }
-        else if(offset < tmp->start + tmp->size)
-        {
+        if(offset < tmp->start + tmp->size)
           return _get_char(tmp, result, offset);
-        }
+
         shift += get_internal_shift(tmp);
         break;
       case TYPE_DELETE:
-        if(offset < tmp->start)
-        {
-          if(TYPE_FILE == vb->buf_type)
-          {
-            fseek(vb->fp, offset + shift, SEEK_SET);
-            fread(&value, 1, 1, vb->fp);
-          }
-          else
-          {
-            value = vb->buf[offset + shift];
-          }
-          *result = 1;
-          return value;
-        }
         shift += tmp->size;
         break;
       default:

@@ -3,6 +3,8 @@
 #ifndef __USER_PREFS_H__
 #define __USER_PREFS_H__
 
+#define MAX_GRP 16
+
 typedef enum
 {
   P_NONE,

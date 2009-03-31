@@ -34,7 +34,7 @@ action_code_t action_insert_after(int count, char *buf, int len);
 action_code_t action_paste_before(int count);
 action_code_t action_paste_after(int count);
 action_code_t action_clean_yank(void);
-action_code_t action_yank(int count, off_t end_addr); /* yank from cursor to end_addr (end_addr can be INVALID_ADDR) */
+action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor); /* yank from cursor to end_addr (end_addr can be INVALID_ADDR) */
 action_code_t action_append(void);
 action_code_t action_replace(int count);
 action_code_t action_save(void);

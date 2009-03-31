@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "display.h"
 #include "user_prefs.h"
 #include "app_state.h"
@@ -175,23 +176,32 @@ off_t visual_addr(void)
 }
 
 /* returns the number of bytes displayed on that line */
-int print_line(off_t addr, int y)
+int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size)
 {
   int i, j, k,
-      x = 1,
+      y, x = 1,
       byte_addr;
   char c, result,
        addr_text[ADDR_DIGITS + 1],
        bin_text[9];
 
+  y = (line_addr - page_addr) / BYTES_PER_LINE;
   y++; /* line 0 is the box border */
 
   /* print address */
-  sprintf(addr_text, "%08X", addr);
+  sprintf(addr_text, "%08X", line_addr);
   mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
-  if (address_invalid(addr))
-    return 0;
+  if (screen_buf == NULL)
+  {
+    if (address_invalid(line_addr))
+      return 0;
+  }
+  else
+  {
+    if (line_addr < page_addr || line_addr >= page_addr + screen_buf_size)
+      return 0;
+  }
 
   for (i=0; i<HEX_COLS; i++)
   {
@@ -199,14 +209,24 @@ int print_line(off_t addr, int y)
     for (j=0; j<user_prefs[GROUPING].value; j++)
     {
       if (user_prefs[LIL_ENDIAN].value)
-        byte_addr = addr - 1 + (i*user_prefs[GROUPING].value) + (user_prefs[GROUPING].value - j);
+        byte_addr = line_addr - 1 + (i*user_prefs[GROUPING].value) + (user_prefs[GROUPING].value - j);
       else
-        byte_addr = addr + (i*user_prefs[GROUPING].value) + j;
+        byte_addr = line_addr + (i*user_prefs[GROUPING].value) + j;
 
-      if (address_invalid(byte_addr))
-        break;
-
-      c = vf_get_char(current_file, &result, byte_addr);
+      if (screen_buf == NULL)
+      {
+        if (address_invalid(line_addr))
+          break;
+        else
+          c = vf_get_char(current_file, &result, byte_addr);
+      }
+      else
+      {
+        if (byte_addr < page_addr || byte_addr >= page_addr + screen_buf_size)
+          break;
+        else
+          c = screen_buf[byte_addr - page_addr];
+      }
 
       if (is_visual_on())
       {
@@ -322,13 +342,10 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 }
 
 
-void print_screen(off_t addr)
+void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size)
 {
   int i;
   off_t line_addr = addr;
-
-  display_info.page_start = addr;
-  display_info.page_end = PAGE_END;
 
   werase(window_list[WINDOW_HEX]);
   werase(window_list[WINDOW_ASCII]);
@@ -337,10 +354,36 @@ void print_screen(off_t addr)
 
   for (i=0; i<HEX_LINES; i++)
   {
-    line_addr += print_line(line_addr, i);
-    if (address_invalid(line_addr))
-      break; /* break after print_line to print the address */
+    line_addr += print_line(addr, line_addr, screen_buf, screen_buf_size);
+    if (screen_buf == NULL)
+    {
+      if (address_invalid(line_addr))
+        break;
+    }
+    else
+    {
+      if (line_addr < addr || line_addr >= addr + screen_buf_size)
+        break;
+    }
   }
+}
+
+void print_screen(off_t addr)
+{
+  int i, screen_buf_size;
+  off_t line_addr = addr;
+  char *screen_buf;
+
+  display_info.page_start = addr;
+  display_info.page_end = PAGE_END;
+
+  screen_buf_size = PAGE_END - addr + 1;
+  screen_buf = (char *)malloc(screen_buf_size);
+  vf_get_buf(current_file, screen_buf, addr, screen_buf_size);
+
+  print_screen_buf(addr, screen_buf, screen_buf_size);
+
+  free(screen_buf);
 }
 
 off_t address_invalid(off_t addr)
@@ -353,6 +396,42 @@ off_t address_invalid(off_t addr)
     dist_past_range = (addr - display_info.file_size) + 1;
 
   return dist_past_range;
+}
+
+int get_y_from_page_offset(int offset)
+{
+  int y = 1, z;
+
+  if (offset < 0)
+    return -1;
+
+  if (offset > PAGE_SIZE)
+    return -1;
+
+  z = (HEX_COLS * user_prefs[GROUPING].value);
+  y += offset / z;
+
+  return y;
+}
+
+int get_x_from_page_offset(int offset)
+{
+  int x, y;
+  y = get_y_from_page_offset(offset);
+
+  if (y < 0)
+    return -1;
+
+  y--;
+
+  offset -= y * HEX_COLS * user_prefs[GROUPING].value;
+
+  if (display_info.cursor_window == WINDOW_HEX)
+    x = 1 + (offset / user_prefs[GROUPING].value) * BYTES_PER_GROUP;
+  else
+    x = 1 + offset;
+
+  return x;
 }
 
 int get_y_from_addr(off_t addr)

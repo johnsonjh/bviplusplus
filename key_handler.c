@@ -170,6 +170,8 @@ action_code_t do_cmd_line(int s)
     c = getch();
     switch(c)
     {
+      case KEY_RESIZE:
+        break;
       case KEY_UP:
         tmp_hist_index = hist_index-1;
         if (tmp_hist_index < 0)
@@ -388,115 +390,194 @@ int is_hex(int c)
 }
 void do_insert(int count, int c)
 {
-  WINDOW *insbox;
-  char *ins_buf, *tmp_buf;
-  char insbox_line[MAX_INSERT_BOX_LEN], tmp[3], tmpc;
-  int i, c2, ins_buf_size = 4, chars_per_byte = 0;
-  int char_count = 0, byte_count = 0, print_offset = 1, print_buf_offset = 0;
+  char *screen_buf, *ins_buf, *tmp_ins_buf;
+  char tmp[9], tmp2[MAX_GRP], tmpc;
+  int c2 = 0, i;
+  int hy, hx, ay, ax;
+  int ins_buf_size;
+  int chars_per_byte, char_count = 0, tmp_char_count = 0, low_tmp_char_count = 0;
+  int offset, len1, ins_buf_offset, len2, len3;
+  off_t ins_addr, page_start;
 
-  if (display_info.cursor_window == WINDOW_HEX)
-    chars_per_byte = 2;
-  else
-    chars_per_byte = 1;
+  screen_buf = (char *)malloc(2 * PAGE_SIZE); /* fix this later, but make it big for now */
+  ins_buf_size = user_prefs[GROUPING].value;
+  ins_buf = (char *)malloc(ins_buf_size);
 
-  ins_buf = (char *)calloc(1, ins_buf_size);
-  insbox = newwin(INSERT_BOX_H, INSERT_BOX_W, INSERT_BOX_Y, INSERT_BOX_X);
-  box(insbox, 0, 0);
-  snprintf(insbox_line, MAX_INSERT_BOX_LEN, "[Press ESC when done]");
-  mvwaddstr(insbox, 2, (INSERT_BOX_W - strlen(insbox_line))/2, insbox_line);
-  wmove(insbox, 1, 1);
-  wrefresh(insbox);
-
-  c2 = getch();
-
-  while(c2 != ESC)
+  /* later mod this depending on c = a/i/A/I */
+  switch (c)
   {
-    if (display_info.cursor_window == WINDOW_HEX)
+    case 'A': /* no break */
+    case 'a': /* no break */
+      ins_addr = display_info.cursor_addr + 1;
+      break;
+    case 'I': /* no break */
+    case 'i': /* no break */
+    default:
+      ins_addr = display_info.cursor_addr;
+      break;
+  }
+
+  page_start = display_info.page_start;
+
+  while (c2 != ESC)
+  {
+    offset = ins_addr - page_start;
+    if (offset < 0)
     {
-      if (is_hex(c) == 0)
-      {
-        flash();
-        continue;
-      }
-      tmp[char_count % chars_per_byte] = (char)c;
-      char_count++;
-      mvwaddch(insbox, 1, print_offset++, c);
-      wrefresh(insbox);
-      if (print_offset >= MAX_INSERT_BOX_LEN)
-      {
-        werase(insbox);
-        box(insbox, 0, 0);
-        print_buf_offset += (MAX_INSERT_BOX_LEN/2);
-        print_offset = 0;
-        for (i=print_buf_offset; i<char_count; i++)
-        {
-           mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF)<<4);
-           mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF));
-          if (((print_buf_offset + i) % user_prefs[GROUPING].value) == 0)
-            mvwaddch(insbox, 1, print_offset++,  ' ');
-        }
-        /* print tmp[0/1] if partial fill? */
-        wrefresh(insbox);
-      }
-      if ((char_count % chars_per_byte) == 0)
-      {
-        tmp[2] = 0;
-        tmpc = (char)strtol(tmp, NULL, 16);
-        if (byte_count >= ins_buf_size)
-        {
-          tmp_buf = calloc(1, ins_buf_size * 2);
-          memcpy(tmp_buf, ins_buf, ins_buf_size);
-          free(ins_buf);
-          ins_buf = tmp_buf;
-        }
-        ins_buf[byte_count] = tmpc;
-        byte_count++;
-        if ((byte_count % user_prefs[GROUPING].value) == 0)
-        {
-          mvwaddch(insbox, 1, print_offset++,  ' ');
-          wrefresh(insbox);
-          if (print_offset >= MAX_INSERT_BOX_LEN)
-          {
-            werase(insbox);
-            box(insbox, 0, 0);
-            print_buf_offset += (MAX_INSERT_BOX_LEN/2);
-            print_offset = 0;
-            for (i=print_buf_offset; i<char_count; i++)
-            {
-               mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF)<<4);
-               mvwaddch(insbox, 1, print_offset++, (ins_buf[print_buf_offset + print_offset]&0xF));
-              if (((print_buf_offset + i) % user_prefs[GROUPING].value) == 0)
-                mvwaddch(insbox, 1, print_offset++,  ' ');
-            }
-            /* print tmp[0/1] if partial fill? */
-            wrefresh(insbox);
-          }
-        }
-      }
+      len1 = 0;
+      ins_buf_offset = page_start - ins_addr;
+      len2 = char_count - ins_buf_offset;
     }
     else
     {
+      len1 = offset;
+      len2 = char_count;
+      ins_buf_offset = 0;
+    }
+    len3 = (PAGE_END - page_start) - (len1 + len2) + 1;
+
+    if (len1 != 0)
+      vf_get_buf(current_file, screen_buf, page_start, len1);
+    if (len2 != 0)
+      memcpy(screen_buf + len1, ins_buf + ins_buf_offset, len2);
+    if (len3 > 0)
+      vf_get_buf(current_file, screen_buf + len1 + len2 + 1, ins_addr, len3);
+
+    print_screen_buf(page_start, screen_buf, len1+len2+1+len3);
+
+    if (display_info.cursor_window == WINDOW_HEX)
+    {
+      hy = get_y_from_page_offset(len1+len2);
+      hx = get_x_from_page_offset(len1+len2);
+      display_info.cursor_window = WINDOW_ASCII;
+      ay = get_y_from_page_offset(len1+len2);
+      ax = get_x_from_page_offset(len1+len2);
+      display_info.cursor_window = WINDOW_HEX;
+      chars_per_byte = 2;
+    }
+    else
+    {
+      display_info.cursor_window = WINDOW_HEX;
+      hy = get_y_from_page_offset(len1+len2);
+      hx = get_x_from_page_offset(len1+len2);
+      display_info.cursor_window = WINDOW_ASCII;
+      ay = get_y_from_page_offset(len1+len2);
+      ax = get_x_from_page_offset(len1+len2);
+      chars_per_byte = 1;
     }
 
- 
+    for (i=0; i<user_prefs[GROUPING].value; i++) /* print from temp buf here to clear or print partial insert */
+    {
+      if (i>=tmp_char_count)
+      {
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), ' ');
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i)+1, ' ');
+        mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, ' ');
+      }
+      else
+      {
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), HEX(tmp2[i]>>4&0xF));
+        mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i)+1, HEX(tmp2[i]>>0&0xF));
+        if (isprint(tmp2[i]))
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, tmp2[i]);
+        else
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, '.');
+      }
+    }
+
+    if (display_info.cursor_window == WINDOW_HEX)
+      wmove(window_list[WINDOW_HEX], hy, hx);
+    else
+      wmove(window_list[WINDOW_ASCII], ay, ax);
+
+
+    update_panels();
+    doupdate();
     c2 = getch();
+    switch (c2)
+    {
+      case KEY_BACKSPACE:
+        break;
+      case KEY_RESIZE:
+        break;
+      case ESC:
+        break;
+      default:
+        if (display_info.cursor_window == WINDOW_HEX)
+        {
+          if (is_hex(c2) == 0)
+          {
+            flash();
+            continue;
+          }
+          tmp[low_tmp_char_count] = (char)c2;
+          low_tmp_char_count++;
+          if ((low_tmp_char_count % chars_per_byte) == 0)
+          {
+            low_tmp_char_count = 0;
+            tmp[chars_per_byte] = 0;
+            tmpc = (char)strtol(tmp, NULL, 16);
+            tmp2[tmp_char_count % user_prefs[GROUPING].value] = tmpc;
+            tmp_char_count++;
+
+            if ((tmp_char_count % user_prefs[GROUPING].value) == 0)
+            {
+              while (char_count + tmp_char_count >= ins_buf_size)
+              {
+                tmp_ins_buf = calloc(1, ins_buf_size * 2);
+                memcpy(tmp_ins_buf, ins_buf, ins_buf_size);
+                ins_buf_size *= 2;
+                free(ins_buf);
+                ins_buf = tmp_ins_buf;
+              }
+
+              memcpy(ins_buf + char_count, tmp2, tmp_char_count);
+              char_count += tmp_char_count;
+              tmp_char_count = 0;
+            }
+          }
+        }
+        else /* cursor in ascii window */
+        {
+        }
+        break;
+    }
+  /* handle key press */
+  /* print from start_offset to insert_addr of screen_buf */
+  /* print from 0 to num_inserted_bytes of ins buf */
+  /* print from insert_addr to insert_addr + (PAGE_SIZE - (inser_addr + num_inserted_bytes)) of screen_buf */
   }
 
-  if (byte_count)
+  if (char_count)
   {
     if (count == 0)
       count = 1;
 
-    action_insert_before(count,ins_buf,byte_count);
+    switch (c)
+    {
+      case 'A': /* no break */
+      case 'a': /* no break */
+        for (i=0; i<count; i++)
+          action_insert_after(count,ins_buf,char_count);
+        break;
+      case 'I': /* no break */
+      case 'i': /* no break */
+      default:
+        for (i=0; i<count; i++)
+          action_insert_before(count,ins_buf,char_count);
+        break;
+    }
   }
 
+
+
   free(ins_buf);
+  free(screen_buf);
 
-  delwin(insbox);
-  place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
-  print_screen(display_info.page_start);
-
+  place_cursor(ins_addr+char_count, CALIGN_NONE, CURSOR_REAL);
+  print_screen(page_start);
 }
+
 void do_yank(int count, int c)
 {
   off_t end_addr = INVALID_ADDR;
@@ -508,7 +589,7 @@ void do_yank(int count, int c)
   else
     end_addr = get_next_motion_addr();
 
-  action_yank(count, end_addr);
+  action_yank(count, end_addr, TRUE);
 }
 void do_replace(int count)
 {
@@ -738,8 +819,9 @@ void handle_key(int c)
       action_cursor_move_left(multiplier, CURSOR_REAL);
       /* no break */
     case 'x':
-      action_yank(multiplier, INVALID_ADDR);
+      action_yank(multiplier, INVALID_ADDR, FALSE);
       action_delete(multiplier, INVALID_ADDR);
+      action_visual_select_off();
       break;
     case 'v':
       action_visual_select_toggle();
@@ -765,6 +847,7 @@ void handle_key(int c)
     case 'y': /* no separate behavior from Y, right now */
     case 'Y':
       do_yank(multiplier, c);
+      action_visual_select_off();
       break;
     case 'd':
     case 'D':
@@ -818,9 +901,9 @@ void handle_key(int c)
 }
 
 /*
- * use buffering for the screen mem, will help for doing group inserts
  * Remember to add tab completion, macros, and a good system for command line parsing, .rc files
- * Add options: columns, search hl, search ignorecase
+ * Add options: search hl, search ignorecase
  * Check bvi man page for min list of command line commands to support
+ * Handle KEY_RESIZE wherever we use looped getch for a while
  */
 
