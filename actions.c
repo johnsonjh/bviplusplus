@@ -707,3 +707,13 @@ action_code_t action_quit(BOOL force)
   return error;
 }
 
+action_code_t action_do_resize(void)
+{
+  action_code_t error = E_SUCCESS;
+  update_display_info();
+  destroy_screen();
+  create_screen();
+  print_screen(display_info.page_start);
+  return error;
+}
+

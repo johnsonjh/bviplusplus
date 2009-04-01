@@ -504,14 +504,26 @@ off_t get_addr_from_xy(int x, int y)
 
 void destroy_screen()
 {
+  del_panel(panel_list[WINDOW_MENU]);
+  del_panel(panel_list[WINDOW_ADDR]);
+  del_panel(panel_list[WINDOW_HEX]);
+  del_panel(panel_list[WINDOW_ASCII]);
+  del_panel(panel_list[WINDOW_STATUS]);
+
   delwin(window_list[WINDOW_MENU]);
   delwin(window_list[WINDOW_ADDR]);
   delwin(window_list[WINDOW_HEX]);
   delwin(window_list[WINDOW_ASCII]);
+  delwin(window_list[WINDOW_STATUS]);
 }
 
 void create_screen()
 {
+  int a, h;
+
+  h = HEX_BOX_W;
+  a = ASCII_BOX_W;
+
   window_list[WINDOW_MENU]  = newwin( MENU_BOX_H,  MENU_BOX_W,  MENU_BOX_Y,  MENU_BOX_X);
   window_list[WINDOW_ADDR]  = newwin( ADDR_BOX_H,  ADDR_BOX_W,  ADDR_BOX_Y,  ADDR_BOX_X);
   window_list[WINDOW_HEX]   = newwin(  HEX_BOX_H,   HEX_BOX_W,   HEX_BOX_Y,   HEX_BOX_X);

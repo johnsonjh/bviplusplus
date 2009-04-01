@@ -83,8 +83,7 @@ action_code_t do_set(void)
 
   }
 
-  update_display_info();
-  print_screen(display_info.page_start);
+  action_do_resize();
 
   return error;
 }
@@ -924,9 +923,7 @@ void handle_key(int c)
       jump_addr = -1;
       break;
     case KEY_RESIZE:
-      destroy_screen();
-      create_screen();
-      print_screen(display_info.page_start);
+      action_do_resize();
       break;
     default:
       break;

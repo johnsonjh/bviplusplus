@@ -57,5 +57,6 @@ action_code_t action_redo(int count);
 action_code_t action_save(void);
 action_code_t action_save_as(char *name);
 action_code_t action_quit(BOOL force);
+action_code_t action_do_resize(void);
 
 #endif /* __ACTIONS_H__ */
