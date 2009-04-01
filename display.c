@@ -294,6 +294,54 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
   return ((i-1) * user_prefs[GROUPING].value) + j;
 }
 
+void update_status_window(void)
+{
+  int y, x, i, result;
+  unsigned char tmp[4], bin_text[9];
+
+  y = get_y_from_addr(display_info.cursor_addr);
+  x = get_x_from_addr(display_info.cursor_addr);
+
+  result = vf_get_buf(current_file, tmp, display_info.cursor_addr, 4);
+
+  if (result > 0)
+  {
+    for (i=0; i<8; i++)
+    {
+      if ((tmp[0] >> (7 - i)) & 1)
+        snprintf(bin_text+i, 2, "%c", '1');
+      else
+        snprintf(bin_text+i, 2, "%c", '0');
+    }
+  }
+
+  if (result == 4)
+    mvwprintw(window_list[WINDOW_STATUS], 0, WINDOW_STATUS_W - STATUS_PRINT_LEN,
+              "H: %02x D: %d B: %s X32: %02x%02x%02x%02x X32LE: %02x%02x%02x%02x     Addr: %08x (%d)              ",
+              tmp[0],
+              tmp[0],
+              bin_text,
+              tmp[0], tmp[1], tmp[2], tmp[3],
+              tmp[3], tmp[2], tmp[1], tmp[0],
+              display_info.cursor_addr,
+              display_info.cursor_addr);
+  else if (result > 0)
+    mvwprintw(window_list[WINDOW_STATUS], 0, WINDOW_STATUS_W - STATUS_PRINT_LEN,
+              "H: %08x D: %d B: %s     Addr: %08x (%d)              ",
+              tmp[0],
+              tmp[0],
+              bin_text,
+              display_info.cursor_addr,
+              display_info.cursor_addr);
+  else
+    mvwprintw(window_list[WINDOW_STATUS], 0, WINDOW_STATUS_W - STATUS_PRINT_LEN,
+              "     Addr: %08x (%d)              ",
+              display_info.cursor_addr,
+              display_info.cursor_addr);
+
+  wmove(window_list[display_info.cursor_window], y, x);
+}
+
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 {
   int x, y;
@@ -349,6 +397,7 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size)
 
   werase(window_list[WINDOW_HEX]);
   werase(window_list[WINDOW_ASCII]);
+  werase(window_list[WINDOW_STATUS]);
   box(window_list[WINDOW_HEX], 0, 0);
   box(window_list[WINDOW_ASCII], 0, 0);
 

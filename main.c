@@ -63,6 +63,7 @@ int main(int argc, char **argv)
 
   while (app_state.quit == FALSE)
   {
+    update_status_window();
     update_panels();
     doupdate();
     place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);

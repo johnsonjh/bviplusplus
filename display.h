@@ -18,6 +18,7 @@
 #define ADDR_BOX_H_   (LINES - MENU_BOX_H - WINDOW_STATUS_H)
 #define ADDR_BOX_H    (ADDR_BOX_H_ > 3 ? ADDR_BOX_H_ : 3)
 
+#define STATUS_PRINT_LEN 100
 #define WINDOW_STATUS_H 1
 #define WINDOW_STATUS_W COLS
 #define WINDOW_STATUS_Y MENU_BOX_H + ADDR_BOX_H
@@ -132,6 +133,7 @@ int is_visual_on(void);
 int visual_span(void);
 off_t visual_addr(void);
 int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size);
+void update_status_window(void);
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor);
 void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size);
 void print_screen(off_t addr);
