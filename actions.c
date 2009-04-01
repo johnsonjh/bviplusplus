@@ -503,20 +503,7 @@ action_code_t action_replace(int count)
   action_code_t error = E_SUCCESS;
   return error;
 }
-action_code_t action_save(void)
-{
-  action_code_t error = E_SUCCESS;
-  if (is_visual_on())
-    return E_INVALID;
-  return error;
-}
-action_code_t action_save_as(void)
-{
-  action_code_t error = E_SUCCESS;
-  if (is_visual_on())
-    return E_INVALID;
-  return error;
-}
+
 action_code_t action_discard_changes(void)
 {
   action_code_t error = E_SUCCESS;
@@ -686,6 +673,31 @@ action_code_t action_redo(int count)
   update_display_info();
   place_cursor(caddr, CALIGN_NONE, CURSOR_REAL);
   print_screen(display_info.page_start);
+  return error;
+}
+
+action_code_t action_save(void)
+{
+  action_code_t error = E_SUCCESS;
+  int complete;
+  vf_save(current_file, NULL, &complete);
+  return error;
+}
+
+action_code_t action_save_as(char *name)
+{
+  action_code_t error = E_SUCCESS;
+  msg_box("\"Save As\"Not implimented yet, sucker!");
+  return error;
+}
+
+action_code_t action_quit(BOOL force)
+{
+  action_code_t error = E_SUCCESS;
+  if (vf_need_save(current_file) && force == FALSE)
+    msg_box("File has unsaved chages");
+  else
+    app_state.quit = TRUE;
   return error;
 }
 

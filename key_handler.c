@@ -133,7 +133,34 @@ action_code_t cmd_parse(char *cbuff)
     }
     if (strncmp(tok, "q", MAX_CMD_BUF) == 0)
     {
-      app_state.quit = TRUE;
+      action_quit(FALSE);
+      return error;
+    }
+    if (strncmp(tok, "q!", MAX_CMD_BUF) == 0)
+    {
+      action_quit(TRUE);
+      return error;
+    }
+    if (strncmp(tok, "w", MAX_CMD_BUF) == 0)
+    {
+      tok = strtok(NULL, delimiters);
+      if (tok == NULL)
+        action_save();
+      else
+        action_save_as(tok);
+      return error;
+    }
+    if ((strncmp(tok, "wq", MAX_CMD_BUF) == 0) ||
+        (strncmp(tok, "qw", MAX_CMD_BUF) == 0))
+    {
+      tok = strtok(NULL, delimiters);
+      if (tok == NULL)
+        action_save();
+      else
+        action_save_as(tok);
+
+      action_quit(FALSE);
+      return error;
     }
 
     tok = strtok(NULL, delimiters);

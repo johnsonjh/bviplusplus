@@ -37,8 +37,6 @@ action_code_t action_clean_yank(void);
 action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor); /* yank from cursor to end_addr (end_addr can be INVALID_ADDR) */
 action_code_t action_append(void);
 action_code_t action_replace(int count);
-action_code_t action_save(void);
-action_code_t action_save_as(void);
 action_code_t action_discard_changes(void);
 action_code_t action_close_file(void);
 action_code_t action_open_file(void);
@@ -56,5 +54,8 @@ off_t action_get_mark(int m);
 action_code_t action_set_mark(int m);
 action_code_t action_undo(int count);
 action_code_t action_redo(int count);
+action_code_t action_save(void);
+action_code_t action_save_as(char *name);
+action_code_t action_quit(BOOL force);
 
 #endif /* __ACTIONS_H__ */
