@@ -330,7 +330,7 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
     x = get_x_from_addr(addr);
     y = get_y_from_addr(addr);
     wmove(window_list[display_info.cursor_window], y, x);
-    display_info.cursor_addr = addr;
+    display_info.cursor_addr = get_addr_from_xy(x,y);
   }
 
   if (display_info.file_size == 0)

@@ -225,7 +225,7 @@ action_code_t action_delete(int count, off_t end_addr)
   else
   {
     if (count == 0)
-      count = 1;
+      count = user_prefs[GROUPING].value;
 
     if (end_addr != INVALID_ADDR)
     {
@@ -248,8 +248,11 @@ action_code_t action_delete(int count, off_t end_addr)
     }
   }
 
-  if (address_invalid(addr) == 0 && address_invalid(addr+count) == 0)
+  if (address_invalid(addr) == 0)
   {
+    while(address_invalid(addr+count-1) && count > 0)
+      count--;
+
     vf_delete(current_file, addr, count);
     update_display_info();
 
@@ -451,7 +454,7 @@ action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor)
   else
   {
     if (count == 0)
-      count = 1;
+      count = user_prefs[GROUPING].value;
 
     if (end_addr != INVALID_ADDR)
     {
@@ -474,8 +477,11 @@ action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor)
     }
   }
 
-  if (address_invalid(addr) == 0 && address_invalid(addr+count) == 0)
+  if (address_invalid(addr) == 0)
   {
+    while(address_invalid(addr+count-1) && count > 0)
+      count--;
+
     if (yank_buf[yank_register].len != 0)
       free(yank_buf[yank_register].buf);
 

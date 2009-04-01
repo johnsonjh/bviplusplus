@@ -566,13 +566,27 @@ void do_insert(int count, int c)
         }
         else /* cursor in ascii window */
         {
+          tmp2[tmp_char_count % user_prefs[GROUPING].value] = (char)c2;
+          tmp_char_count++;
+
+          if ((tmp_char_count % user_prefs[GROUPING].value) == 0)
+          {
+            while (char_count + tmp_char_count >= ins_buf_size)
+            {
+              tmp_ins_buf = calloc(1, ins_buf_size * 2);
+              memcpy(tmp_ins_buf, ins_buf, ins_buf_size);
+              ins_buf_size *= 2;
+              free(ins_buf);
+              ins_buf = tmp_ins_buf;
+            }
+
+            memcpy(ins_buf + char_count, tmp2, tmp_char_count);
+            char_count += tmp_char_count;
+            tmp_char_count = 0;
+          }
         }
         break;
     }
-  /* handle key press */
-  /* print from start_offset to insert_addr of screen_buf */
-  /* print from 0 to num_inserted_bytes of ins buf */
-  /* print from insert_addr to insert_addr + (PAGE_SIZE - (inser_addr + num_inserted_bytes)) of screen_buf */
   }
 
   if (char_count)
@@ -768,8 +782,6 @@ void handle_key(int c)
   static int esc_count = 0;
   static off_t jump_addr = -1;
 
-  mvwprintw(window_list[WINDOW_STATUS], 0, 15, "%c", c);
-
   if (c >= '0' && c <= '9')
   {
     int_c = c - '0';
@@ -785,9 +797,6 @@ void handle_key(int c)
     else
       jump_addr *= 10;
     jump_addr += int_c;
-
-    mvwprintw(window_list[WINDOW_STATUS], 0, 100, "jump_addr = %d (%x)",
-              jump_addr, jump_addr);
   }
 
   switch (c)
@@ -912,6 +921,11 @@ void handle_key(int c)
       multiplier = 0;
       jump_addr = -1;
       break;
+    case KEY_RESIZE:
+      destroy_screen();
+      create_screen();
+      print_screen(display_info.page_start);
+      break;
     default:
       break;
   }
@@ -921,10 +935,6 @@ void handle_key(int c)
     jump_addr = -1;
     multiplier = 0;
   }
-
-  mvwprintw(window_list[WINDOW_STATUS], 0, 30, "addr = %08x, vaddr = %08x",
-            display_info.cursor_addr, visual_addr());
-
 }
 
 /*

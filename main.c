@@ -63,29 +63,11 @@ int main(int argc, char **argv)
 
   while (app_state.quit == FALSE)
   {
-    int xx, yy;
-    off_t a;
-
     update_panels();
     doupdate();
     place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
     c = wgetch(window_list[display_info.cursor_window]);
-    if (c == KEY_RESIZE)
-    {
-      destroy_screen();
-      create_screen();
-      print_screen(display_info.page_start);
-    }
-    else
-    {
-      handle_key(c);
-    }
-    xx = get_x_from_addr(display_info.cursor_addr);
-    yy = get_y_from_addr(display_info.cursor_addr);
-    a = get_addr_from_xy(xx, yy);
-
-    werase(window_list[WINDOW_MENU]);
-    mvwprintw(window_list[WINDOW_MENU], 0, 0, "%x  a = %x, x = %d, y = %d", c, a, xx, yy);
+    handle_key(c);
   }
 
   destroy_screen();
@@ -99,20 +81,10 @@ int main(int argc, char **argv)
 
 
 #if 0
-  impliment printline and grouping start offset.... if start is 0 and line is 0 first line contains start offset bytes at end of line, then start normal on line 1
-  //if a blob (rename to group) goes over a line what do do? ...  don't let grouping exceed 128bit [grouping = 16], instead impliment alternating color scheme with
-  also alt color offset, allow truly arbitrary, but does not affect size of windows
-
-  little endian is broken (drops a byte), also even if in little endian should ascii order change?
-  limit 'grouping' to 1,2,4,8,16 (8 bit, 16 bit, 32 bit, 64 bit, 128 bit?)... i think so
-
-  impliment minimum window widths based on grouping... do not resize smaller than these
-
-
-search binary (bit level), hex (nibble level), ascii
-run arbitrary scripts on visually selected areas (checksum, parsing, etc)
-File tabs
-Uses my file system (with buffering?)
+  if in little endian should ascii order change?
+  search binary (bit level), hex (nibble level), ascii
+  run arbitrary scripts on visually selected areas (checksum, parsing, etc)
+  File tabs
 
 
 File        Edit                       Tabs     Help
