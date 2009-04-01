@@ -436,11 +436,18 @@ void do_insert(int count, int c)
     case 'a': /* no break */
       ins_addr = display_info.cursor_addr + 1;
       break;
+    case INS:
     case 'I': /* no break */
     case 'i': /* no break */
     default:
       ins_addr = display_info.cursor_addr;
       break;
+#if 0
+    case 'c':
+    case 'C':
+    case 's':
+    case 'S':
+#endif
   }
 
   page_start = display_info.page_start;
@@ -864,6 +871,7 @@ void handle_key(int c)
       action_visual_select_toggle();
       break;
 /* These are a real problem because they do not translate well between vi/emacs modes */
+    case INS:
     case 'i':
     case 'I':
     case 'a':

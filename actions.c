@@ -707,6 +707,104 @@ action_code_t action_quit(BOOL force)
   return error;
 }
 
+action_code_t action_blob_shift_right(void)
+{
+  int new_blob_shift_value;
+
+  new_blob_shift_value = user_prefs[BLOB_GROUPING_OFFSET].value;
+  new_blob_shift_value++;
+
+  if (new_blob_shift_value > user_prefs[BLOB_GROUPING_OFFSET].max)
+    return E_INVALID;
+
+  user_prefs[BLOB_GROUPING_OFFSET].max = new_blob_shift_value;
+
+  print_screen(display_info.page_start);
+
+  return E_SUCCESS;
+}
+action_code_t action_blob_shift_left(void)
+{
+  int new_blob_shift_value;
+
+  new_blob_shift_value = user_prefs[BLOB_GROUPING_OFFSET].value;
+  new_blob_shift_value--;
+
+  if (new_blob_shift_value < user_prefs[BLOB_GROUPING_OFFSET].min)
+    return E_INVALID;
+
+  user_prefs[BLOB_GROUPING_OFFSET].max = new_blob_shift_value;
+
+  print_screen(display_info.page_start);
+
+  return E_SUCCESS;
+}
+
+action_code_t action_blob_inc(void)
+{
+  int new_blob_value;
+
+  new_blob_value = user_prefs[BLOB_GROUPING].value;
+  new_blob_value++;
+
+  if (new_blob_value > user_prefs[BLOB_GROUPING].max)
+    return E_INVALID;
+
+  user_prefs[BLOB_GROUPING].max = new_blob_value;
+
+  print_screen(display_info.page_start);
+
+  return E_SUCCESS;
+}
+action_code_t action_blob_dec(void)
+{
+  int new_blob_value;
+
+  new_blob_value = user_prefs[BLOB_GROUPING].value;
+  new_blob_value--;
+
+  if (new_blob_value < user_prefs[BLOB_GROUPING].min)
+    return E_INVALID;
+
+  user_prefs[BLOB_GROUPING].max = new_blob_value;
+
+  print_screen(display_info.page_start);
+
+  return E_SUCCESS;
+}
+action_code_t action_grp_inc(void)
+{
+  int new_grp_value;
+
+  new_grp_value = user_prefs[GROUPING].value;
+  new_grp_value++;
+
+  if (new_grp_value > user_prefs[GROUPING].max)
+    return E_INVALID;
+
+  user_prefs[GROUPING].max = new_grp_value;
+
+  print_screen(display_info.page_start);
+
+  return E_SUCCESS;
+}
+action_code_t action_grp_dec(void)
+{
+  int new_grp_value;
+
+  new_grp_value = user_prefs[GROUPING].value;
+  new_grp_value--;
+
+  if (new_grp_value < user_prefs[GROUPING].min)
+    return E_INVALID;
+
+  user_prefs[GROUPING].max = new_grp_value;
+
+  print_screen(display_info.page_start);
+
+  return E_SUCCESS;
+}
+
 action_code_t action_do_resize(void)
 {
   action_code_t error = E_SUCCESS;
