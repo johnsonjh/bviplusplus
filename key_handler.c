@@ -497,7 +497,10 @@ void do_insert(int count, int c)
     {
       if (i>=tmp_char_count)
       {
-        mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), ' ');
+        if (low_tmp_char_count && i == tmp_char_count)
+          mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), tmp[0]);
+        else
+          mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), ' ');
         mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i)+1, ' ');
         mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, ' ');
       }
@@ -690,13 +693,12 @@ void do_replace(int count)
         continue;
       }
       tmp[char_count % chars_per_byte] = (char)c;
+      mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count, tmp[char_count % chars_per_byte]);
       char_count++;
       if ((char_count % chars_per_byte) == 0)
       {
         tmp[2] = 0;
         tmpc = (char)strtol(tmp, NULL, 16);
-        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count-2,  tmp[0]);
-        mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count-1, tmp[1]);
         if (isprint(tmpc))
           mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, tmpc);
         else
