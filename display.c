@@ -163,9 +163,9 @@ int is_visual_on(void)
 int visual_span(void)
 {
   if (display_info.cursor_addr < display_info.visual_select_addr)
-    return (display_info.visual_select_addr - display_info.cursor_addr) + 1;
+    return (display_info.visual_select_addr - display_info.cursor_addr) + user_prefs[GROUPING].value;
   else
-    return (display_info.cursor_addr - display_info.visual_select_addr) + 1;
+    return (display_info.cursor_addr - display_info.visual_select_addr) + user_prefs[GROUPING].value;
 }
 off_t visual_addr(void)
 {

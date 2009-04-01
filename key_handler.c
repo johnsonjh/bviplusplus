@@ -635,7 +635,7 @@ void do_yank(int count, int c)
 void do_replace(int count)
 {
   int hx, hy, ax, ay, c, i, char_count = 0, chars_per_byte = 0;
-  char tmp[3], tmpc;
+  char tmp[3], tmpc, *tmp_fill;
   char replace_buf[256];
   off_t tmp_addr = 0;
 
@@ -723,16 +723,8 @@ void do_replace(int count)
   {
     if (is_visual_on())
     {
-      if (display_info.cursor_addr > display_info.visual_select_addr)
-      {
-        tmp_addr = display_info.visual_select_addr;
-        count = display_info.cursor_addr - display_info.visual_select_addr + user_prefs[GROUPING].value;
-      }
-      else
-      {
-        tmp_addr = display_info.cursor_addr;
-        count = display_info.visual_select_addr - display_info.cursor_addr + user_prefs[GROUPING].value;
-      }
+      tmp_addr = visual_addr();
+      count = visual_span();
       count /= user_prefs[GROUPING].value;
       action_visual_select_off();
     }
@@ -741,12 +733,20 @@ void do_replace(int count)
       tmp_addr = display_info.cursor_addr;
     }
 
-    for (i=0; i<count; i++)
+    if (address_invalid(tmp_addr) == 0)
     {
-      if (address_invalid(tmp_addr) || address_invalid(tmp_addr + user_prefs[GROUPING].value))
-        break;
-      vf_replace(current_file, replace_buf, tmp_addr, user_prefs[GROUPING].value);
-      tmp_addr += user_prefs[GROUPING].value;
+      count *= user_prefs[GROUPING].value;
+      while (address_invalid(tmp_addr + count) && count > 0)
+        count -= user_prefs[GROUPING].value;
+
+      if (count > 0)
+      {
+        tmp_fill = (char *)malloc(count);
+        for (i=0; i<count/user_prefs[GROUPING].value; i++)
+          memcpy(tmp_fill+i*(user_prefs[GROUPING].value), replace_buf, user_prefs[GROUPING].value);
+        vf_replace(current_file, tmp_fill, tmp_addr, count);
+        free(tmp_fill);
+      }
     }
   }
 
