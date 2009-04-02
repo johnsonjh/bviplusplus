@@ -31,7 +31,7 @@ action_code_t action_cursor_move_up(int count, cursor_t cursor)
   a = display_info.cursor_addr;
   a -= BYTES_PER_LINE * count;
 
-  while (address_invalid(a))
+  while (a < 0)
     a += BYTES_PER_LINE;
 
   if (a >= display_info.cursor_addr)
@@ -54,7 +54,7 @@ action_code_t action_cursor_move_down(int count, cursor_t cursor)
   a = display_info.cursor_addr;
   a += BYTES_PER_LINE * count;
 
-  while (address_invalid(a))
+  while (a > display_info.file_size)
     a -= BYTES_PER_LINE;
 
   if (address_invalid(a))
@@ -77,7 +77,7 @@ action_code_t action_cursor_move_left(int count, cursor_t cursor)
   a = display_info.cursor_addr;
   a -= user_prefs[GROUPING].value * count;
 
-  while (address_invalid(a))
+  while (a < 0)
     a +=  user_prefs[GROUPING].value;
 
   if (address_invalid(a))
@@ -100,7 +100,7 @@ action_code_t action_cursor_move_right(int count, cursor_t cursor)
   a = display_info.cursor_addr;
   a += user_prefs[GROUPING].value * count;
 
-  while (address_invalid(a))
+  while (a > display_info.file_size)
     a -=  user_prefs[GROUPING].value;
 
   if (address_invalid(a))

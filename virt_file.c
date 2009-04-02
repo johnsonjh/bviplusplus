@@ -175,6 +175,9 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
 {
   struct stat stat_buf;
 
+  if (f == NULL)
+    return FALSE;
+
   /* If given a file name fill in some info.
      If not the user must open the stream and set the size.
      Filename is still required for saving at this point.
@@ -263,6 +266,9 @@ BOOL vf_create_file(file_manager_t * f, const char *file_name)
 {
   struct stat stat_buf;
 
+  if (f == NULL)
+    return 0;
+
   if (NULL == file_name)
     return FALSE;
 
@@ -297,9 +303,14 @@ off_t vf_save(file_manager_t * f, char *name, int *complete)
   char *tmp_buf;
   off_t write_offset = 0;
   off_t shift = 0;
-  vbuf_t *tmp = f->fm.first_child;
+  vbuf_t *tmp;
   size_t result = 0;
   int seek_result = 0;
+
+  if (f == NULL)
+    return 0; /* save as? */
+
+  tmp = f->fm.first_child;
 
   *complete = 0;
 
@@ -496,7 +507,12 @@ off_t vf_save(file_manager_t * f, char *name, int *complete)
   ---------------------------*/
 BOOL vf_need_save(file_manager_t * f)
 {
-  vbuf_undo_list_t *tmp = f->ul.last;
+  vbuf_undo_list_t *tmp;
+
+  if (f == NULL)
+    return 0;
+
+  tmp = f->ul.last;
 
   while(NULL != tmp)
   {
@@ -520,6 +536,9 @@ int vf_undo(file_manager_t * f, int count, off_t * undo_addr)
   vbuf_list_t *tmp_list = NULL;
   vbuf_t *tmp = NULL;
   int undo_count;
+
+  if (f == NULL)
+    return 0;
 
   /* look for the first change still applied */
   while(NULL != tmp_undo_list)
@@ -583,6 +602,9 @@ int vf_redo(file_manager_t * f, int count, off_t * redo_addr)
   vbuf_list_t *tmp_list = NULL;
   vbuf_t *tmp = NULL;
   int redo_count;
+
+  if (f == NULL)
+    return 0;
 
   if(NULL == tmp_undo_list)
     return 0;
@@ -663,6 +685,8 @@ int vf_redo(file_manager_t * f, int count, off_t * redo_addr)
   ---------------------------*/
 size_t vf_insert_before(file_manager_t * f, char *buf, off_t offset, size_t len)
 {
+  if (f == NULL)
+    return 0;
   prune(&f->ul);
   return _insert_before(&f->fm, buf, offset, len, &f->ul.last);
 }
@@ -673,6 +697,8 @@ size_t vf_insert_before(file_manager_t * f, char *buf, off_t offset, size_t len)
   ---------------------------*/
 size_t vf_insert_after(file_manager_t * f, char *buf, off_t offset, size_t len)
 {
+  if (f == NULL)
+    return 0;
   prune(&f->ul);
   return _insert_before(&f->fm, buf, offset + 1, len, &f->ul.last);
 }
@@ -686,6 +712,9 @@ size_t vf_replace(file_manager_t * f, char *buf, off_t offset, size_t len)
   size_t rep_size = 0;
   vbuf_list_t *vb_list = NULL;
   vbuf_undo_list_t *new_list;
+
+  if (f == NULL)
+    return 0;
 
   prune(&f->ul);
 
@@ -714,6 +743,9 @@ size_t vf_delete(file_manager_t * f, off_t offset, size_t len)
   vbuf_list_t *vb_list = NULL;
   vbuf_undo_list_t *new_list;
 
+  if (f == NULL)
+    return 0;
+
   prune(&f->ul);
 
   del_size = _delete(&f->fm, offset, len, &vb_list);
@@ -737,6 +769,12 @@ size_t vf_delete(file_manager_t * f, off_t offset, size_t len)
   ---------------------------*/
 char vf_get_char(file_manager_t * f, char *result, off_t offset)
 {
+  if (f == NULL)
+  {
+    *result = 0;
+    return 0;
+  }
+
   return _get_char(&f->fm, result, offset);
 }
 
@@ -746,6 +784,9 @@ char vf_get_char(file_manager_t * f, char *result, off_t offset)
   ---------------------------*/
 size_t vf_get_buf(file_manager_t * f, char *dest, off_t offset, size_t len)
 {
+  if (f == NULL)
+    return 0;
+
   return _get_buf(&f->fm, dest, offset, len);
 }
 
