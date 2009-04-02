@@ -422,7 +422,7 @@ void do_insert(int count, int c)
   int hy, hx, ay, ax;
   int ins_buf_size;
   int chars_per_byte, char_count = 0, tmp_char_count = 0, low_tmp_char_count = 0;
-  int offset, len1, ins_buf_offset, len2, len3;
+  int offset = 0, len1, ins_buf_offset, len2, len3;
   off_t ins_addr, page_start;
 
   screen_buf = (char *)malloc(2 * PAGE_SIZE); /* fix this later, but make it big for now */
@@ -454,6 +454,8 @@ void do_insert(int count, int c)
 
   while (c2 != ESC)
   {
+    if ((offset + char_count + 1) > PAGE_SIZE)
+      page_start += BYTES_PER_LINE;
     offset = ins_addr - page_start;
     if (offset < 0)
     {
@@ -467,7 +469,14 @@ void do_insert(int count, int c)
       len2 = char_count;
       ins_buf_offset = 0;
     }
-    len3 = (PAGE_END - page_start) - (len1 + len2) + 1;
+    if ((len1 + len2) > PAGE_SIZE)
+      len3 = 0;
+    else
+    {
+      len3 = (PAGE_END - display_info.page_start) - len1 + 1;
+      if ((len1 + len2 + len3) > PAGE_SIZE)
+        len3 = PAGE_SIZE - (len1 + len2);
+    }
 
     if (len1 != 0)
       vf_get_buf(current_file, screen_buf, page_start, len1);
@@ -475,6 +484,8 @@ void do_insert(int count, int c)
       memcpy(screen_buf + len1, ins_buf + ins_buf_offset, len2);
     if (len3 > 0)
       vf_get_buf(current_file, screen_buf + len1 + len2 + 1, ins_addr, len3);
+    else
+      len3 = 0;
 
     print_screen_buf(page_start, screen_buf, len1+len2+1+len3);
 
@@ -521,14 +532,12 @@ void do_insert(int count, int c)
       }
     }
 
+    update_panels();
+    doupdate();
     if (display_info.cursor_window == WINDOW_HEX)
       wmove(window_list[WINDOW_HEX], hy, hx);
     else
       wmove(window_list[WINDOW_ASCII], ay, ax);
-
-
-    update_panels();
-    doupdate();
     c2 = getch();
     switch (c2)
     {
@@ -618,8 +627,6 @@ void do_insert(int count, int c)
         break;
     }
   }
-
-
 
   free(ins_buf);
   free(screen_buf);
@@ -744,7 +751,7 @@ void do_replace(int count)
     if (address_invalid(tmp_addr) == 0)
     {
       count *= user_prefs[GROUPING].value;
-      while (address_invalid(tmp_addr + count) && count > 0)
+      while (address_invalid(tmp_addr + count - 1) && count > 0)
         count -= user_prefs[GROUPING].value;
 
       if (count > 0)

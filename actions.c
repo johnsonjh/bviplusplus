@@ -274,6 +274,7 @@ action_code_t action_insert_before(int count, char *buf, int len)
   if (is_visual_on())
     return E_INVALID;
   vf_insert_before(current_file, buf, display_info.cursor_addr, len);
+  update_display_info();
   place_cursor(display_info.cursor_addr + len - 1, CALIGN_NONE, CURSOR_REAL);
   print_screen(display_info.page_start);
   return error;
@@ -285,6 +286,7 @@ action_code_t action_insert_after(int count, char *buf, int len)
   if (is_visual_on())
     return E_INVALID;
   vf_insert_after(current_file, buf, display_info.cursor_addr, len);
+  update_display_info();
   place_cursor(display_info.cursor_addr + len, CALIGN_NONE, CURSOR_REAL);
   print_screen(display_info.page_start);
   return error;
@@ -660,6 +662,8 @@ action_code_t action_undo(int count)
 
   vf_undo(current_file, count, &caddr);
   update_display_info();
+  if (address_invalid(caddr))
+    caddr = display_info.file_size - 1;
   place_cursor(caddr, CALIGN_NONE, CURSOR_REAL);
   print_screen(display_info.page_start);
   return error;
