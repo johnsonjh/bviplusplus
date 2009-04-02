@@ -345,7 +345,7 @@ void update_status_window(void)
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 {
   int x, y;
-  off_t new_screen_addr;
+  off_t new_screen_addr = 0;
 
   if (cursor == CURSOR_VIRTUAL)
   {

@@ -35,11 +35,11 @@
 #define BYTES_PER_GROUP       (display_info.cursor_window == WINDOW_HEX ? HEX_BYTES_PER_GROUP : ASCII_BYTES_PER_GROUP)
 
 /* width of hex box + ascii box */
-#define SHARED_WIDTH (COLS - ADDR_BOX_W)
+#define SHARED_WIDTH ((COLS - ADDR_BOX_W) < 4 ? 4 : (COLS - ADDR_BOX_W))
 
 #define MAX_HEX_COLS    ((SHARED_WIDTH-4)/((3*ASCII_BYTES_PER_GROUP) + 1))
 #define HEX_COLS        (user_prefs[MAX_COLS].value == 0 ? MAX_HEX_COLS : MAX_HEX_COLS > user_prefs[MAX_COLS].value ? user_prefs[MAX_COLS].value : MAX_HEX_COLS)
-#define BYTES_PER_LINE  (HEX_COLS * user_prefs[GROUPING].value)
+#define BYTES_PER_LINE (HEX_COLS * user_prefs[GROUPING].value)
 #define HEX_LINES       (HEX_BOX_H - 2)
 
 
