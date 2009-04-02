@@ -315,29 +315,22 @@ void update_status_window(void)
     }
   }
 
+  werase(window_list[WINDOW_STATUS]);
+
+  if (result > 0)
+    mvwprintw(window_list[WINDOW_STATUS], 0, STATUS_1_X,
+              "[/x %02x  /d %03u  /b %s]",
+              tmp[0], tmp[0], bin_text);
   if (result == 4)
-    mvwprintw(window_list[WINDOW_STATUS], 0, WINDOW_STATUS_W - STATUS_PRINT_LEN,
-              "H: %02x D: %d B: %s X32: %02x%02x%02x%02x X32LE: %02x%02x%02x%02x     Addr: %08x (%d)              ",
-              tmp[0],
-              tmp[0],
-              bin_text,
+    mvwprintw(window_list[WINDOW_STATUS], 0, STATUS_2_X,
+              "[U32: %02x%02x%02x%02x (le: %02x%02x%02x%02x)]",
               tmp[0], tmp[1], tmp[2], tmp[3],
-              tmp[3], tmp[2], tmp[1], tmp[0],
-              display_info.cursor_addr,
-              display_info.cursor_addr);
-  else if (result > 0)
-    mvwprintw(window_list[WINDOW_STATUS], 0, WINDOW_STATUS_W - STATUS_PRINT_LEN,
-              "H: %08x D: %d B: %s     Addr: %08x (%d)              ",
-              tmp[0],
-              tmp[0],
-              bin_text,
-              display_info.cursor_addr,
-              display_info.cursor_addr);
-  else
-    mvwprintw(window_list[WINDOW_STATUS], 0, WINDOW_STATUS_W - STATUS_PRINT_LEN,
-              "     Addr: %08x (%d)              ",
-              display_info.cursor_addr,
-              display_info.cursor_addr);
+              tmp[3], tmp[2], tmp[1], tmp[0]);
+
+  mvwprintw(window_list[WINDOW_STATUS], 0, STATUS_3_X,
+            "Addr: %08x (%d)",
+            display_info.cursor_addr,
+            display_info.cursor_addr);
 
   wmove(window_list[display_info.cursor_window], y, x);
 }
