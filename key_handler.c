@@ -473,7 +473,7 @@ void do_insert(int count, int c)
       len3 = 0;
     else
     {
-      len3 = (PAGE_END - display_info.page_start) - len1 + 1;
+      len3 = (PAGE_END - page_start) - len1 + 1;
       if ((len1 + len2 + len3) > PAGE_SIZE)
         len3 = PAGE_SIZE - (len1 + len2);
     }
