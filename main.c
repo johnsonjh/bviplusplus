@@ -27,6 +27,13 @@ int main(int argc, char **argv)
       fprintf(stderr, "Could not open %s\n", argv[i]);
   }
   current_file = vf_get_current_fm_from_ring(file_ring);
+  if (current_file == NULL) /* no file specified in open */
+  {
+    current_file = vf_add_fm_to_ring(file_ring);
+    if (vf_init(current_file, NULL) == FALSE)
+      fprintf(stderr, "Empty file failed?\n");
+  }
+
   action_init_yank();
 
   initscr();
@@ -83,6 +90,7 @@ int main(int argc, char **argv)
 
 
 #if 0
+  status bar should indicate nochange/saved/unsaved display options (little endian?, grouping?), file name, #open buffers?
   if in little endian should ascii order change?
   search binary (bit level), hex (nibble level), ascii
   run arbitrary scripts on visually selected areas (checksum, parsing, etc)

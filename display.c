@@ -382,7 +382,10 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
   }
 
   if (display_info.file_size == 0)
+  {
+    display_info.cursor_addr = 0;
     wmove(window_list[display_info.cursor_window], 1, 1);
+  }
 
   if (is_visual_on())
     print_screen(display_info.page_start);

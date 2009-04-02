@@ -661,7 +661,7 @@ char _get_char(vbuf_t * vb, char *result, off_t offset)
   dest = &value;
 
   /* Offset is not in this set! */
-  if(offset > vb->start + vb->size)
+  if(offset >= vb->start + vb->size)
   {
     *result = 0;
     return 0;

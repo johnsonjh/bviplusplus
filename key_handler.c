@@ -434,7 +434,10 @@ void do_insert(int count, int c)
   {
     case 'A': /* no break */
     case 'a': /* no break */
-      ins_addr = display_info.cursor_addr + 1;
+      if (display_info.file_size == 0)
+        ins_addr = display_info.cursor_addr;
+      else
+        ins_addr = display_info.cursor_addr + user_prefs[GROUPING].value;
       break;
     case INS:
     case 'I': /* no break */
@@ -473,7 +476,7 @@ void do_insert(int count, int c)
       len3 = 0;
     else
     {
-      len3 = (PAGE_END - page_start) - len1 + 1;
+      len3 = (PAGE_END - page_start) - len1 + user_prefs[GROUPING].value;
       if ((len1 + len2 + len3) > PAGE_SIZE)
         len3 = PAGE_SIZE - (len1 + len2);
     }
@@ -483,7 +486,7 @@ void do_insert(int count, int c)
     if (len2 != 0)
       memcpy(screen_buf + len1, ins_buf + ins_buf_offset, len2);
     if (len3 > 0)
-      vf_get_buf(current_file, screen_buf + len1 + len2 + 1, ins_addr, len3);
+      vf_get_buf(current_file, screen_buf + len1 + len2 + user_prefs[GROUPING].value, ins_addr, len3);
     else
       len3 = 0;
 
@@ -616,8 +619,16 @@ void do_insert(int count, int c)
     {
       case 'A': /* no break */
       case 'a': /* no break */
-        for (i=0; i<count; i++)
-          action_insert_after(count,ins_buf,char_count);
+        if (display_info.file_size == 0)
+        {
+          for (i=0; i<count; i++)
+            action_insert_before(count,ins_buf,char_count);
+        }
+        else
+        {
+          for (i=0; i<count; i++)
+            action_insert_after(count,ins_buf,char_count);
+        }
         break;
       case 'I': /* no break */
       case 'i': /* no break */
