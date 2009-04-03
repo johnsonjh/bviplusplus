@@ -267,7 +267,7 @@ BOOL vf_create_file(file_manager_t * f, const char *file_name)
   struct stat stat_buf;
 
   if (f == NULL)
-    return 0;
+    return FALSE;
 
   if (NULL == file_name)
     return FALSE;
@@ -284,7 +284,7 @@ BOOL vf_create_file(file_manager_t * f, const char *file_name)
   else
     f->fm.size = stat_buf.st_size;
 
-  return FALSE;
+  return TRUE;
 }
 
 
@@ -317,7 +317,7 @@ off_t vf_save(file_manager_t * f, char *name, int *complete)
   prune(&f->ul);
 
   if (f->fm.fp == NULL)
-    return
+    return 0;
 
   fclose(f->fm.fp);
   f->fm.fp = fopen(f->fname, "r+");
@@ -501,7 +501,19 @@ off_t vf_save(file_manager_t * f, char *name, int *complete)
   return write_offset;
 }
 
+/*---------------------------
 
+  ---------------------------*/
+BOOL vf_need_create(file_manager_t * f)
+{
+  if (f == NULL)
+    return FALSE;
+
+  if (f->fm.fp == NULL)
+    return TRUE;
+
+  return FALSE;
+}
 /*---------------------------
 
   ---------------------------*/
@@ -510,7 +522,7 @@ BOOL vf_need_save(file_manager_t * f)
   vbuf_undo_list_t *tmp;
 
   if (f == NULL)
-    return 0;
+    return FALSE;
 
   tmp = f->ul.last;
 

@@ -72,6 +72,13 @@
 #define MSG_BOX_X (((HEX_BOX_W - MSG_BOX_W) / 2) + HEX_BOX_X)
 #define MAX_MSG_BOX_LEN ((MSG_BOX_H - 3) * (MSG_BOX_W - 2))
 
+
+#define MAX_FILE_NAME 265
+#define FILE_BOX_H 4
+#define FILE_BOX_W ((HEX_BOX_W - 8) > 4 ? (HEX_BOX_W - 8) : 4)
+#define FILE_BOX_Y (((HEX_BOX_H - FILE_BOX_H) / 2) + HEX_BOX_Y)
+#define FILE_BOX_X (((HEX_BOX_W - FILE_BOX_W) / 2) + HEX_BOX_X)
+
 #define INSERT_BOX_H 4
 #define INSERT_BOX_W 50
 #define INSERT_BOX_Y (((HEX_BOX_H - INSERT_BOX_H) / 2) + HEX_BOX_Y)

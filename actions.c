@@ -1,9 +1,11 @@
 #include <stdlib.h>
+#include <string.h>
 #include "actions.h"
 #include "display.h"
 #include "virt_file.h"
 #include "app_state.h"
 #include "user_prefs.h"
+#include "key_handler.h"
 
 #define MARK_LIST_SIZE (26*2)
 #define NUM_YANK_REGISTERS (26*2 + 10)
@@ -692,10 +694,102 @@ action_code_t action_redo(int count)
   return error;
 }
 
+BOOL file_name_prompt(char *file_name)
+{
+  WINDOW *w;
+  int c, i, y, position = 0, count = 0;
+  char cbuff[MAX_FILE_NAME];
+
+  w = newwin(FILE_BOX_H, FILE_BOX_W, FILE_BOX_Y, FILE_BOX_X);
+  box(w, 0, 0);
+  y = FILE_BOX_H-2;
+  mvwprintw(w, y, 1, "Enter name of file [ESC] cancel, [ENTER] done");
+  y--;
+  wmove(w, y, 1);
+  wrefresh(w);
+
+  c = getch();
+  while (c != ESC && c != NL && c != CR && c != KEY_ENTER)
+  {
+    switch(c)
+    {
+      case KEY_RESIZE:
+        break;
+      case BVICTRL('H'):
+      case KEY_BACKSPACE:
+        if (position == 0)
+          break;
+        mvwaddch(w, y, position, ' ');
+
+        for (i=position; i<count; i++)
+          mvwaddch(w, y, i, cbuff[i]);
+        wclrtoeol(w);
+
+        box(w, 0, 0);
+        wmove(w, y, position);
+        position--;
+        count--;
+        break;
+      case KEY_LEFT:
+        if (--position < 0)
+          position++;
+        wmove(w, y, position+1);
+        break;
+      case KEY_RIGHT:
+        if (++position > count)
+          position--;
+        wmove(w, y, position+1);
+        break;
+      default:
+        if (count >= MAX_FILE_NAME)
+          break;
+        for (i=count; i>=position; i--)
+          cbuff[i+1] = cbuff[i];
+        cbuff[position] = (char)c;
+        count++;
+        for (i=position; i<count; i++)
+          mvwaddch(w, y, i+1, cbuff[i]);
+        position++;
+        wmove(w, y, position+1);
+        break;
+    }
+    wrefresh(w);
+    c = getch();
+  }
+
+  cbuff[count] = '\0';
+
+  delwin(w);
+  print_screen(display_info.page_start);
+
+  if (c == ESC)
+    return FALSE;
+
+  if (count)
+  {
+    strncpy(file_name, cbuff, MAX_FILE_NAME);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 action_code_t action_save(void)
 {
   action_code_t error = E_SUCCESS;
   int complete;
+  char file_name[MAX_FILE_NAME];
+  BOOL status;
+
+  if (vf_need_create(current_file))
+  {
+    status = file_name_prompt(file_name);
+    if (status == FALSE)
+      return E_INVALID;
+    vf_create_file(current_file, file_name);
+    if (status == FALSE)
+      return E_INVALID;
+  }
   vf_save(current_file, NULL, &complete);
   return error;
 }
