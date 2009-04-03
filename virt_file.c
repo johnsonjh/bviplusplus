@@ -264,8 +264,6 @@ file_manager_t that is not linked to a file.
   ---------------------------*/
 BOOL vf_create_file(file_manager_t * f, const char *file_name)
 {
-  struct stat stat_buf;
-
   if (f == NULL)
     return FALSE;
 
@@ -276,13 +274,17 @@ BOOL vf_create_file(file_manager_t * f, const char *file_name)
   f->fname[MAX_PATH_LEN] = 0;
 
   f->fm.fp = fopen(f->fname, "r");
-  if(NULL == f->fm.fp)
+  if(NULL != f->fm.fp) /* file already exists */
     return FALSE;
 
-  if (stat(f->fname, &stat_buf))
+  f->fm.fp = fopen(f->fname, "w+");
+  if(NULL == f->fm.fp) /* couldn't create file */
     return FALSE;
-  else
-    f->fm.size = stat_buf.st_size;
+
+  fclose(f->fm.fp);
+  f->fm.fp = fopen(f->fname, "r");
+  if(NULL == f->fm.fp) /* couldn't open the file just created */
+    return FALSE;
 
   return TRUE;
 }
