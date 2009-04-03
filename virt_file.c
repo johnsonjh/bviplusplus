@@ -262,6 +262,18 @@ void vf_stat(file_manager_t * f, vf_stat_t * s)
 Call this before saving when you have made edits to an initialized
 file_manager_t that is not linked to a file.
   ---------------------------*/
+char *vf_get_fname(file_manager_t * f)
+{
+  if (f == NULL)
+    return NULL;
+
+  return f->fname;
+}
+
+/*---------------------------
+Call this before saving when you have made edits to an initialized
+file_manager_t that is not linked to a file.
+  ---------------------------*/
 BOOL vf_create_file(file_manager_t * f, const char *file_name)
 {
   if (f == NULL)

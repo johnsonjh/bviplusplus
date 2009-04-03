@@ -19,11 +19,12 @@
 #define ADDR_BOX_H    (ADDR_BOX_H_ > 3 ? ADDR_BOX_H_ : 3)
 
 
-#define STATUS_1_X (WINDOW_STATUS_W - 100)
-#define STATUS_2_X (STATUS_1_X + 30)
-#define STATUS_3_X (STATUS_2_X + 35)
+#define STATUS_1_Y 0
+#define STATUS_1_X (COLS - 30)
+#define STATUS_2_Y 1
+#define STATUS_2_X STATUS_1_X
 
-#define WINDOW_STATUS_H 1
+#define WINDOW_STATUS_H 2
 #define WINDOW_STATUS_W COLS
 #define WINDOW_STATUS_Y MENU_BOX_H + ADDR_BOX_H
 #define WINDOW_STATUS_X 0

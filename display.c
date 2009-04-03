@@ -317,20 +317,22 @@ void update_status_window(void)
 
   werase(window_list[WINDOW_STATUS]);
 
+  mvwaddstr(window_list[WINDOW_STATUS], 0, 0, vf_get_fname(current_file));
+  mvwprintw(window_list[WINDOW_STATUS], 1, 0,
+            "Addr: %08x (%d)",
+            display_info.cursor_addr,
+            display_info.cursor_addr);
+
   if (result > 0)
-    mvwprintw(window_list[WINDOW_STATUS], 0, STATUS_1_X,
-              "[/x %02x  /d %03u  /b %s]",
+    mvwprintw(window_list[WINDOW_STATUS], STATUS_1_Y, STATUS_1_X,
+              "[/x %02x  /d %03u  /b %s  ]",
               tmp[0], tmp[0], bin_text);
   if (result == 4)
-    mvwprintw(window_list[WINDOW_STATUS], 0, STATUS_2_X,
+    mvwprintw(window_list[WINDOW_STATUS], STATUS_2_Y, STATUS_2_X,
               "[U32: %02x%02x%02x%02x (le: %02x%02x%02x%02x)]",
               tmp[0], tmp[1], tmp[2], tmp[3],
               tmp[3], tmp[2], tmp[1], tmp[0]);
 
-  mvwprintw(window_list[WINDOW_STATUS], 0, STATUS_3_X,
-            "Addr: %08x (%d)",
-            display_info.cursor_addr,
-            display_info.cursor_addr);
 
   wmove(window_list[display_info.cursor_window], y, x);
 }
