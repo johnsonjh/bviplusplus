@@ -48,6 +48,7 @@ int action_visual_select_check(void);
 action_code_t action_visual_select_on(void);
 action_code_t action_visual_select_off(void);
 action_code_t action_visual_select_toggle(void);
+action_code_t action_do_search(int s, char *cmd, cursor_t cursor);
 action_code_t action_search_highlight(void);
 action_code_t action_clear_search_highlight(void);
 off_t action_get_mark(int m);

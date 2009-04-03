@@ -604,6 +604,13 @@ action_code_t action_visual_select_toggle(void)
 
   return error;
 }
+
+action_code_t action_do_search(int s, char *cmd, cursor_t cursor)
+{
+  action_code_t error = E_SUCCESS;
+  msg_box("Sorry, search not implimented yet. Stay tuned for updates.");
+  return error;
+}
 action_code_t action_search_highlight(void)
 {
   action_code_t error = E_SUCCESS;

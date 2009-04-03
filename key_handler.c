@@ -174,7 +174,7 @@ typedef struct cmd_hist_s
   int count;
 } cmd_hist_t;
 
-action_code_t do_cmd_line(int s)
+action_code_t do_cmd_line(int s, cursor_t cursor)
 {
   static cmd_hist_t cmd_hist[MAX_CMD_HISTORY] = { 0 };
   cmd_hist_t tmp_cmd;
@@ -199,6 +199,8 @@ action_code_t do_cmd_line(int s)
       case KEY_RESIZE:
         break;
       case KEY_UP:
+        if (s == '/' || s == '\\')
+          break;
         tmp_hist_index = hist_index-1;
         if (tmp_hist_index < 0)
           tmp_hist_index = MAX_CMD_HISTORY - 1;
@@ -222,6 +224,8 @@ action_code_t do_cmd_line(int s)
         wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
         break;
       case KEY_DOWN:
+        if (s == '/' || s == '\\')
+          break;
         if (hist_index == entry_hist_index)
           break;
         tmp_hist_index = hist_index+1;
@@ -246,7 +250,7 @@ action_code_t do_cmd_line(int s)
       case BVICTRL('H'):
       case KEY_BACKSPACE:
         if (tmp_cmd.position == 0)
-          break;
+          return E_NO_ACTION;
         for (i=tmp_cmd.position; i<tmp_cmd.count; i++)
         {
           tmp_cmd.cbuff[i-1] = tmp_cmd.cbuff[i];
@@ -290,12 +294,19 @@ action_code_t do_cmd_line(int s)
 
   if (tmp_cmd.count)
   {
-    strncpy(cmd, tmp_cmd.cbuff, MAX_CMD_BUF);
-    strncpy(cmd_hist[entry_hist_index].cbuff, tmp_cmd.cbuff, MAX_CMD_BUF);
-    cmd_hist[entry_hist_index].count = tmp_cmd.count;
-    cmd_hist[entry_hist_index].position = tmp_cmd.position;
-    cmd_parse(cmd);
-    hist_index = (entry_hist_index+1) % MAX_CMD_HISTORY;
+    if (s == '/' || s == '\\')
+    {
+      action_do_search(s, cmd, cursor);
+    }
+    else
+    {
+      strncpy(cmd, tmp_cmd.cbuff, MAX_CMD_BUF);
+      strncpy(cmd_hist[entry_hist_index].cbuff, tmp_cmd.cbuff, MAX_CMD_BUF);
+      cmd_hist[entry_hist_index].count = tmp_cmd.count;
+      cmd_hist[entry_hist_index].position = tmp_cmd.position;
+      cmd_parse(cmd);
+      hist_index = (entry_hist_index+1) % MAX_CMD_HISTORY;
+    }
   }
   else
   {
@@ -380,7 +391,9 @@ off_t get_next_motion_addr(void)
         action_cursor_move_page_up(CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case ':':
-        do_cmd_line(c);
+      case '/':
+      case '\\':
+        do_cmd_line(c, CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case ESC:
         return display_info.cursor_addr;
@@ -937,7 +950,9 @@ void handle_key(int c)
       action_redo(multiplier);
       break;
     case ':':
-      do_cmd_line(c);
+    case '/':
+    case '\\':
+      do_cmd_line(c, CURSOR_REAL);
       break;
     case ESC:
       action_visual_select_off();
