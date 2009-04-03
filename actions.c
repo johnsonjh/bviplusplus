@@ -719,12 +719,12 @@ BOOL file_name_prompt(char *file_name)
       case KEY_BACKSPACE:
         if (position == 0)
           break;
-        mvwaddch(w, y, position, ' ');
-
         for (i=position; i<count; i++)
+        {
+          cbuff[i-1] = cbuff[i];
           mvwaddch(w, y, i, cbuff[i]);
+        }
         wclrtoeol(w);
-
         box(w, 0, 0);
         wmove(w, y, position);
         position--;

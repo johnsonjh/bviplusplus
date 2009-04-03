@@ -247,7 +247,12 @@ action_code_t do_cmd_line(int s)
       case KEY_BACKSPACE:
         if (tmp_cmd.position == 0)
           break;
-        mvwaddch(window_list[WINDOW_STATUS], 0, tmp_cmd.position, ' ');
+        for (i=tmp_cmd.position; i<tmp_cmd.count; i++)
+        {
+          tmp_cmd.cbuff[i-1] = tmp_cmd.cbuff[i];
+          mvwaddch(window_list[WINDOW_STATUS], 0, i, tmp_cmd.cbuff[i]);
+        }
+        wclrtoeol(window_list[WINDOW_STATUS]);
         wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position);
         tmp_cmd.position--;
         tmp_cmd.count--;
