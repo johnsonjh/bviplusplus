@@ -289,6 +289,46 @@ BOOL vf_create_file(file_manager_t * f, const char *file_name)
   return TRUE;
 }
 
+/*---------------------------
+Call this before saving when you want to save an existing file to a
+new file.
+  ---------------------------*/
+BOOL vf_copy_file(file_manager_t * f, const char *file_name)
+{
+  FILE *out;
+  char c;
+
+  if (f == NULL)
+    return FALSE;
+
+  if (NULL == file_name)
+    return FALSE;
+
+  if (f->fm.fp == NULL)
+    return FALSE;
+
+  out = fopen(file_name, "w+");
+  if (out == NULL)
+    return FALSE;
+
+  fseek(f->fm.fp, 0, SEEK_SET);
+  fread(&c, 1, 1, f->fm.fp);
+  while (!feof(f->fm.fp))
+  {
+    fwrite(&c, 1, 1, out);
+    fread(&c, 1, 1, f->fm.fp);
+  }
+
+  snprintf(f->fname, MAX_PATH_LEN - 1, "%s", file_name);
+  f->fname[MAX_PATH_LEN] = 0;
+
+  fclose(f->fm.fp);
+  fclose(out);
+
+  f->fm.fp = fopen(f->fname, "r");
+
+  return TRUE;
+}
 
 /*---------------------------
 
@@ -298,7 +338,7 @@ BOOL vf_create_file(file_manager_t * f, const char *file_name)
    checking! Also the total insert changes is
    limited to MAX_SAVE_SHIFT. Consider increasing
    this size dynamically when needed? */
-off_t vf_save(file_manager_t * f, char *name, int *complete)
+off_t vf_save(file_manager_t * f, int *complete)
 {
   static char move_buf[2][MAX_SAVE_SHIFT];  /* 2 x 2 megs from heap */
   int buf_select = 0;

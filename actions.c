@@ -780,24 +780,53 @@ action_code_t action_save(void)
   int complete;
   char file_name[MAX_FILE_NAME];
   BOOL status;
+  off_t size;
 
   if (vf_need_create(current_file))
   {
     status = file_name_prompt(file_name);
     if (status == FALSE)
       return E_INVALID;
-    vf_create_file(current_file, file_name);
+    status = vf_create_file(current_file, file_name);
     if (status == FALSE)
       return E_INVALID;
   }
-  vf_save(current_file, NULL, &complete);
+  size = vf_save(current_file, &complete);
+  if (size != display_info.file_size)
+  {
+    msg_box("Only saved %d bytes, should have saved %d bytes!!",
+            size, display_info.file_size);
+    return E_INVALID;
+  }
   return error;
 }
 
 action_code_t action_save_as(char *name)
 {
   action_code_t error = E_SUCCESS;
-  msg_box("\"Save As\"Not implimented yet, sucker!");
+  int complete;
+  BOOL status;
+
+  if (vf_need_create(current_file))
+  {
+    status = vf_create_file(current_file, name);
+    if (status == FALSE)
+    {
+      msg_box("Could not create \"%s\" (does the file already exist?)", name);
+      return E_INVALID;
+    }
+  }
+  else
+  {
+    status = vf_copy_file(current_file, name);
+    if (status == FALSE)
+    {
+      msg_box("Could not create \"%s\" (does the file already exist?)", name);
+      return E_INVALID;
+    }
+  }
+
+  vf_save(current_file, &complete);
   return error;
 }
 

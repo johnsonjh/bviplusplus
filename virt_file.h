@@ -125,7 +125,7 @@ int    vf_undo(file_manager_t * f, int count, off_t * undo_addr);
 int    vf_redo(file_manager_t * f, int count, off_t * redo_addr);
 BOOL   vf_need_save(file_manager_t * f);
 BOOL   vf_create_file(file_manager_t * f, const char *file_name);
-off_t  vf_save(file_manager_t * f, char *name, int *complete);
+off_t  vf_save(file_manager_t * f, int *complete);
 
 #endif /* __VIRT_FILE_H */
 
