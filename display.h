@@ -144,10 +144,10 @@ void blob_standout(BOOL on);
 int is_visual_on(void);
 int visual_span(void);
 off_t visual_addr(void);
-int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size);
+int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size, int screen_start, int screen_end);
 void update_status_window(void);
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor);
-void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size);
+void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, int screen_start, int screen_end);
 void print_screen(off_t addr);
 
 #endif /* __DISPLAY_H__ */

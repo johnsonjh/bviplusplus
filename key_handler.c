@@ -508,7 +508,7 @@ void do_insert(int count, int c)
     else
       len3 = 0;
 
-    print_screen_buf(page_start, screen_buf, len1+len2+1+len3);
+    print_screen_buf(page_start, screen_buf, len1+len2+1+len3, 0, len1+len2+1+len3);
 
     if (display_info.cursor_window == WINDOW_HEX)
     {
