@@ -176,12 +176,11 @@ off_t visual_addr(void)
 }
 
 /* returns the number of bytes displayed on that line */
-int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size, int screen_start, int screen_end)
+int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size)
 {
   int i, j, k,
       y, x = 1,
-      byte_addr,
-      screen_size;
+      byte_addr;
   char c, result,
        addr_text[ADDR_DIGITS + 1],
        bin_text[9];
@@ -200,8 +199,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
   }
   else
   {
-    screen_size = screen_end - screen_start;
-    if (line_addr < page_addr || line_addr >= page_addr + screen_size)
+    if (line_addr < page_addr || line_addr >= page_addr + screen_buf_size)
       return 0;
   }
 
@@ -227,7 +225,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
       }
       else
       {
-        if (byte_addr < page_addr || byte_addr >= page_addr + screen_size)
+        if (byte_addr < page_addr || byte_addr >= page_addr + screen_buf_size)
         {
           visual_select_hl(FALSE);
           break;
@@ -396,7 +394,7 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 }
 
 
-void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, int screen_start, int screen_end)
+void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size)
 {
   int i;
   off_t line_addr = addr;
@@ -409,7 +407,7 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, int scr
 
   for (i=0; i<HEX_LINES; i++)
   {
-    line_addr += print_line(addr, line_addr, screen_buf, screen_buf_size, screen_start, screen_end);
+    line_addr += print_line(addr, line_addr, screen_buf, screen_buf_size);
     if (screen_buf == NULL)
     {
       if (address_invalid(line_addr))
@@ -417,7 +415,7 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, int scr
     }
     else
     {
-      if (line_addr >= addr + (screen_end - screen_start))
+      if (line_addr < addr || line_addr >= addr + screen_buf_size)
         break;
     }
   }
@@ -425,35 +423,18 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, int scr
 
 void print_screen(off_t addr)
 {
-  int i, screen_buf_size, screen_start, screen_end;
+  int i, screen_buf_size;
   off_t line_addr = addr;
   char *screen_buf;
 
   display_info.page_start = addr;
   display_info.page_end = PAGE_END;
 
-  screen_buf_size = 3*PAGE_SIZE;
-
-  screen_start = PAGE_SIZE;
-  screen_end = 2*PAGE_SIZE;
-
-  if ((addr - PAGE_SIZE) < 0)
-  {
-    screen_start -= 0 - (addr - PAGE_SIZE);
-    screen_end -= 0 - (addr - PAGE_SIZE);
-    screen_buf_size -= 0 - (addr - PAGE_SIZE);
-  }
-  if ((addr + PAGE_SIZE) > display_info.file_size)
-  {
-    screen_end -= (addr + PAGE_SIZE) - display_info.file_size;
-    screen_buf_size -= (addr + PAGE_SIZE) - display_info.file_size;
-  }
-
-//PAGE_END - addr + 1;
+  screen_buf_size = PAGE_END - addr + 1;
   screen_buf = (char *)malloc(screen_buf_size);
-  vf_get_buf(current_file, screen_buf, addr - screen_start, screen_buf_size);
+  vf_get_buf(current_file, screen_buf, addr, screen_buf_size);
 
-  print_screen_buf(addr, screen_buf, screen_buf_size, screen_start, screen_end);
+  print_screen_buf(addr, screen_buf, screen_buf_size);
 
   free(screen_buf);
 }
