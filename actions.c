@@ -605,10 +605,153 @@ action_code_t action_visual_select_toggle(void)
   return error;
 }
 
+action_code_t action_move_cursor_prev_search(cursor_t cursor)
+{
+  action_code_t error = E_SUCCESS;
+  search_aid_t search_aid;
+  off_t addr, tmp;
+
+  addr = display_info.cursor_addr - PAGE_SIZE;
+  if (address_invalid(addr))
+    addr = 0;
+
+/* now search past pages */
+  while(!address_invalid(addr))
+  {
+    fill_search_buf(addr, PAGE_SIZE, &search_aid);
+
+    do
+    {
+      tmp = search_aid.hl_start;
+      buf_search(&search_aid);
+    } while (search_aid.hl_start != -1 && search_aid.hl_start < display_info.cursor_addr);
+
+    if (tmp != -1 && tmp < display_info.cursor_addr)
+    {
+      place_cursor(tmp, CALIGN_NONE, cursor);
+      free_search_buf(&search_aid);
+      return error;
+    }
+
+    free_search_buf(&search_aid);
+    addr -= PAGE_SIZE;
+  }
+
+  msg_box("Beginning of file reached, wrapping");
+
+  addr = display_info.file_size - PAGE_SIZE;
+  if (address_invalid(addr))
+    addr = 0;
+
+/* now search future pages */
+  while(addr >= display_info.cursor_addr)
+  {
+    fill_search_buf(addr, PAGE_SIZE, &search_aid);
+
+    do
+    {
+      tmp = search_aid.hl_start;
+      buf_search(&search_aid);
+    } while (search_aid.hl_start != -1);
+
+    if (tmp != -1 && tmp >= display_info.cursor_addr)
+    {
+      place_cursor(tmp, CALIGN_NONE, cursor);
+      free_search_buf(&search_aid);
+      return error;
+    }
+
+    free_search_buf(&search_aid);
+    addr -= PAGE_SIZE;
+  }
+
+  msg_box("Term \"%s\" not found", search_item[current_search].pattern);
+  return error;
+}
+
+action_code_t  action_move_cursor_next_search(cursor_t cursor)
+{
+  action_code_t error = E_SUCCESS;
+  search_aid_t search_aid;
+  off_t addr;
+
+  addr = display_info.cursor_addr;
+
+  fill_search_buf(addr, PAGE_SIZE, &search_aid);
+
+/* first search the current page */
+  while (search_aid.hl_start != -1 && search_aid.hl_start <= display_info.cursor_addr)
+    buf_search(&search_aid);
+
+  if (search_aid.hl_start != -1)
+  {
+    place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
+    free_search_buf(&search_aid);
+    return error;
+  }
+
+  free_search_buf(&search_aid);
+
+  addr += 2*PAGE_SIZE;
+
+/* now search future pages */
+  while(!address_invalid(addr))
+  {
+    fill_search_buf(addr, PAGE_SIZE, &search_aid);
+
+    if (search_aid.hl_start != -1)
+    {
+      place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
+      free_search_buf(&search_aid);
+      return error;
+    }
+
+    free_search_buf(&search_aid);
+    addr += 2*PAGE_SIZE;
+  }
+
+  msg_box("End of file reached, wrapping");
+
+  addr = 0;
+
+/* now search past pages */
+  while(addr <= display_info.cursor_addr)
+  {
+    fill_search_buf(addr, PAGE_SIZE, &search_aid);
+
+    if (search_aid.hl_start != -1 && search_aid.hl_start <= display_info.cursor_addr)
+    {
+      place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
+      free_search_buf(&search_aid);
+      return error;
+    }
+
+    free_search_buf(&search_aid);
+    addr += 2*PAGE_SIZE;
+  }
+
+  msg_box("Term \"%s\" not found", search_item[current_search].pattern);
+  return error;
+}
 action_code_t action_do_search(int s, char *cmd, cursor_t cursor)
 {
   action_code_t error = E_SUCCESS;
-  msg_box("Sorry, search not implimented yet. Stay tuned for updates.");
+  set_search_term(cmd);
+
+  if (search_item[current_search].used == TRUE)
+  {
+    search_item[current_search].highlight = TRUE;
+    search_item[current_search].color = 1;
+    if (s == '/')
+      search_item[current_search].search_window = SEARCH_ASCII;
+    else
+      search_item[current_search].search_window = SEARCH_HEX;
+
+    print_screen(display_info.page_start);
+
+    action_move_cursor_next_search(cursor);
+  }
+
   return error;
 }
 action_code_t action_search_highlight(void)
@@ -673,14 +816,16 @@ action_code_t action_undo(int count)
   if (count == 0)
     count = 1;
 
-  vf_undo(current_file, count, &caddr);
-  update_display_info();
-  if (address_invalid(caddr))
-    caddr = display_info.file_size - 1;
-  if (caddr < 0)
-    caddr = 0;
-  place_cursor(caddr, CALIGN_NONE, CURSOR_REAL);
-  print_screen(display_info.page_start);
+  if (vf_undo(current_file, count, &caddr))
+  {
+    update_display_info();
+    if (address_invalid(caddr))
+      caddr = display_info.file_size - 1;
+    if (caddr < 0)
+      caddr = 0;
+    place_cursor(caddr, CALIGN_NONE, CURSOR_REAL);
+    print_screen(display_info.page_start);
+  }
   return error;
 }
 action_code_t action_redo(int count)
@@ -798,12 +943,15 @@ action_code_t action_save(void)
     if (status == FALSE)
       return E_INVALID;
   }
-  size = vf_save(current_file, &complete);
-  if (size != display_info.file_size)
+  if (vf_need_save(current_file))
   {
-    msg_box("Only saved %d bytes, should have saved %d bytes!!",
-            size, display_info.file_size);
-    return E_INVALID;
+    size = vf_save(current_file, &complete);
+    if (size != display_info.file_size)
+    {
+      msg_box("Only saved %d bytes, should have saved %d bytes!!",
+              size, display_info.file_size);
+      return E_INVALID;
+    }
   }
   return error;
 }

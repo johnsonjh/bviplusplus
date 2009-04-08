@@ -35,6 +35,7 @@ int main(int argc, char **argv)
   }
 
   action_init_yank();
+  search_init();
 
   initscr();
   keypad(stdscr, TRUE);
@@ -82,6 +83,7 @@ int main(int argc, char **argv)
   destroy_screen();
   endwin();
 
+  search_cleanup();
   action_clean_yank();
   vf_destroy_fm_ring(file_ring);
 
@@ -110,6 +112,14 @@ int main(int argc, char **argv)
   run arbitrary scripts on visually selected areas (checksum, parsing, etc)
 
   use readline library instead of custome cmd line and file save dialogue?
+
+  fix the case where a filename is specified at launch but the file does not exist (should create the file)
+
+  allow user options for case sensitive search (REG_ICASE) and extended regex (REG_EXTENDED). Right now both are hardcoded in set_search_term()
+
+  search hl and visual hl interfere with eachother since they both use standout. Make a count for each kind of thing (standout/color/etc) and inc going on, dec going off. Only really turn off if count == 0
+
+  fix bug where whole windows highlight if the search term starts before page_start
 
 
 File        Edit                       Tabs     Help

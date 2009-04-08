@@ -1,7 +1,8 @@
-#include "virt_file.h"
 #include <ncurses.h>
 #include <panel.h>
 #include <menu.h>
+#include "virt_file.h"
+#include "search.h"
 
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
@@ -144,10 +145,10 @@ void blob_standout(BOOL on);
 int is_visual_on(void);
 int visual_span(void);
 off_t visual_addr(void);
-int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size);
+int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size, search_aid_t *search_aid);
 void update_status_window(void);
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor);
-void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size);
+void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, search_aid_t *search_aid);
 void print_screen(off_t addr);
 
 #endif /* __DISPLAY_H__ */

@@ -4,6 +4,7 @@
 #include "user_prefs.h"
 #include "app_state.h"
 #include "virt_file.h"
+#include "search.h"
 
 display_info_t display_info;
 WINDOW *window_list[MAX_WINDOWS];
@@ -89,10 +90,15 @@ void reset_display_info(void)
 void update_display_info(void)
 {
   vf_stat(current_file, &vfstat);
+  display_info.page_start -= display_info.page_start % BYTES_PER_LINE;
   display_info.file_size = vfstat.file_size;
   display_info.page_end = PAGE_END;
   display_info.has_color = has_colors();
-  place_cursor(display_info.cursor_addr - (display_info.cursor_addr % user_prefs[GROUPING].value), CALIGN_NONE, CURSOR_REAL);
+  if (display_info.cursor_addr < display_info.page_start)
+    display_info.cursor_addr = display_info.page_start;
+  if (display_info.cursor_addr > display_info.page_end)
+    display_info.cursor_addr = display_info.page_end;
+  display_info.cursor_addr -= (display_info.cursor_addr % user_prefs[GROUPING].value);
 }
 
 void search_hl(BOOL on)
@@ -176,7 +182,7 @@ off_t visual_addr(void)
 }
 
 /* returns the number of bytes displayed on that line */
-int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size)
+int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size, search_aid_t *search_aid)
 {
   int i, j, k,
       y, x = 1,
@@ -217,6 +223,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
       {
         if (address_invalid(line_addr))
         {
+          search_hl(FALSE);
           visual_select_hl(FALSE);
           break;
         }
@@ -227,11 +234,37 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
       {
         if (byte_addr < page_addr || byte_addr >= page_addr + screen_buf_size)
         {
+          search_hl(FALSE);
           visual_select_hl(FALSE);
           break;
         }
         else
           c = screen_buf[byte_addr - page_addr];
+
+/* check for search highlighting */
+        if (search_item[current_search].highlight &&
+            search_aid != NULL)
+        {
+          if (search_aid->hl_start != -1)
+          {
+            if(search_aid->hl_start <= byte_addr)
+            {
+              if (search_aid->hl_end > byte_addr)
+              {
+                search_hl(TRUE);
+              }
+              else
+              {
+                search_hl(FALSE);
+                buf_search(search_aid);
+                if(search_aid->hl_start <= byte_addr &&
+                   search_aid->hl_end > byte_addr)
+                  search_hl(TRUE);
+              }
+            }
+          }
+        }
+/**/
       }
 
       if (is_visual_on())
@@ -296,7 +329,6 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
     mvwaddch(window_list[WINDOW_HEX], y, x++, ' ');
   }
 
-  visual_select_hl(FALSE);
   return ((i-1) * user_prefs[GROUPING].value) + j;
 }
 
@@ -394,7 +426,7 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 }
 
 
-void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size)
+void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, search_aid_t *search_aid)
 {
   int i;
   off_t line_addr = addr;
@@ -407,7 +439,7 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size)
 
   for (i=0; i<HEX_LINES; i++)
   {
-    line_addr += print_line(addr, line_addr, screen_buf, screen_buf_size);
+    line_addr += print_line(addr, line_addr, screen_buf, screen_buf_size, search_aid);
     if (screen_buf == NULL)
     {
       if (address_invalid(line_addr))
@@ -419,6 +451,7 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size)
         break;
     }
   }
+
 }
 
 void print_screen(off_t addr)
@@ -426,6 +459,7 @@ void print_screen(off_t addr)
   int i, screen_buf_size;
   off_t line_addr = addr;
   char *screen_buf;
+  search_aid_t search_aid;
 
   display_info.page_start = addr;
   display_info.page_end = PAGE_END;
@@ -433,9 +467,11 @@ void print_screen(off_t addr)
   screen_buf_size = PAGE_END - addr + 1;
   screen_buf = (char *)malloc(screen_buf_size);
   vf_get_buf(current_file, screen_buf, addr, screen_buf_size);
+  fill_search_buf(addr, screen_buf_size, &search_aid);
 
-  print_screen_buf(addr, screen_buf, screen_buf_size);
+  print_screen_buf(addr, screen_buf, screen_buf_size, &search_aid);
 
+  free_search_buf(&search_aid);
   free(screen_buf);
 }
 

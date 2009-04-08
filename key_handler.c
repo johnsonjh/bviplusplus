@@ -296,6 +296,7 @@ action_code_t do_cmd_line(int s, cursor_t cursor)
   {
     if (s == '/' || s == '\\')
     {
+      strncpy(cmd, tmp_cmd.cbuff, MAX_CMD_BUF);
       action_do_search(s, cmd, cursor);
     }
     else
@@ -389,6 +390,12 @@ off_t get_next_motion_addr(void)
       case BVICTRL('b'):
       case KEY_PPAGE:
         action_cursor_move_page_up(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'n':
+        action_move_cursor_next_search(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'N':
+        action_move_cursor_prev_search(CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case ':':
       case '/':
@@ -508,7 +515,7 @@ void do_insert(int count, int c)
     else
       len3 = 0;
 
-    print_screen_buf(page_start, screen_buf, len1+len2+1+len3);
+    print_screen_buf(page_start, screen_buf, len1+len2+1+len3, NULL);
 
     if (display_info.cursor_window == WINDOW_HEX)
     {
@@ -949,6 +956,13 @@ void handle_key(int c)
     case 'U':
       action_redo(multiplier);
       break;
+    case 'n':
+      action_move_cursor_next_search(CURSOR_REAL);
+      break;
+    case 'N':
+      action_move_cursor_prev_search(CURSOR_REAL);
+      break;
+    case '?':
     case ':':
     case '/':
     case '\\':
