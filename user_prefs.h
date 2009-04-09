@@ -30,7 +30,10 @@ typedef enum
   GROUPING,
   BLOB_GROUPING,
   BLOB_GROUPING_OFFSET,
-  MAX_COLS
+  MAX_COLS,
+  SEARCH_HL,
+  IGNORECASE,
+  EXTENDED_REGEX
 } user_pref_e;
 
 extern user_pref_t user_prefs[];

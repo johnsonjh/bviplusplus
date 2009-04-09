@@ -8,7 +8,10 @@ user_pref_t user_prefs[] = {
   { "grouping",             "grp",              1,         1,     1,     MAX_GRP, P_LONG },
   { "blob_grouping",        "blob",             0,         0,     0,     0,       P_LONG },
   { "blob_grouping_offset", "bloboff",          0,         0,     0,     0,       P_LONG },
-  { "columns",              "cols",             0,         0,     0,     0,       P_LONG },
+  { "columns",              "cols",             0,         0,     1,     0,       P_LONG },
+  { "search_hl",            "hl",               1,         1,     0,     0,       P_BOOL },
+  { "ignorecase",           "case",             1,         1,     0,     0,       P_BOOL },
+  { "extended_regex",       "eregex",           1,         1,     0,     0,       P_BOOL },
   { "",                     "",                 0,         0,     0,     0,       P_NONE },
 };
 

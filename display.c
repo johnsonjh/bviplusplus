@@ -103,7 +103,7 @@ void update_display_info(void)
 
 void search_hl(BOOL on)
 {
-  if (on)
+  if (on && user_prefs[SEARCH_HL].value && search_item[current_search].highlight)
   {
     wattron(window_list[WINDOW_HEX], A_STANDOUT);
     wattron(window_list[WINDOW_ASCII], A_STANDOUT);

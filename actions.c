@@ -766,6 +766,11 @@ action_code_t action_clear_search_highlight(void)
   action_code_t error = E_SUCCESS;
   if (is_visual_on())
     return E_INVALID;
+
+  search_item[current_search].highlight = FALSE;
+
+  print_screen(display_info.page_start);
+
   return error;
 }
 

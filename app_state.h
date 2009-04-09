@@ -6,6 +6,7 @@
 typedef struct app_state_s
 {
   BOOL    quit;
+  BOOL    search_since_cancel;
 } app_state_t;
 
 extern app_state_t     app_state;

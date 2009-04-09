@@ -66,6 +66,18 @@ const char *help_text[] = {
   "  U               Redo",
   " ",
   "Settings:",
+  "       Option               Arguments    Default   Alias",
+  "  :set binary               <on|off>     off       bin",
+  "  :set little_endian        <on|off>     off       le",
+  "  :set grouping             <1-16>       1         grp",
+  "  :set blob_grouping        <0-n>        0         blob",
+  "  :set blob_grouping_offset <0-n>        0         bloboff",
+  "  :set columns              <1-n>        0         cols",
+  "  :set search_hl            <on|off>     on        hl",
+  "  :set ignorecase           <on|off>     on        case",
+  "  :set extended_regex       <on|off>     on        eregex",
+  " ",
+  "ESC ESC temporarily turns off search highlighting (until next search)",
   0,
 };
 

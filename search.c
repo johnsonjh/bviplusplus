@@ -4,6 +4,7 @@
 #include "search.h"
 #include "display.h"
 #include "app_state.h"
+#include "user_prefs.h"
 
 search_item_t search_item[MAX_SEARCHES];
 int current_search = 0;
@@ -69,14 +70,19 @@ void buf_search(search_aid_t *search_aid)
 
 void set_search_term(char *pattern)
 {
-  int error, len;
+  int error, len, flags = 0;
   char *error_text;
+
+  if (user_prefs[IGNORECASE].value)
+    flags |= REG_ICASE;
+  if (user_prefs[IGNORECASE].value)
+    flags |= REG_EXTENDED;
 
   regfree(&search_item[current_search].compiled);
 
   error = regcomp(&search_item[current_search].compiled,
                   pattern,
-                  REG_ICASE|REG_EXTENDED);
+                  flags);
   if (error)
   {
     search_item[current_search].used = FALSE;

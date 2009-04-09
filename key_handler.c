@@ -977,8 +977,12 @@ void handle_key(int c)
       do_cmd_line(c, CURSOR_REAL);
       break;
     case ESC:
-      action_visual_select_off();
-      if (esc_count)
+      if (action_visual_select_check())
+      {
+        action_visual_select_off();
+        esc_count = 0;
+      }
+      else if (esc_count)
       {
         action_clear_search_highlight();
         esc_count = 0;
