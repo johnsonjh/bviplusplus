@@ -187,6 +187,8 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
     snprintf(f->fname, MAX_PATH_LEN - 1, "%s", file_name);
     f->fname[MAX_PATH_LEN] = 0;
 
+    f->fm.fp = fopen(f->fname, "w+");
+    fclose(f->fm.fp);
     f->fm.fp = fopen(f->fname, "r");
     if(NULL == f->fm.fp)
     {
