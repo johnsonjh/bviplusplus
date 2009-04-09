@@ -87,6 +87,11 @@
 #define INSERT_BOX_X (((HEX_BOX_W - INSERT_BOX_W) / 2) + HEX_BOX_X)
 #define MAX_INSERT_BOX_LEN (INSERT_BOX_W - 2)
 
+#define SCROLL_BOX_H HEX_BOX_H
+#define SCROLL_BOX_W HEX_BOX_W
+#define SCROLL_BOX_Y HEX_BOX_Y
+#define SCROLL_BOX_X HEX_BOX_X
+
 typedef enum window_e
 {
   WINDOW_MENU,

@@ -6,6 +6,7 @@
 #include "display.h"
 #include "actions.h"
 #include "app_state.h"
+#include "help.h"
 
 action_code_t show_set(void)
 {
@@ -95,10 +96,8 @@ action_code_t cmd_parse(char *cbuff)
   const char delimiters[] = " =";
   long long num = 0;
 
-  //msg_box("%s", cbuff);
-
   tok = strtok(cbuff, delimiters);
-  while (tok != NULL)
+  if (tok != NULL)
   {
     if (strncmp(tok,"0x",2) == 0)
       num = strtoll(tok, &endptr, 16);
@@ -162,8 +161,16 @@ action_code_t cmd_parse(char *cbuff)
       return error;
     }
 
-    tok = strtok(NULL, delimiters);
+    if ((strncmp(tok, "help", MAX_CMD_BUF) == 0) ||
+        (strncmp(tok, "h", MAX_CMD_BUF) == 0))
+    {
+      scrollable_window_display(help_text);
+      return error;
+    }
+
   }
+
+  flash();
   return error;
 }
 
@@ -888,6 +895,7 @@ void handle_key(int c)
     case KEY_END:
       action_cursor_move_line_end(CURSOR_REAL);
       break;
+    case '^':
     case KEY_HOME:
       action_cursor_move_line_start(CURSOR_REAL);
       break;
