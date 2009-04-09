@@ -97,27 +97,22 @@ int main(int argc, char **argv)
   create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box(). Use this for things like soft quit with changes, that way user doesnt have to press a key specifically to clear the warning 
 
   update soft quit to check all open files for changes
-
   create a warning/prompt on hard quit when an offscreen file has changes?
-
   soft quit should prompt to save? y/n/c
 
   file tabs?
 
-  fix saving an empty file or using 'save as' (:ws name), also should save as return the editor to editing the new file or the original? (vim does original), but in case of empty file definitely the new file.
-
-  if save (:w) on empty file, prompt for save name?
-
-  search binary (bit level), hex (nibble level), ascii
+  search binary? (bit level)
   run arbitrary scripts on visually selected areas (checksum, parsing, etc)
-
   use readline library instead of custome cmd line and file save dialogue?
-
   allow user options for case sensitive search (REG_ICASE) and extended regex (REG_EXTENDED). Right now both are hardcoded in set_search_term()
 
   search hl and visual hl interfere with eachother since they both use standout. Make a count for each kind of thing (standout/color/etc) and inc going on, dec going off. Only really turn off if count == 0
 
-  fix bug where whole windows highlight if the search term starts before page_start
+   Remember to add tab completion, macros, and a good system for command line parsing, .rc files
+   Check bvi man page for min list of command line commands to support
+   Handle KEY_RESIZE wherever we use looped getch for a while
+
 
 
 File        Edit                       Tabs     Help

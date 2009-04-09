@@ -452,6 +452,8 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, search_
     }
   }
 
+  search_hl(FALSE);
+
 }
 
 void print_screen(off_t addr)

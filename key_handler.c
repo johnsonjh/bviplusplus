@@ -996,10 +996,4 @@ void handle_key(int c)
   }
 }
 
-/*
- * Remember to add tab completion, macros, and a good system for command line parsing, .rc files
- * Add options: search hl, search ignorecase
- * Check bvi man page for min list of command line commands to support
- * Handle KEY_RESIZE wherever we use looped getch for a while
- */
 
