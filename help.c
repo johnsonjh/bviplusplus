@@ -7,7 +7,7 @@
 #include "help.h"
 
 
-const char *help_text[] = {
+char *help_text[] = {
   "Bviplus is designed to be as similar to vim as possible.",
   "Here are some basics:",
   " ",
@@ -85,7 +85,7 @@ const char *help_text[] = {
   0,
 };
 
-void scrollable_window_display(const char **text)
+void scrollable_window_display(char **text)
 {
   WINDOW *scrollbox;
   int i, y = 0, c = 0, update = 1, scroll_lines = SCROLL_BOX_H - 4, len = 0;

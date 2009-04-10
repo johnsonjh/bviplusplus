@@ -4,8 +4,8 @@
 
 #define MAX_LINES_SCROLLBOX 5000
 
-extern const char *help_text[];
+extern char *help_text[];
 
-void scrollable_window_display(const char **text);
+void scrollable_window_display(char **text);
 
 #endif /* __HELP_H__ */
