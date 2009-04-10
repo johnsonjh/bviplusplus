@@ -11,7 +11,38 @@
 action_code_t show_set(void)
 {
   action_code_t error = E_SUCCESS;
-  msg_box("show set");
+  int i = 0, num_elements = 0, eq_tab = 25, len;
+  //char **text;
+  char *text[500];
+
+  while (user_prefs[num_elements].flags != P_NONE)
+    num_elements++;
+
+  //text = (char **)malloc(num_elements+1);
+
+  for(i=0; i<num_elements; i++)
+  {
+    text[i] = (char *)malloc(256);
+    snprintf(text[i], 256, " %s", user_prefs[i].name);
+    len = strlen(text[i]);
+    for (;len<eq_tab;len++)
+      snprintf(text[i] + len, 256 - len, " ");
+    if (user_prefs[i].flags == P_LONG)
+      snprintf(text[i] + len, 256 - len, "= %d",
+               user_prefs[i].value);
+    else if (user_prefs[i].flags == P_BOOL)
+      snprintf(text[i] + len, 256 - len, "= %s",
+               user_prefs[i].value == TRUE ? "TRUE" : "FALSE");
+  }
+
+  text[i] = 0;
+  scrollable_window_display(text);
+
+  for(i=0; i<num_elements; i++)
+    free(text[i]);
+
+  //free(text);
+
   return error;
 }
 
