@@ -410,8 +410,12 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
 
     x = get_x_from_addr(addr);
     y = get_y_from_addr(addr);
-    wmove(window_list[display_info.cursor_window], y, x);
     display_info.cursor_addr = get_addr_from_xy(x,y);
+
+    if (is_visual_on())
+      print_screen(display_info.page_start);
+
+    wmove(window_list[display_info.cursor_window], y, x);
   }
 
   if (display_info.file_size == 0)
@@ -419,9 +423,6 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
     display_info.cursor_addr = 0;
     wmove(window_list[display_info.cursor_window], 1, 1);
   }
-
-  if (is_visual_on())
-    print_screen(display_info.page_start);
 
 }
 

@@ -25,14 +25,24 @@ static int yank_register = 0;
 
 void run_external()
 {
-  int outpipe[2], inpipe[2], error, status, i = 0, eof = EOF;
-  char *tok, errstr[MAX_CMD_BUF + 1], mystr[MAX_CMD_BUF + 1];
-  char *delimiters = " ";
+  int outpipe[2], inpipe[2];
+  int error, status, i = 0, eof = EOF, size = 0;
+  off_t start = 0;
+  char *tok, *delimiters = " ";
+  char errstr[MAX_CMD_BUF], dummy;
+  char *buf = NULL, *tmp_buf = NULL;
   pid_t pid;
 
-  memset(errstr, 0, MAX_CMD_BUF + 1);
-  memset(mystr, 0, MAX_CMD_BUF + 1);
-
+  if (!is_visual_on())
+  {
+    msg_box("Please first use visual select ('v') to select the bytes to send to the external program");
+    return;
+  }
+  else
+  {
+    start = visual_addr();
+    size = visual_span();
+  }
 
   tok = strtok(NULL, delimiters);
   if (tok == NULL)
@@ -51,6 +61,8 @@ void run_external()
   {
     error = errno;
     msg_box("Could not creat outpipe: %s\n", strerror(error));
+    close(outpipe[0]);
+    close(outpipe[1]);
     return;
   }
 
@@ -59,6 +71,10 @@ void run_external()
   {
     error = errno;
     msg_box("Could not fork: %s\n", strerror(error));
+    close(inpipe[0]);
+    close(inpipe[1]);
+    close(outpipe[0]);
+    close(outpipe[1]);
     return;
   }
 
@@ -69,32 +85,68 @@ void run_external()
     close(outpipe[0]);
     close(inpipe[1]);
 
-    write(outpipe[1], "test\n", 5);
+    buf = (char *)malloc(size);
+    if (buf == NULL)
+    {
+      msg_box("Error allocating buffer for external program output (size = %d)", size);
+      free(buf);
+      close(inpipe[0]);
+      close(outpipe[1]);
+      waitpid(pid, &status, 0);
+      return;
+    }
+
+    vf_get_buf(current_file, buf, start, size);
+
+    write(outpipe[1], buf, size);
     close(outpipe[1]);
 
-    while (read(inpipe[0], &mystr[i], 1) > 0 && mystr[i] != EOF)
-      i++;
+    while (read(inpipe[0], &buf[i], 1) > 0 && buf[i] != EOF)
+    {
+      if (buf[i] != '\n')
+        i++;
+      if (i >= size)
+      {
+        size *= 2;
+        tmp_buf = malloc(size);
+        if (tmp_buf == NULL)
+        {
+          msg_box("Error allocating buffer for external program output (size = %d)", size);
+          free(buf);
+          close(inpipe[0]);
+          waitpid(pid, &status, 0);
+          return;
+        }
+        memcpy(tmp_buf, buf, i);
+        free(buf);
+        buf = tmp_buf;
+        tmp_buf = NULL;
+      }
+    }
 
-    mystr[i] = '\0';
+    buf[i] = '\0';
 
-    msg_box("%s", mystr);
+    msg_box("%s", buf);
 
-    waitpid(pid, &status, 0);
-    close(outpipe[1]);
+    free(buf);
     close(inpipe[0]);
+    waitpid(pid, &status, 0);
   }
   else
   {
+    memset(errstr, 0, MAX_CMD_BUF);
     dup2(outpipe[0],0);
     dup2(inpipe[1],1);
     close(outpipe[1]);
     close(inpipe[0]);
     execl(tok,"external",NULL);
     error = errno;
-    while (read(outpipe[0], &mystr[0], 1) > 0 && mystr[0] != EOF) /* prevent SIGPIPE signal to parrent */
+    while (read(outpipe[0], &dummy, 1) > 0 && dummy != EOF) /* prevent SIGPIPE to parrent */
     snprintf(errstr, MAX_CMD_BUF, "'%s': %s", tok, strerror(error));
     write(inpipe[1], errstr, strlen(errstr));
     write(inpipe[1], &eof, 1);
+    close(outpipe[0]);
+    close(inpipe[1]);
     _exit(EXIT_SUCCESS);
   }
 }
@@ -661,7 +713,15 @@ int action_visual_select_check(void)
 action_code_t action_visual_select_on(void)
 {
   action_code_t error = E_SUCCESS;
-  display_info.visual_select_addr = display_info.cursor_addr;
+  if (display_info.file_size == 0)
+  {
+    msg_box("Cannot visual select on empty file");
+    error = E_INVALID;
+  }
+  else
+  {
+    display_info.visual_select_addr = display_info.cursor_addr;
+  }
   return error;
 }
 action_code_t action_visual_select_off(void)
