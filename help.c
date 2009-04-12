@@ -11,6 +11,9 @@ char *help_text[] = {
   "Bviplus is designed to be as similar to vim as possible.",
   "Here are some basics:",
   " ",
+  "For this help dialogue:",
+  "  :help",
+  " ",
   "Command/Insert toggle",
   "  ESC             Exit insert mode",
   "  i               Insert before",
@@ -82,6 +85,13 @@ char *help_text[] = {
   "  * Experimental, may cause display problems ",
   " ",
   "ESC ESC temporarily turns off search highlighting (until next search)",
+  " ",
+  "Running external programs on data sets:",
+  "  (First select 1 or more bytes using visual select)",
+  "  :ex <external program>                    Run the external program on the visual select data.",
+  "  :external <external program>              The program should be one which reads from",
+  "                                            stdin and writes to stdout.",
+  "                                            eg. ':ex md5sum'",
   0,
 };
 
@@ -123,11 +133,31 @@ void scrollable_window_display(char **text)
         break;
     case BVICTRL('f'):
     case KEY_NPAGE:
-        y+=(SCROLL_BOX_H-4);
+        if (y == (len - (SCROLL_BOX_H - 10)))
+        {
+          flash();
+        }
+        else
+        {
+          y+=(SCROLL_BOX_H-4);
+          if (y > (len - (SCROLL_BOX_H - 10)))
+            y = (len - (SCROLL_BOX_H - 10));
+          update = 1;
+        }
         break;
     case BVICTRL('b'):
     case KEY_PPAGE:
-        y-=(SCROLL_BOX_H-4);
+        if (y == 0)
+        {
+          flash();
+        }
+        else
+        {
+          y-=(SCROLL_BOX_H-4);
+          if (y<0)
+            y=0;
+          update = 1;
+        }
         break;
     }
 
