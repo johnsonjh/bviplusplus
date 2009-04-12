@@ -103,9 +103,8 @@ int main(int argc, char **argv)
   file tabs?
 
   search binary? (bit level)
-  run arbitrary scripts on visually selected areas (checksum, parsing, etc)
-  use readline library instead of custome cmd line and file save dialogue?
-  allow user options for case sensitive search (REG_ICASE) and extended regex (REG_EXTENDED). Right now both are hardcoded in set_search_term()
+  make more flexible output for data returned from external programs
+  use readline library instead of custom cmd line and file save dialogue?
 
   search hl and visual hl interfere with eachother since they both use standout. Make a count for each kind of thing (standout/color/etc) and inc going on, dec going off. Only really turn off if count == 0
 
