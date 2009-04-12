@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 #include "actions.h"
 #include "display.h"
 #include "virt_file.h"
@@ -23,19 +24,28 @@ static yank_buf_t yank_buf[NUM_YANK_REGISTERS];
 static int yank_register = 0;
 
 
+void sig_pipe_handler(int signum)
+{
+  msg_box("SIGPIPE received");
+}
+
 void run_external()
 {
   int outpipe[2], inpipe[2];
   int error, status, i = 0, eof = EOF, size = 0;
   off_t start = 0;
   char *tok, *delimiters = " ";
-  char errstr[MAX_CMD_BUF], dummy;
+  char errstr[MAX_CMD_BUF], *arglist[MAX_CMD_BUF], dummy = 1;
   char *buf = NULL, *tmp_buf = NULL;
   pid_t pid;
+  void *s;
+
+  s = signal(SIGPIPE, sig_pipe_handler);
 
   if (!is_visual_on())
   {
     msg_box("Please first use visual select ('v') to select the bytes to send to the external program");
+    signal(SIGPIPE, s);
     return;
   }
   else
@@ -48,13 +58,26 @@ void run_external()
   if (tok == NULL)
   {
     msg_box("No external program specified, use ':external <program>'");
+    signal(SIGPIPE, s);
     return;
+  }
+  else
+  {
+    while (tok != NULL)
+    {
+      arglist[i] = tok;
+      tok = strtok(NULL, delimiters);
+      i++;
+    }
+    arglist[i] = (char *)NULL;
+    i = 0;
   }
 
   if (pipe(outpipe))
   {
     error = errno;
     msg_box("Could not creat outpipe: %s\n", strerror(error));
+    signal(SIGPIPE, s);
     return;
   }
   if(pipe(inpipe))
@@ -63,6 +86,7 @@ void run_external()
     msg_box("Could not creat outpipe: %s\n", strerror(error));
     close(outpipe[0]);
     close(outpipe[1]);
+    signal(SIGPIPE, s);
     return;
   }
 
@@ -75,6 +99,7 @@ void run_external()
     close(inpipe[1]);
     close(outpipe[0]);
     close(outpipe[1]);
+    signal(SIGPIPE, s);
     return;
   }
 
@@ -93,6 +118,7 @@ void run_external()
       close(inpipe[0]);
       close(outpipe[1]);
       waitpid(pid, &status, 0);
+      signal(SIGPIPE, s);
       return;
     }
 
@@ -115,6 +141,7 @@ void run_external()
           free(buf);
           close(inpipe[0]);
           waitpid(pid, &status, 0);
+          signal(SIGPIPE, s);
           return;
         }
         memcpy(tmp_buf, buf, i);
@@ -129,8 +156,10 @@ void run_external()
     msg_box("%s", buf);
 
     free(buf);
-    close(inpipe[0]);
     waitpid(pid, &status, 0);
+    close(inpipe[0]);
+    signal(SIGPIPE, s);
+    return;
   }
   else
   {
@@ -139,10 +168,10 @@ void run_external()
     dup2(inpipe[1],1);
     close(outpipe[1]);
     close(inpipe[0]);
-    execl(tok,"external",NULL);
+    execvp(*arglist, arglist);
     error = errno;
     while (read(outpipe[0], &dummy, 1) > 0 && dummy != EOF) /* prevent SIGPIPE to parrent */
-    snprintf(errstr, MAX_CMD_BUF, "'%s': %s", tok, strerror(error));
+    snprintf(errstr, MAX_CMD_BUF, "'%s': %s", *arglist, strerror(error));
     write(inpipe[1], errstr, strlen(errstr));
     write(inpipe[1], &eof, 1);
     close(outpipe[0]);
