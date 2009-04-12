@@ -13,7 +13,7 @@ action_code_t show_set(void)
   action_code_t error = E_SUCCESS;
   int i = 0, num_elements = 0, eq_tab = 25, len;
   //char **text;
-  char *text[500];
+  char *text[100];
 
   while (user_prefs[num_elements].flags != P_NONE)
     num_elements++;
@@ -196,6 +196,13 @@ action_code_t cmd_parse(char *cbuff)
         (strncmp(tok, "h", MAX_CMD_BUF) == 0))
     {
       scrollable_window_display(help_text);
+      return error;
+    }
+
+    if ((strncmp(tok, "external", MAX_CMD_BUF) == 0) ||
+        (strncmp(tok, "ex", MAX_CMD_BUF) == 0))
+    {
+      run_external();
       return error;
     }
 

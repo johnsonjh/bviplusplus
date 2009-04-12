@@ -1,5 +1,7 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #include "actions.h"
 #include "display.h"
 #include "virt_file.h"
@@ -20,6 +22,82 @@ static off_t mark_list[MARK_LIST_SIZE];
 static yank_buf_t yank_buf[NUM_YANK_REGISTERS];
 static int yank_register = 0;
 
+
+void run_external()
+{
+  int outpipe[2], inpipe[2], error, status, i = 0, eof = EOF;
+  char *tok, errstr[MAX_CMD_BUF + 1], mystr[MAX_CMD_BUF + 1];
+  char *delimiters = " ";
+  pid_t pid;
+
+  memset(errstr, 0, MAX_CMD_BUF + 1);
+  memset(mystr, 0, MAX_CMD_BUF + 1);
+
+
+  tok = strtok(NULL, delimiters);
+  if (tok == NULL)
+  {
+    msg_box("No external program specified, use ':external <program>'");
+    return;
+  }
+
+  if (pipe(outpipe))
+  {
+    error = errno;
+    msg_box("Could not creat outpipe: %s\n", strerror(error));
+    return;
+  }
+  if(pipe(inpipe))
+  {
+    error = errno;
+    msg_box("Could not creat outpipe: %s\n", strerror(error));
+    return;
+  }
+
+  pid = fork();
+  if (pid < 0)
+  {
+    error = errno;
+    msg_box("Could not fork: %s\n", strerror(error));
+    return;
+  }
+
+  setvbuf(stdout,(char*)NULL,_IONBF,0);
+
+  if(pid)
+  {
+    close(outpipe[0]);
+    close(inpipe[1]);
+
+    write(outpipe[1], "test\n", 5);
+    close(outpipe[1]);
+
+    while (read(inpipe[0], &mystr[i], 1) > 0 && mystr[i] != EOF)
+      i++;
+
+    mystr[i] = '\0';
+
+    msg_box("%s", mystr);
+
+    waitpid(pid, &status, 0);
+    close(outpipe[1]);
+    close(inpipe[0]);
+  }
+  else
+  {
+    dup2(outpipe[0],0);
+    dup2(inpipe[1],1);
+    close(outpipe[1]);
+    close(inpipe[0]);
+    execl(tok,"external",NULL);
+    error = errno;
+    while (read(outpipe[0], &mystr[0], 1) > 0 && mystr[0] != EOF) /* prevent SIGPIPE signal to parrent */
+    snprintf(errstr, MAX_CMD_BUF, "'%s': %s", tok, strerror(error));
+    write(inpipe[1], errstr, strlen(errstr));
+    write(inpipe[1], &eof, 1);
+    _exit(EXIT_SUCCESS);
+  }
+}
 
 /** UP **/
 action_code_t action_cursor_move_up(int count, cursor_t cursor)
