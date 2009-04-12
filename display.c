@@ -334,8 +334,8 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
 
 void update_status_window(void)
 {
-  int y, x, i, result;
-  unsigned char tmp[4], bin_text[9];
+  int y, x, i, result, str_length = 0;
+  unsigned char tmp[4], bin_text[9], file_name[MAX_FILE_NAME];
 
   y = get_y_from_addr(display_info.cursor_addr);
   x = get_x_from_addr(display_info.cursor_addr);
@@ -355,7 +355,12 @@ void update_status_window(void)
 
   werase(window_list[WINDOW_STATUS]);
 
-  mvwaddstr(window_list[WINDOW_STATUS], 0, 0, vf_get_fname(current_file));
+  snprintf(file_name, MAX_FILE_NAME, "%s", vf_get_fname(current_file));
+  str_length = strlen(file_name);
+  if (vf_need_save(current_file))
+    snprintf(file_name + str_length, MAX_FILE_NAME - str_length, "*(unsaved changes)");
+
+  mvwaddstr(window_list[WINDOW_STATUS], 0, 0, file_name);
   mvwprintw(window_list[WINDOW_STATUS], 1, 0,
             "Addr: %08x (%d)",
             display_info.cursor_addr,
