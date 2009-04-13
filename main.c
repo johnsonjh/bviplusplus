@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 
 
 #if 0
-  status bar should indicate nochange/saved/unsaved display options (little endian?, grouping?), file name, #open buffers, repeat count?
+  status bar should indicate display options (little endian?, grouping?), #open buffers, repeat count?
 
   create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box(). Use this for things like soft quit with changes, that way user doesnt have to press a key specifically to clear the warning 
 

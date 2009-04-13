@@ -362,9 +362,11 @@ void update_status_window(void)
 
   mvwaddstr(window_list[WINDOW_STATUS], 0, 0, file_name);
   mvwprintw(window_list[WINDOW_STATUS], 1, 0,
-            "Addr: %08x (%d)",
+            "Addr: %08x/%08x (%d/%d)",
             display_info.cursor_addr,
-            display_info.cursor_addr);
+            display_info.file_size - 1,
+            display_info.cursor_addr,
+            display_info.file_size - 1);
 
   if (result > 0)
     mvwprintw(window_list[WINDOW_STATUS], STATUS_1_Y, STATUS_1_X,

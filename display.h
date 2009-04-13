@@ -92,6 +92,11 @@
 #define SCROLL_BOX_Y HEX_BOX_Y
 #define SCROLL_BOX_X HEX_BOX_X
 
+#define SAVE_BOX_H 4
+#define SAVE_BOX_W 52
+#define SAVE_BOX_Y (((HEX_BOX_H - SAVE_BOX_H) / 2) + HEX_BOX_Y)
+#define SAVE_BOX_X (((HEX_BOX_W - SAVE_BOX_W) / 2) + HEX_BOX_X)
+
 typedef enum window_e
 {
   WINDOW_MENU,
