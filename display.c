@@ -332,6 +332,36 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
   return ((i-1) * user_prefs[GROUPING].value) + j;
 }
 
+void update_file_tabs_window(void)
+{
+  file_manager_t *tmp_file, *head_file;
+  int i = 1;
+
+  head_file = vf_get_head_fm_from_ring(file_ring);
+  tmp_file = head_file;
+
+  werase(window_list[WINDOW_MENU]);
+  mvwaddch(window_list[WINDOW_MENU], 0, 0, '|');
+
+  do
+  {
+    waddch(window_list[WINDOW_MENU], ' ');
+    if (tmp_file == current_file)
+      wattron(window_list[WINDOW_MENU], A_STANDOUT);
+    wprintw(window_list[WINDOW_MENU], "%d %s", i, vf_get_fname_file(tmp_file));
+    i++;
+    if (vf_need_save(tmp_file))
+      waddch(window_list[WINDOW_MENU], '*');
+    wattroff(window_list[WINDOW_MENU], A_STANDOUT);
+    waddch(window_list[WINDOW_MENU], ' ');
+    waddch(window_list[WINDOW_MENU], '|');
+    tmp_file = vf_get_next_fm_from_ring(file_ring);
+  } while (tmp_file != head_file);
+  wrefresh(window_list[WINDOW_MENU]);
+
+  vf_set_current_fm_from_ring(file_ring, current_file);
+}
+
 void update_status_window(void)
 {
   int y, x, i, result, str_length = 0;

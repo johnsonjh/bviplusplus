@@ -68,6 +68,7 @@ int main(int argc, char **argv)
 
   create_screen();
   print_screen(display_info.page_start);
+  update_file_tabs_window();
 
   while (app_state.quit == FALSE)
   {
@@ -76,7 +77,6 @@ int main(int argc, char **argv)
     doupdate();
     place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
     c = wgetch(window_list[display_info.cursor_window]);
-    mvwprintw(window_list[WINDOW_MENU], 0, 0, "%2c = %03x    ", c, c);
     handle_key(c);
   }
 

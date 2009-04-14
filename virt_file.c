@@ -76,16 +76,17 @@ file_manager_t *vf_add_fm_to_ring(vf_ring_t *r)
   if (r->next == NULL)
   {
     r->next = new;
+    r->head = new;
     new->next = new;
     new->last = new;
   }
   else
   {
     tmp = r->next;
-    new->next = tmp->next;
-    new->last = tmp;
-    tmp->next->last = new;
-    tmp->next = new;
+    new->next = tmp;
+    new->last = tmp->last;
+    tmp->last->next = new;
+    tmp->last = new;
   }
 
   return &new->fm;
@@ -104,9 +105,19 @@ BOOL vf_remove_fm_from_ring(vf_ring_t *r, file_manager_t *fm)
 
   if (fm == NULL)
   {
-    tmp->last->next = tmp->next;
-    tmp->next->last = tmp->last;
+    if (tmp->next == tmp)
+    {
+      tmp->next = NULL;
+      tmp->last = NULL;
+    }
+    else
+    {
+      tmp->last->next = tmp->next;
+      tmp->next->last = tmp->last;
+    }
     r->next = tmp->next;
+    if (r->head == tmp)
+      r->head = tmp->next;
     vf_term(&tmp->fm);
     free(tmp);
     return TRUE;
@@ -117,10 +128,20 @@ BOOL vf_remove_fm_from_ring(vf_ring_t *r, file_manager_t *fm)
     {
       if (&tmp->fm == fm)
       {
+        if (tmp->next == tmp)
+        {
+          tmp->next = NULL;
+          tmp->last = NULL;
+        }
+        else
+        {
+          tmp->last->next = tmp->next;
+          tmp->next->last = tmp->last;
+        }
         if (r->next == tmp)
           r->next = tmp->next;
-        tmp->last->next = tmp->next;
-        tmp->next->last = tmp->last;
+        if (r->head == tmp)
+          r->head = tmp->next;
         vf_term(fm);
         free(tmp);
         return TRUE;
@@ -165,6 +186,42 @@ file_manager_t *vf_get_current_fm_from_ring(vf_ring_t *r)
     return NULL;
 
   return &r->next->fm;
+}
+BOOL vf_set_current_fm_from_ring(vf_ring_t *r, file_manager_t *fm)
+{
+  vf_ring_t *tmp;
+
+  if (r == NULL)
+    return FALSE;
+
+  tmp = r->next;
+
+  while (tmp != NULL)
+  {
+    if (&tmp->fm == fm)
+    {
+      r->next = tmp;
+      return TRUE;
+    }
+
+    tmp = tmp->next;
+    if (tmp == r->next)
+      return FALSE;
+  }
+
+  return FALSE;
+}
+file_manager_t *vf_get_head_fm_from_ring(vf_ring_t *r)
+{
+  if (r == NULL)
+    return NULL;
+
+  if (r->head == NULL)
+    return NULL;
+
+  r->next = r->head;
+
+  return &r->head->fm;
 }
 
 
@@ -261,8 +318,6 @@ void vf_stat(file_manager_t * f, vf_stat_t * s)
 }
 
 /*---------------------------
-Call this before saving when you have made edits to an initialized
-file_manager_t that is not linked to a file.
   ---------------------------*/
 char *vf_get_fname(file_manager_t * f)
 {
@@ -270,6 +325,22 @@ char *vf_get_fname(file_manager_t * f)
     return NULL;
 
   return f->fname;
+}
+/*---------------------------
+  ---------------------------*/
+char *vf_get_fname_file(file_manager_t * f)
+{
+  char *tmp1, *tmp2;
+
+  if (f == NULL)
+    return NULL;
+
+  tmp1 = f->fname;
+
+  while((tmp2 = strchr(tmp1, '/')) != NULL)
+    tmp1 = tmp2+1;
+
+  return tmp1;
 }
 
 /*---------------------------

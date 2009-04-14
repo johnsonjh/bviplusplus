@@ -66,6 +66,8 @@ action_code_t action_blob_inc(void);
 action_code_t action_blob_dec(void);
 action_code_t action_grp_inc(void);
 action_code_t action_grp_dec(void);
+action_code_t action_load_next_file(void);
+action_code_t action_load_prev_file(void);
 action_code_t action_do_resize(void);
 
 #endif /* __ACTIONS_H__ */

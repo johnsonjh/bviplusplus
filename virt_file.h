@@ -97,6 +97,7 @@ struct vf_ring_s
 {
   vf_ring_t *next;
   vf_ring_t *last;
+  vf_ring_t *head;
   file_manager_t fm;
 };
 
@@ -111,6 +112,7 @@ BOOL vf_remove_fm_from_ring(vf_ring_t *r, file_manager_t *fm);
 file_manager_t *vf_get_next_fm_from_ring(vf_ring_t *r);
 file_manager_t *vf_get_last_fm_from_ring(vf_ring_t *r);
 file_manager_t *vf_get_current_fm_from_ring(vf_ring_t *r);
+file_manager_t *vf_get_head_fm_from_ring(vf_ring_t *r);
 
 BOOL   vf_init(file_manager_t * f, const char *file_name);
 void   vf_term(file_manager_t * f);
@@ -125,6 +127,7 @@ int    vf_undo(file_manager_t * f, int count, off_t * undo_addr);
 int    vf_redo(file_manager_t * f, int count, off_t * redo_addr);
 BOOL   vf_need_save(file_manager_t * f);
 char *vf_get_fname(file_manager_t * f);
+char *vf_get_fname_file(file_manager_t * f);
 BOOL   vf_create_file(file_manager_t * f, const char *file_name);
 off_t  vf_save(file_manager_t * f, int *complete);
 
