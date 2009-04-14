@@ -1223,7 +1223,15 @@ action_code_t action_quit(BOOL force)
   if (vf_need_save(current_file) && force == FALSE)
     msg_box("File has unsaved chages");
   else
-    app_state.quit = TRUE;
+  {
+    vf_remove_fm_from_ring(file_ring, current_file);
+    current_file = vf_get_current_fm_from_ring(file_ring);
+    if (current_file == NULL)
+      app_state.quit = TRUE;
+    else
+      print_screen(display_info.page_start);
+  }
+
   return error;
 }
 
