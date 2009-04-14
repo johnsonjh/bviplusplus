@@ -140,16 +140,19 @@ action_code_t cmd_parse(char *cbuff)
         msg_box("Invalid jump address: %d", num);
       else
         action_jump_to(num, CURSOR_REAL);
+      return error;
     }
 
     if (strncmp(tok, "set", MAX_CMD_BUF) == 0)
     {
       error = do_set();
+      return error;
     }
     if ((strncmp(tok, "next",     MAX_CMD_BUF) == 0) ||
         (strncmp(tok, "bn",       MAX_CMD_BUF) == 0))
     {
       action_load_next_file();
+      return error;
     }
     if ((strncmp(tok, "prev",     MAX_CMD_BUF) == 0) ||
         (strncmp(tok, "previous", MAX_CMD_BUF) == 0) ||
@@ -157,6 +160,7 @@ action_code_t cmd_parse(char *cbuff)
         (strncmp(tok, "last",     MAX_CMD_BUF) == 0))
     {
       action_load_prev_file();
+      return error;
     }
     if (strncmp(tok, "q", MAX_CMD_BUF) == 0)
     {
