@@ -68,7 +68,6 @@ int main(int argc, char **argv)
 
   create_screen();
   print_screen(display_info.page_start);
-  update_file_tabs_window();
 
   while (app_state.quit == FALSE)
   {

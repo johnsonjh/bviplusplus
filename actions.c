@@ -1329,14 +1329,12 @@ action_code_t action_load_next_file(void)
 {
   current_file = vf_get_next_fm_from_ring(file_ring);
   reset_display_info();
-  update_file_tabs_window();
   print_screen(display_info.page_start);
 }
 action_code_t action_load_prev_file(void)
 {
   current_file = vf_get_last_fm_from_ring(file_ring);
   reset_display_info();
-  update_file_tabs_window();
   print_screen(display_info.page_start);
 }
 

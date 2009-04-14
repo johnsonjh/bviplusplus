@@ -513,6 +513,7 @@ void print_screen(off_t addr)
 
   free_search_buf(&search_aid);
   free(screen_buf);
+  update_file_tabs_window();
 }
 
 off_t address_invalid(off_t addr)
