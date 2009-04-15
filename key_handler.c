@@ -187,6 +187,13 @@ action_code_t cmd_parse(char *cbuff)
       action_save_all();
       return error;
     }
+    if ((strncmp(tok, "wqa", MAX_CMD_BUF) == 0) ||
+        (strncmp(tok, "waq", MAX_CMD_BUF) == 0))
+    {
+      action_save_all();
+      action_quit_all(FALSE);
+      return error;
+    }
     if (strncmp(tok, "w", MAX_CMD_BUF) == 0)
     {
       tok = strtok(NULL, delimiters);
