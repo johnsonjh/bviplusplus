@@ -97,6 +97,16 @@ char *help_text[] = {
   "  :external <external program>              The program should be one which reads from",
   "                                            stdin and writes to stdout.",
   "                                            eg. ':ex md5sum'",
+  " ",
+  "Files:",
+  "  :bn             Next file",
+  "  :next",
+  "  ~",
+  " ",
+  "  :bp             Last file",
+  "  :prev",
+  "  :previous",
+  "  :last",
   0,
 };
 
