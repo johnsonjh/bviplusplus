@@ -1187,6 +1187,27 @@ action_code_t action_save(void)
   }
   return error;
 }
+action_code_t action_save_all(void)
+{
+  action_code_t error = E_SUCCESS;
+  file_manager_t *tmp_file, *holder;
+
+  holder = current_file;
+  do
+  {
+    tmp_file = vf_get_next_fm_from_ring(file_ring);
+    if (vf_need_save(tmp_file))
+    {
+      current_file = tmp_file;
+      update_display_info();
+      print_screen(0);
+      action_save();
+    }
+  } while (tmp_file != holder);
+  current_file = holder;
+
+  return error;
+}
 
 action_code_t action_save_as(char *name)
 {
@@ -1227,11 +1248,36 @@ action_code_t action_quit(BOOL force)
     vf_remove_fm_from_ring(file_ring, current_file);
     current_file = vf_get_current_fm_from_ring(file_ring);
     if (current_file == NULL)
+    {
       app_state.quit = TRUE;
+    }
     else
+    {
+      update_display_info();
       print_screen(display_info.page_start);
+    }
   }
 
+  return error;
+}
+action_code_t action_quit_all(BOOL force)
+{
+  action_code_t error = E_SUCCESS;
+  file_manager_t *tmp_file;
+
+  if (force != TRUE)
+  {
+    while ((tmp_file = vf_get_next_fm_from_ring(file_ring)) != current_file)
+    {
+      if (vf_need_save(tmp_file))
+      {
+        msg_box("Files have unsaved chages");
+        return E_INVALID;
+      }
+    }
+  }
+
+  app_state.quit = TRUE;
   return error;
 }
 

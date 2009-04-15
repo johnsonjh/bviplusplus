@@ -95,11 +95,7 @@ int main(int argc, char **argv)
 
   create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box(). Use this for things like soft quit with changes, that way user doesnt have to press a key specifically to clear the warning 
 
-  update soft quit to check all open files for changes
   create a warning/prompt on hard quit when an offscreen file has changes?
-  soft quit should prompt to save? y/n/c
-
-  file tabs?
 
   search binary? (bit level)
   make more flexible output for data returned from external programs
