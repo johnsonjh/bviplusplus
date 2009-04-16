@@ -45,7 +45,8 @@ int main(int argc, char **argv)
   noecho();
   attrset(A_NORMAL);
   start_color();      /* Start color      */
-  init_pair(1, COLOR_YELLOW, COLOR_BLACK);
+  use_default_colors();
+  init_pair(1, COLOR_YELLOW, -1);
 
   reset_display_info();
 
