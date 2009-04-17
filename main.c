@@ -41,8 +41,9 @@ int main(int argc, char **argv)
   keypad(stdscr, TRUE);
   scrollok(stdscr, TRUE);
   nonl();
-  cbreak();
+  //cbreak();
   noecho();
+  raw();
   attrset(A_NORMAL);
   start_color();      /* Start color      */
   use_default_colors();
@@ -52,19 +53,15 @@ int main(int argc, char **argv)
 
   app_state.quit = FALSE;
 
-//#define SHOW_DEBUG_SCREEN
+#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
   printw("COLS = %d\n", COLS);
-  printw("SHARED_WIDTH = %d\n", SHARED_WIDTH);
-  printw("BYTES_PER_GROUP = %d\n", BYTES_PER_GROUP);
-  printw("a = (SHARED_WIDTH * BYTES_PER_GROUP) = %d\n", (SHARED_WIDTH * BYTES_PER_GROUP));
-  printw("b = ((3 * BYTES_PER_GROUP) + 1) = %d\n", ((3 * BYTES_PER_GROUP) + 1));
-  printw("a/b = HEX_BOX_W = %d\n", HEX_BOX_W);
-  printw("PAGE_SIZE = %d\n", PAGE_SIZE);
-  printw("_PAGE_END = %d\n", _PAGE_END);
-  printw("PAGE_END = %d\n", PAGE_END);
-  printw("PRESS ANY KEY TO CONTINUE\n", HEX_BOX_W);
-  getch();
+  printw("PRESS q to continue\n");
+  while ((c = getch()) != 'q')
+  {
+    printw("PRESSED KEY = %x\n", c);
+    refresh();
+  }
 #endif
 
   create_screen();
@@ -94,9 +91,7 @@ int main(int argc, char **argv)
 #if 0
   status bar should indicate display options (little endian?, grouping?), #open buffers, repeat count?
 
-  create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box(). Use this for things like soft quit with changes, that way user doesnt have to press a key specifically to clear the warning 
-
-  create a warning/prompt on hard quit when an offscreen file has changes?
+  create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box().
 
   search binary? (bit level)
   make more flexible output for data returned from external programs
@@ -108,6 +103,7 @@ int main(int argc, char **argv)
    Check bvi man page for min list of command line commands to support
    Handle KEY_RESIZE wherever we use looped getch for a while
 
+   Need to support :e and :e!
 
 
 File        Edit                       Tabs     Help

@@ -132,8 +132,7 @@ void run_external()
 
     while (read(inpipe[0], &buf[i], 1) > 0 && buf[i] != EOF)
     {
-      if (buf[i] != '\n')
-        i++;
+      i++;
       if (i >= size)
       {
         size *= 2;
@@ -154,9 +153,7 @@ void run_external()
       }
     }
 
-    buf[i] = '\0';
-
-    msg_box("%s", buf);
+    big_buf_display(buf, i);
 
     free(buf);
     waitpid(pid, &status, 0);
@@ -1165,6 +1162,7 @@ action_code_t action_save(void)
     {
       msg_box("Only saved %d bytes, should have saved %d bytes!!",
               size, display_info.file_size);
+      curs_set(1);
       return E_INVALID;
     }
 

@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdlib.h>
 #include "display.h"
 #include "user_prefs.h"
 #include "app_state.h"
@@ -120,6 +122,8 @@ void scrollable_window_display(char **text)
   while (len < MAX_LINES_SCROLLBOX && text[len] != NULL)
     len++;
 
+  curs_set(0);
+
   do
   {
     switch(c)
@@ -194,6 +198,49 @@ void scrollable_window_display(char **text)
   } while(c != 'q' && c != ESC);
 
   delwin(scrollbox);
+
+  curs_set(1);
   print_screen(display_info.page_start);
+}
+
+void big_buf_display(char *buf, int max_size)
+{
+  char *end, *this, *next;
+  char *text[MAX_LINES_SCROLLBOX];
+  int index = 0, size;
+
+  end = strchr(buf, EOF);
+  if (end == NULL)
+    end = buf+size;
+
+  if (end > buf+size)
+    end = buf+size;
+
+  this = buf;
+  next = strchr(this, '\n');
+  while(next != NULL && next < end && index < MAX_LINES_SCROLLBOX)
+  {
+    size = (next - this);
+    text[index] = (char *)malloc(size+1);
+    memcpy(text[index], this, size);
+    text[index][size] = '\0';
+    this = next+1;
+    if (this < end)
+      next = strchr(this, '\n');
+    else
+      break;
+    index++;
+  }
+
+  if (index >= MAX_LINES_SCROLLBOX)
+    index = MAX_LINES_SCROLLBOX - 1;
+  text[index] = 0;
+
+  scrollable_window_display(text);
+
+  index = 0;
+  while (text[index] != 0)
+    free(text[index++]);
+
 }
 

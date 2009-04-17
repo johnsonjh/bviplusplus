@@ -897,7 +897,7 @@ void do_delete(int count, int c)
 
 void handle_key(int c)
 {
-  int x, y, int_c, mark;
+  int x, y, int_c, mark, tab;
   static int multiplier = 0;
   static int esc_count = 0;
   static off_t jump_addr = -1;
@@ -917,6 +917,22 @@ void handle_key(int c)
     else
       jump_addr *= 10;
     jump_addr += int_c;
+
+    if (esc_count)
+    {
+      tab = c - '0';
+      current_file = vf_get_head_fm_from_ring(file_ring);
+      tab--;
+      while (tab > 0)
+      {
+        tab--;
+        current_file = vf_get_next_fm_from_ring(file_ring);
+      }
+      esc_count = 0;
+      multiplier = 0;
+      jump_addr = -1;
+      print_screen(display_info.page_start);
+    }
   }
 
   switch (c)
@@ -983,22 +999,22 @@ void handle_key(int c)
     case 'v':
       action_visual_select_toggle();
       break;
-/* These are a real problem because they do not translate well between vi/emacs modes */
+/* These are not handled yet */
+    case 'c':
+    case 'C':
+    case 's':
+    case 'S':
+/*****************************/
     case INS:
     case 'i':
     case 'I':
     case 'a':
     case 'A':
-    case 'c':
-    case 'C':
-    case 's':
-    case 'S':
       do_insert(multiplier, c);
       break;
     case 'R':
       do_overwrite(multiplier);
       break;
-/*************************************************************************************/
     case 'r':
       do_replace(multiplier);
       break;
@@ -1065,6 +1081,9 @@ void handle_key(int c)
     default:
       break;
   }
+
+  if (c != ESC)
+    esc_count = 0;
 
   if (c < '0' || c > '9')
   {
