@@ -126,6 +126,8 @@ action_code_t cmd_parse(char *cbuff)
   char *tok = 0, *endptr = 0;
   const char delimiters[] = " =";
   long long num = 0;
+  char fname[MAX_FILE_NAME];
+  off_t caddrsave, paddrsave;
 
   tok = strtok(cbuff, delimiters);
   if (tok != NULL)
@@ -160,6 +162,42 @@ action_code_t cmd_parse(char *cbuff)
         (strncmp(tok, "last",     MAX_CMD_BUF) == 0))
     {
       action_load_prev_file();
+      return error;
+    }
+    if (strncmp(tok, "e", MAX_CMD_BUF) == 0)
+    {
+      tok = strtok(NULL, delimiters);
+      if (tok == NULL)
+      {
+        current_file = vf_add_fm_to_ring(file_ring);
+        if (vf_init(current_file, NULL) == FALSE)
+          fprintf(stderr, "Empty file failed?\n");
+        update_display_info();
+        print_screen(0);
+      }
+      else
+      {
+        current_file = vf_add_fm_to_ring(file_ring);
+        if (vf_init(current_file, tok) == FALSE)
+          fprintf(stderr, "Could not open %s\n", tok);
+        update_display_info();
+        print_screen(0);
+      }
+      return error;
+    }
+    if (strncmp(tok, "e!", MAX_CMD_BUF) == 0)
+    {
+      snprintf(fname, MAX_FILE_NAME, "%s", vf_get_fname(current_file));
+      caddrsave = display_info.cursor_addr;
+      paddrsave = display_info.page_start;
+      vf_term(current_file);
+      vf_init(current_file, fname);
+      update_display_info();
+      place_cursor(caddrsave, CALIGN_NONE, CURSOR_REAL);
+      if (address_invalid(paddrsave))
+        print_screen(0);
+      else
+        print_screen(paddrsave);
       return error;
     }
     if (strncmp(tok, "q", MAX_CMD_BUF) == 0)

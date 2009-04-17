@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
   app_state.quit = FALSE;
 
-#define SHOW_DEBUG_SCREEN
+//#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
   printw("COLS = %d\n", COLS);
   printw("PRESS q to continue\n");
@@ -89,31 +89,16 @@ int main(int argc, char **argv)
 
 
 #if 0
-  status bar should indicate display options (little endian?, grouping?), #open buffers, repeat count?
-
   create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box().
 
   search binary? (bit level)
-  make more flexible output for data returned from external programs
   use readline library instead of custom cmd line and file save dialogue?
+  Remember to add tab completion, macros, and a good system for command line parsing, .rc files
 
   search hl and visual hl interfere with eachother since they both use standout. Make a count for each kind of thing (standout/color/etc) and inc going on, dec going off. Only really turn off if count == 0
 
-   Remember to add tab completion, macros, and a good system for command line parsing, .rc files
-   Check bvi man page for min list of command line commands to support
-   Handle KEY_RESIZE wherever we use looped getch for a while
+  Check bvi man page for min list of command line commands to support
+  Handle KEY_RESIZE wherever we use looped getch for a while
 
-   Need to support :e and :e!
-
-
-File        Edit                       Tabs     Help
-  Open       Copy                        Next
-  Save       Paste                       Prev
-  Save As    Visual Select
-  Close      Cut
-  Exit       Delete
-             Run Script on Selected
-             Preferences
-             View Clipboard
 #endif
 
