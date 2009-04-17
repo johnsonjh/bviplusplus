@@ -22,6 +22,8 @@ char *help_text[] = {
   "  a               Insert after",
   " ",
   "Saving/Quitting:",
+  "  :e [filename]   Open 'filename' or newfile if none specified",
+  "  :e!             Reload current file discarding changes",
   "  :q              Quit",
   "  :q!             Quit without saving",
   "  :qa             Quit all",
