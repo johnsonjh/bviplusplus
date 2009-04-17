@@ -178,6 +178,7 @@ void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid)
       search_aid->buf[(2*i)  ] = HEX((tmp[i] >> 4) & 0xF);
       search_aid->buf[(2*i)+1] = HEX((tmp[i] >> 0) & 0xF);
     }
+    free(tmp);
   }
 
   buf_search(search_aid);
