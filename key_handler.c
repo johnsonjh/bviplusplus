@@ -363,6 +363,7 @@ action_code_t do_cmd_line(int s, cursor_t cursor)
           tmp_cmd.cbuff[i-1] = tmp_cmd.cbuff[i];
           mvwaddch(window_list[WINDOW_STATUS], 0, i, tmp_cmd.cbuff[i]);
         }
+        mvwaddch(window_list[WINDOW_STATUS], 0, tmp_cmd.count, ' ');
         wclrtoeol(window_list[WINDOW_STATUS]);
         wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position);
         tmp_cmd.position--;

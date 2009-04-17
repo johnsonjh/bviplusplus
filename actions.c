@@ -1048,6 +1048,7 @@ BOOL file_name_prompt(char *file_name)
           cbuff[i-1] = cbuff[i];
           mvwaddch(w, y, i, cbuff[i]);
         }
+        mvwaddch(window_list[WINDOW_STATUS], 0, tmp_cmd.count, ' ');
         wclrtoeol(w);
         box(w, 0, 0);
         wmove(w, y, position);
