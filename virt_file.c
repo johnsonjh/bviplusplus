@@ -626,6 +626,7 @@ off_t vf_save(file_manager_t * f, int *complete)
 
   cleanup(f);
 
+  *complete = 100;
   return write_offset;
 }
 

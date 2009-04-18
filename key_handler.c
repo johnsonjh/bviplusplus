@@ -54,6 +54,7 @@ action_code_t do_set(void)
   int option, set = 1;
   long value;
 
+  /* process same string as last strtok() call from cmd_parse()*/
   tok = strtok(NULL, delimiters);
 
   if (tok == NULL)
@@ -980,6 +981,12 @@ void handle_key(int c)
       mark = getch();
       jump_addr = action_get_mark(mark);
       action_jump_to(jump_addr, CURSOR_REAL);
+      break;
+    case '<':
+      action_blob_shift_left();
+      break;
+    case '>':
+      action_blob_shift_right();
       break;
     case 'm':
       mark = getch();

@@ -1284,13 +1284,16 @@ action_code_t action_blob_shift_right(void)
 {
   int new_blob_shift_value;
 
+  if (user_prefs[BLOB_GROUPING].value == 0)
+    return E_INVALID;
+
   new_blob_shift_value = user_prefs[BLOB_GROUPING_OFFSET].value;
   new_blob_shift_value++;
 
-  if (new_blob_shift_value > user_prefs[BLOB_GROUPING_OFFSET].max)
-    return E_INVALID;
+  if (new_blob_shift_value >= user_prefs[BLOB_GROUPING].value)
+    new_blob_shift_value = 0;
 
-  user_prefs[BLOB_GROUPING_OFFSET].max = new_blob_shift_value;
+  user_prefs[BLOB_GROUPING_OFFSET].value = new_blob_shift_value;
 
   print_screen(display_info.page_start);
 
@@ -1300,13 +1303,16 @@ action_code_t action_blob_shift_left(void)
 {
   int new_blob_shift_value;
 
+  if (user_prefs[BLOB_GROUPING].value == 0)
+    return E_INVALID;
+
   new_blob_shift_value = user_prefs[BLOB_GROUPING_OFFSET].value;
   new_blob_shift_value--;
 
-  if (new_blob_shift_value < user_prefs[BLOB_GROUPING_OFFSET].min)
-    return E_INVALID;
+  if (new_blob_shift_value <= -user_prefs[BLOB_GROUPING].value)
+    new_blob_shift_value = user_prefs[BLOB_GROUPING].value-1;
 
-  user_prefs[BLOB_GROUPING_OFFSET].max = new_blob_shift_value;
+  user_prefs[BLOB_GROUPING_OFFSET].value = new_blob_shift_value;
 
   print_screen(display_info.page_start);
 
@@ -1323,7 +1329,7 @@ action_code_t action_blob_inc(void)
   if (new_blob_value > user_prefs[BLOB_GROUPING].max)
     return E_INVALID;
 
-  user_prefs[BLOB_GROUPING].max = new_blob_value;
+  user_prefs[BLOB_GROUPING].value = new_blob_value;
 
   print_screen(display_info.page_start);
 
@@ -1339,7 +1345,7 @@ action_code_t action_blob_dec(void)
   if (new_blob_value < user_prefs[BLOB_GROUPING].min)
     return E_INVALID;
 
-  user_prefs[BLOB_GROUPING].max = new_blob_value;
+  user_prefs[BLOB_GROUPING].value = new_blob_value;
 
   print_screen(display_info.page_start);
 
