@@ -196,7 +196,7 @@ void scrollable_window_display(char **text)
       mvwprintw(scrollbox, SCROLL_BOX_H - 2, 1, " [j|DOWN] Down  [k|UP] Up  [q|ESC] Quit |");
       wrefresh(scrollbox);
     }
-    c = getch();
+    c = wgetch(scrollbox);
   } while(c != 'q' && c != ESC);
 
   delwin(scrollbox);
