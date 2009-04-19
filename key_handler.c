@@ -971,6 +971,7 @@ void handle_key(int c)
       esc_count = 0;
       multiplier = 0;
       jump_addr = -1;
+      reset_display_info();
       print_screen(display_info.page_start);
     }
   }
