@@ -10,8 +10,6 @@ display_info_t display_info;
 WINDOW *window_list[MAX_WINDOWS];
 PANEL *panel_list[MAX_WINDOWS];
 
-test
-
 BOOL prompt(char *fmt, ...)
 {
   WINDOW *msgbox;
