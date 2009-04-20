@@ -22,7 +22,7 @@
   MACROS/DEFINES
  ***************/
 #define BUF_TOGGLE(x) (x ^ 1)
-#define MAX_SAVE_SHIFT (1024 * 1024) /* two megs (change save so that we can grow this dynamically if we need more? */
+#define MAX_SAVE_SHIFT (4 * 1024 * 1024) /* two megs (change save so that we can grow this dynamically if we need more? */
 
 
 /****************
@@ -462,29 +462,38 @@ off_t vf_save(file_manager_t * f, int *complete)
     {
       if(shift > 0)             /* data has been inserted */
       {
-        while(tmp->start - write_offset > shift)
+        tmp_buf = (char *)malloc(shift);
+        buf_select = BUF_TOGGLE(buf_select);
+        memcpy(tmp_buf, move_buf[buf_select], shift);
+        seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
+        if (tmp->start - write_offset - shift > MAX_SAVE_SHIFT)
+          fread(move_buf[buf_select], 1, MAX_SAVE_SHIFT, f->fm.fp);
+        else
+          fread(move_buf[buf_select], 1, tmp->start - write_offset - shift, f->fm.fp);
+        seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
+        result = fwrite(tmp_buf, 1, shift, f->fm.fp);
+        free(tmp_buf);
+        write_offset += shift;
+        buf_select = BUF_TOGGLE(buf_select);
+
+        while(tmp->start - write_offset > MAX_SAVE_SHIFT)
         {
           seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-          fread(move_buf[buf_select], 1, shift, f->fm.fp);
+          if (tmp->start - write_offset > 2*MAX_SAVE_SHIFT)
+            fread(move_buf[buf_select], 1, MAX_SAVE_SHIFT, f->fm.fp);
+          else
+            fread(move_buf[buf_select], 1, tmp->start - write_offset - MAX_SAVE_SHIFT, f->fm.fp);
           buf_select = BUF_TOGGLE(buf_select);
           seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-          result = fwrite(move_buf[buf_select], 1, shift, f->fm.fp);
-          write_offset += shift;
+          result = fwrite(move_buf[buf_select], 1, MAX_SAVE_SHIFT, f->fm.fp);
+          write_offset += MAX_SAVE_SHIFT;
           compute_percent_complete(write_offset, f->fm.size, complete);
         }
 
-        seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-        fread(move_buf[buf_select], 1, tmp->start - write_offset, f->fm.fp);
         buf_select = BUF_TOGGLE(buf_select);
         seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-        result =
-          fwrite(move_buf[buf_select], 1, tmp->start - write_offset, f->fm.fp);
-        memcpy(move_buf[buf_select],
-               move_buf[buf_select] + tmp->start - write_offset,
-               shift - (tmp->start - write_offset));
-        memcpy(move_buf[buf_select] + shift - (tmp->start - write_offset),
-               move_buf[BUF_TOGGLE(buf_select)], tmp->start - write_offset);
-        write_offset += shift;
+        result = fwrite(move_buf[buf_select], 1, tmp->start - write_offset, f->fm.fp);
+        write_offset += tmp->start - write_offset;
         compute_percent_complete(write_offset, f->fm.size, complete);
       }
       else                      /* data has been deleted */
@@ -580,22 +589,38 @@ off_t vf_save(file_manager_t * f, int *complete)
 
   if(shift > 0)                 /* data has been inserted */
   {
+    tmp_buf = (char *)malloc(shift);
+    buf_select = BUF_TOGGLE(buf_select);
+    memcpy(tmp_buf, move_buf[buf_select], shift);
+    seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
+    if (f->fm.size - write_offset - shift > MAX_SAVE_SHIFT)
+      fread(move_buf[buf_select], 1, MAX_SAVE_SHIFT, f->fm.fp);
+    else
+      fread(move_buf[buf_select], 1, f->fm.size - write_offset - shift, f->fm.fp);
+    seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
+    result = fwrite(tmp_buf, 1, shift, f->fm.fp);
+    free(tmp_buf);
+    write_offset += shift;
+    buf_select = BUF_TOGGLE(buf_select);
+
     /* optimize this part to read larger chunks than 'shift'? */
-    while(f->fm.size - write_offset > shift)
+    while(f->fm.size - write_offset > MAX_SAVE_SHIFT)
     {
-      seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-      fread(move_buf[buf_select], 1, shift, f->fm.fp);
+      seek_result = fseek(f->fm.fp, write_offset + (MAX_SAVE_SHIFT - shift), SEEK_SET);
+      if (f->fm.size - write_offset > 2*MAX_SAVE_SHIFT)
+        fread(move_buf[buf_select], 1, MAX_SAVE_SHIFT, f->fm.fp);
+      else
+        fread(move_buf[buf_select], 1, f->fm.size - write_offset - MAX_SAVE_SHIFT, f->fm.fp);
       buf_select = BUF_TOGGLE(buf_select);
       seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-      result = fwrite(move_buf[buf_select], 1, shift, f->fm.fp);
-      write_offset += shift;
+      result = fwrite(move_buf[buf_select], 1, MAX_SAVE_SHIFT, f->fm.fp);
+      write_offset += MAX_SAVE_SHIFT;
       compute_percent_complete(write_offset, f->fm.size, complete);
     }
 
     buf_select = BUF_TOGGLE(buf_select);
     seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-    result =
-      fwrite(move_buf[buf_select], 1, f->fm.size - write_offset, f->fm.fp);
+    result = fwrite(move_buf[buf_select], 1, f->fm.size - write_offset, f->fm.fp);
     write_offset += f->fm.size - write_offset;
     compute_percent_complete(write_offset, f->fm.size, complete);
   }
@@ -614,8 +639,7 @@ off_t vf_save(file_manager_t * f, int *complete)
     seek_result = fseek(f->fm.fp, write_offset - shift, SEEK_SET);
     fread(move_buf[buf_select], 1, f->fm.size - write_offset, f->fm.fp);
     seek_result = fseek(f->fm.fp, write_offset, SEEK_SET);
-    result =
-      fwrite(move_buf[buf_select], 1, f->fm.size - write_offset, f->fm.fp);
+    result = fwrite(move_buf[buf_select], 1, f->fm.size - write_offset, f->fm.fp);
     write_offset += f->fm.size - write_offset;
     compute_percent_complete(write_offset, f->fm.size, complete);
     ftruncate(fileno(f->fm.fp), write_offset);

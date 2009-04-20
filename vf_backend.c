@@ -346,6 +346,21 @@ size_t _insert_before(vbuf_t * vb, char *buf, off_t offset, size_t len,
         }
         break;
       case TYPE_DELETE:
+        if(offset < tmp->start)
+        {
+          insert_new_vbuf(&new, tmp, vb, offset, len, TYPE_INSERT, buf);
+          mod_parent_size(new->parent, new->size, TRUE);
+          mod_start_offset(new->next, new->size, TRUE);
+          new_list = (vbuf_undo_list_t *) malloc(sizeof(vbuf_undo_list_t));
+          new_list->applied = TRUE;
+          new_list->saved = FALSE;
+          new_list->last = *undo_list;
+          *undo_list = new_list;
+          new_list->vb_list = (vbuf_list_t *) malloc(sizeof(vbuf_list_t));
+          new_list->vb_list->next = NULL;
+          new_list->vb_list->vb = new;
+          return len;
+        }
         break;
       default:
         break;
@@ -455,6 +470,33 @@ size_t _replace(vbuf_t * vb, char *buf, off_t offset, size_t len,
         }
         break;
       case TYPE_DELETE:
+        if(tmp_offset < tmp->start)
+        {
+          if(tmp_offset + tmp_len < tmp->start)
+            insert_new_vbuf(&new, tmp, vb, tmp_offset, tmp_len,
+                            TYPE_REPLACE, buf + tmp_offset - offset);
+          else
+            insert_new_vbuf(&new, tmp, vb, tmp_offset, tmp->start - tmp_offset,
+                            TYPE_REPLACE, buf + tmp_offset - offset);
+
+          tmp_len -= new->size;
+          tmp_offset += new->size;
+          if(NULL == *vb_list)
+          {
+            *vb_list = (vbuf_list_t *) malloc(sizeof(vbuf_list_t));
+            tmp_vb_list = *vb_list;
+          }
+          else
+          {
+            tmp_vb_list = *vb_list;
+            while(NULL != tmp_vb_list->next)
+              tmp_vb_list = tmp_vb_list->next;
+            tmp_vb_list->next = (vbuf_list_t *) malloc(sizeof(vbuf_list_t));
+            tmp_vb_list = tmp_vb_list->next;
+          }
+          tmp_vb_list->vb = new;
+          tmp_vb_list->next = NULL;
+        }
         break;
       default:
         break;
