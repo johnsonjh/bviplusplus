@@ -10,14 +10,14 @@ display_info_t display_info;
 WINDOW *window_list[MAX_WINDOWS];
 PANEL *panel_list[MAX_WINDOWS];
 
-void msg_box(char *fmt, ...)
+BOOL prompt(char *fmt, ...)
 {
   WINDOW *msgbox;
   char *tok;
   char msgbox_str[MAX_MSG_BOX_LEN];
   char msgbox_line[MAX_MSG_BOX_LEN];
   const char delimiters[] = " \t";
-  int x = 1, y = 1, len = 0;
+  int x = 1, y = 1, len = 0, c;
   va_list args;
 
   memset(msgbox_str, 0, MAX_MSG_BOX_LEN);
@@ -64,12 +64,88 @@ void msg_box(char *fmt, ...)
     memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
   }
 
+  strncat(msgbox_line, "Y / N", MAX_MSG_BOX_LEN);
+  x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+  mvwaddstr(msgbox, MSG_BOX_H - 2, x, msgbox_line);
+
+  curs_set(0);
+  wrefresh(msgbox);
+  c = wgetch(msgbox);
+  while (c != 'y' && c != 'Y' && c != 'n' && c != 'N')
+    c = wgetch(msgbox);
+  curs_set(1);
+
+  delwin(msgbox);
+  print_screen(display_info.page_start);
+
+  if (c == 'y' || c == 'Y')
+    return TRUE;
+  else
+    return FALSE;
+}
+
+void msg_box(char *fmt, ...)
+{
+  WINDOW *msgbox;
+  char *tok;
+  char msgbox_str[MAX_MSG_BOX_LEN];
+  char msgbox_line[MAX_MSG_BOX_LEN];
+  const char delimiters[] = " \t";
+  int x = 1, y = 1, len = 0;
+  va_list args;
+
+  memset(msgbox_str, 0, MAX_MSG_BOX_LEN);
+  memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+
+  msgbox = newwin(MSG_BOX_H, MSG_BOX_W, MSG_BOX_Y, MSG_BOX_X);
+  box(msgbox, 0, 0);
+
+  va_start(args, fmt);
+  vsnprintf(msgbox_str, MAX_MSG_BOX_LEN, fmt, args);
+  va_end(args);
+  len = strlen(msgbox_str);
+
+  tok = strtok(msgbox_str, delimiters);
+  while(tok)
+  {
+    if ((strlen(tok) + strlen(msgbox_line) + 1) < (MSG_BOX_W - 2))
+    {
+      if (strlen(msgbox_line))
+        strncat(msgbox_line, " ", MAX_MSG_BOX_LEN);
+      strncat(msgbox_line, tok, MAX_MSG_BOX_LEN);
+    }
+    else
+    {
+      x = 1 + ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+      mvwaddstr(msgbox, y, x, msgbox_line);
+      y++;
+      if (y > (MSG_BOX_H - 2))
+        return;
+      memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+      strncat(msgbox_line, tok, MAX_MSG_BOX_LEN);
+    }
+
+    tok = strtok(NULL, delimiters);
+  }
+
+  if (strlen(msgbox_line))
+  {
+    x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+    mvwaddstr(msgbox, y, x, msgbox_line);
+    y++;
+    if (y > (MSG_BOX_H - 2))
+      return;
+    memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+  }
+
   strncat(msgbox_line, "[PRESS ANY KEY]", MAX_MSG_BOX_LEN);
   x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
   mvwaddstr(msgbox, MSG_BOX_H - 2, x, msgbox_line);
 
+  curs_set(0);
   wrefresh(msgbox);
-  getch();
+  wgetch(msgbox);
+  curs_set(1);
   delwin(msgbox);
   print_screen(display_info.page_start);
 }
