@@ -76,6 +76,15 @@ action_code_t do_set(void)
         strncmp(user_prefs[option].short_name,  tok, MAX_CMD_BUF) == 0)
     {
 
+/******* Print some warnings since this stuff is not tested ******/
+      if (strncmp(user_prefs[option].short_name, "grp", MAX_CMD_BUF) == 0)
+        msg_box("Warning, grouping other than 1 is experimental!!");
+      if (strncmp(user_prefs[option].short_name, "bin", MAX_CMD_BUF) == 0)
+        msg_box("Warning, binary display mode is experimental!!");
+      if (strncmp(user_prefs[option].short_name, "le", MAX_CMD_BUF) == 0)
+        msg_box("Warning, little endian display mode is experimental!!");
+/*****************************************************************/
+
       if (user_prefs[option].flags == P_BOOL)
       {
         user_prefs[option].value = set;
