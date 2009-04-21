@@ -1291,7 +1291,7 @@ action_code_t action_blob_shift_right(void)
   new_blob_shift_value++;
 
   if (new_blob_shift_value >= user_prefs[BLOB_GROUPING].value)
-    new_blob_shift_value = 0;
+    new_blob_shift_value = -(user_prefs[BLOB_GROUPING].value);
 
   user_prefs[BLOB_GROUPING_OFFSET].value = new_blob_shift_value;
 
