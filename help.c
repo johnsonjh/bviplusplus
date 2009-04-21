@@ -91,6 +91,9 @@ char *help_text[] = {
   "  :set ignorecase           <on|off>     on        case       Case sensativ search",
   "  :set extended_regex       <on|off>     on        eregex     Extended expressions",
   " ",
+  "  >                Increase blob_grouping_offset",
+  "  <                Decrease blob_grouping_offset",
+  " ",
   "  * Experimental, may cause display problems ",
   " ",
   "ESC ESC temporarily turns off search highlighting (until next search)",
@@ -111,6 +114,8 @@ char *help_text[] = {
   "  :prev",
   "  :previous",
   "  :last",
+  " ",
+  "  alt+<n>         Switch to <n>th open file",
   0,
 };
 
