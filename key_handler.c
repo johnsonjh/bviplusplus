@@ -12,13 +12,13 @@ action_code_t show_set(void)
 {
   action_code_t error = E_SUCCESS;
   int i = 0, num_elements = 0, eq_tab = 25, len;
-  //char **text;
-  char *text[100];
+  char **text;
 
   while (user_prefs[num_elements].flags != P_NONE)
     num_elements++;
 
-  //text = (char **)malloc(num_elements+1);
+  /* one extra for delimeter */
+  text = malloc(sizeof(char *)*(num_elements+1));
 
   for(i=0; i<num_elements; i++)
   {
@@ -35,13 +35,13 @@ action_code_t show_set(void)
                user_prefs[i].value == TRUE ? "TRUE" : "FALSE");
   }
 
-  text[i] = 0;
+  text[i] = NULL;
   scrollable_window_display(text);
 
   for(i=0; i<num_elements; i++)
     free(text[i]);
 
-  //free(text);
+  free(text);
 
   return error;
 }
