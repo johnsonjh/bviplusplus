@@ -1073,6 +1073,7 @@ void handle_key(int c)
       break;
     case 'r':
       do_replace(multiplier);
+      action_visual_select_off();
       break;
     case 'y': /* no separate behavior from Y, right now */
     case 'Y':
@@ -1082,6 +1083,7 @@ void handle_key(int c)
     case 'd':
     case 'D':
       do_delete(multiplier, c);
+      action_visual_select_off();
       break;
     case 'p':
       action_paste_after(multiplier);
