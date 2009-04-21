@@ -29,7 +29,7 @@ static int yank_register = 0;
 
 void sig_pipe_handler(int signum)
 {
-  msg_box("SIGPIPE received");
+  msg_box("SIGPIPE (%d) received", signum);
 }
 
 void run_external()
@@ -41,7 +41,7 @@ void run_external()
   char errstr[MAX_CMD_BUF], *arglist[MAX_CMD_BUF], dummy = 1;
   char *buf = NULL, *tmp_buf = NULL;
   pid_t pid;
-  void *s;
+  void (*s)(int);
 
   s = signal(SIGPIPE, sig_pipe_handler);
 

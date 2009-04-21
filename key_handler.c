@@ -293,11 +293,18 @@ typedef struct cmd_hist_s
 
 action_code_t do_cmd_line(int s, cursor_t cursor)
 {
-  static cmd_hist_t cmd_hist[MAX_CMD_HISTORY] = { 0 };
+  static cmd_hist_t cmd_hist[MAX_CMD_HISTORY];
+  static int init_cmd_hist = 1;
   cmd_hist_t tmp_cmd;
   static int hist_index = 0;
   char cmd[MAX_CMD_BUF];
   int entry_hist_index, tmp_hist_index, i = 0, c;
+
+  if (init_cmd_hist)
+  {
+    memset(cmd_hist, 0, sizeof(cmd_hist_t) * MAX_CMD_HISTORY);
+    init_cmd_hist = 0;
+  }
 
   werase(window_list[WINDOW_STATUS]);
   mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
@@ -437,9 +444,8 @@ action_code_t do_cmd_line(int s, cursor_t cursor)
 
 off_t get_next_motion_addr(void)
 {
-  int x, y, c, int_c, mark;
+  int c, int_c, mark;
   static int multiplier = 0;
-  static int esc_count = 0;
   static off_t jump_addr = -1;
 
   c = getch();
@@ -946,7 +952,7 @@ void do_delete(int count, int c)
 
 void handle_key(int c)
 {
-  int x, y, int_c, mark, tab;
+  int int_c, mark, tab;
   static int multiplier = 0;
   static int esc_count = 0;
   static off_t jump_addr = -1;

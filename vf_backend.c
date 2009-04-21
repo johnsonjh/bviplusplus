@@ -206,8 +206,6 @@ static void _cleanup_undo_vb(vbuf_list_t * vb_list)
   ---------------------------*/
 static void _cleanup_undo(vbuf_undo_list_t * undo_list)
 {
-  vbuf_list_t *tmp_list;
-
   if(NULL == undo_list)
     return;
 

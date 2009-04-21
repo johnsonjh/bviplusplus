@@ -46,7 +46,7 @@ BOOL prompt(char *fmt, ...)
       mvwaddstr(msgbox, y, x, msgbox_line);
       y++;
       if (y > (MSG_BOX_H - 2))
-        return;
+        return FALSE;
       memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
       strncat(msgbox_line, tok, MAX_MSG_BOX_LEN);
     }
@@ -60,7 +60,7 @@ BOOL prompt(char *fmt, ...)
     mvwaddstr(msgbox, y, x, msgbox_line);
     y++;
     if (y > (MSG_BOX_H - 2))
-      return;
+      return FALSE;
     memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
   }
 
@@ -84,7 +84,7 @@ BOOL prompt(char *fmt, ...)
     return FALSE;
 }
 
-void msg_box(char *fmt, ...)
+void msg_box(const char *fmt, ...)
 {
   WINDOW *msgbox;
   char *tok;
@@ -271,7 +271,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
   y++; /* line 0 is the box border */
 
   /* print address */
-  sprintf(addr_text, "%08X", line_addr);
+  snprintf(addr_text, ADDR_BOX_W, "%08X", line_addr);
   mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
   if (screen_buf == NULL)
@@ -373,7 +373,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
 
       if (user_prefs[DISPLAY_BINARY].value)
       {
-        snprintf(bin_text, 8, "%b", c);
+        snprintf(bin_text, 8, "%c", c);
         for (k=0; k<8; k++)
         {
           if ((c >> (7 - k)) & 1)
@@ -572,8 +572,7 @@ void print_screen_buf(off_t addr, char *screen_buf, int screen_buf_size, search_
 
 void print_screen(off_t addr)
 {
-  int i, screen_buf_size;
-  off_t line_addr = addr;
+  int screen_buf_size;
   char *screen_buf;
   search_aid_t search_aid;
 
