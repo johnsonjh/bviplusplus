@@ -210,6 +210,7 @@ void scrollable_window_display(char **text)
   print_screen(display_info.page_start);
 }
 
+/* max_size is maximum array index (e.g. number of bytes-1) */
 void big_buf_display(char *buf, int max_size)
 {
   char *this, *line, *end;
@@ -218,10 +219,10 @@ void big_buf_display(char *buf, int max_size)
 
   end = strchr(buf, EOF);
   if (end == NULL)
-    end = buf+max_size-1;
+    end = buf+max_size;
 
   if (end >= buf+max_size)
-    end = buf+max_size-1;
+    end = buf+max_size;
 
   /* count newlines */
   line = buf;
