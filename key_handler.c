@@ -1008,6 +1008,25 @@ void handle_key(int c)
       mark = getch();
       action_set_mark(mark);
       break;
+    case 'g':
+      c = getch();
+      if (c > '0' && c <= '9')
+      {
+        flash();
+        break;
+      }
+      else if (c != 'g')
+      {
+        ungetch(c);
+        jump_addr = get_next_motion_addr();
+      }
+      if (jump_addr == -1)
+        action_cursor_move_file_start(CURSOR_REAL);
+      else
+        action_jump_to(jump_addr, CURSOR_REAL);
+      multiplier = 0;
+      jump_addr = -1;
+      break;
     case 'G':
       if (jump_addr == -1)
         action_cursor_move_file_end(CURSOR_REAL);
