@@ -32,7 +32,7 @@ action_code_t show_set(void)
     len = strlen(text[i]);
     for (;len<eq_tab;len++)
       snprintf(text[i] + len, 256 - len, " ");
-    if (user_prefs[i].flags == P_LONG)
+    if (user_prefs[i].flags == P_INT)
       snprintf(text[i] + len, 256 - len, "= %d",
                user_prefs[i].value);
     else if (user_prefs[i].flags == P_BOOL)
@@ -87,7 +87,7 @@ action_code_t do_set(void)
         break;
       }
 
-      if (user_prefs[option].flags == P_LONG)
+      if (user_prefs[option].flags == P_INT)
       {
         tok = strtok(NULL, delimiters);
 
