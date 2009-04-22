@@ -32,7 +32,7 @@ void sig_pipe_handler(int signum)
   msg_box("SIGPIPE (%d) received", signum);
 }
 
-void run_external()
+void run_external(void)
 {
   int outpipe[2], inpipe[2];
   int error, status, i = 0, eof = EOF, size = 0;

@@ -1,5 +1,8 @@
 #include <ncurses.h>
 
+#ifndef MENUS_H__
+#define MENUS_H__
+
 typedef struct menu_s menu_t;
 
 struct menu_s
@@ -19,6 +22,6 @@ void display_menu(menu_t *m, int x, int y);
 extern menu_t file_menu_items[];
 extern menu_t file_menu;
 
-
+#endif /* MENUS_H__ */
 
 

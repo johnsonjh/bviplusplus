@@ -19,6 +19,11 @@ action_code_t show_set(void)
 
   /* one extra for delimeter */
   text = malloc(sizeof(char *)*(num_elements+1));
+  if (text == NULL)
+  {
+    msg_box("Could not allocate memory for display window");
+    return E_INVALID;
+  }
 
   for(i=0; i<num_elements; i++)
   {

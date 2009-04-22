@@ -707,7 +707,7 @@ off_t get_addr_from_xy(int x, int y)
   return addr;
 }
 
-void destroy_screen()
+void destroy_screen(void)
 {
   del_panel(panel_list[WINDOW_MENU]);
   del_panel(panel_list[WINDOW_ADDR]);
@@ -722,7 +722,7 @@ void destroy_screen()
   delwin(window_list[WINDOW_STATUS]);
 }
 
-void create_screen()
+void create_screen(void)
 {
   int a, h;
 

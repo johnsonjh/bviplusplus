@@ -9,17 +9,17 @@ typedef enum
 {
   P_NONE,
   P_BOOL,
-  P_LONG,
+  P_INT,
 } p_flags_e;
 
 typedef struct user_pref_s
 {
   char *name;
   char *short_name;
-  long value;
-  long def;
-  long min;
-  long max;
+  int value;
+  int def;
+  int min;
+  int max;
   p_flags_e flags;
 } user_pref_t;
 

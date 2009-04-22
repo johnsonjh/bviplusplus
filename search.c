@@ -165,6 +165,11 @@ void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid)
   else
   {
     tmp = (char *)malloc(search_aid->buf_size);
+    if (tmp == NULL)
+    {
+      msg_box("Could not allocate temporary memory for search buf");
+      return;
+    }
     vf_get_buf(current_file,
                tmp,
                search_aid->buf_start_addr,
@@ -172,6 +177,12 @@ void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid)
     size = search_aid->buf_size;
     search_aid->buf_size *= 2;
     search_aid->buf = (char *)malloc(search_aid->buf_size + 1);
+    if (search_aid->buf == NULL)
+    {
+      free(tmp);
+      msg_box("Could not allocate memory for search buf");
+      return;
+    }
     search_aid->buf[search_aid->buf_size] = 0;
     for (i=0; i<size; i++)
     {
