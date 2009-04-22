@@ -126,7 +126,7 @@ void scrollable_window_display(char **text)
 
   scrollbox = newwin(SCROLL_BOX_H, SCROLL_BOX_W, SCROLL_BOX_Y, SCROLL_BOX_X);
 
-  while (len < MAX_LINES_SCROLLBOX && text[len] != NULL)
+  while (text[len] != NULL)
     len++;
 
   curs_set(0);
@@ -212,42 +212,44 @@ void scrollable_window_display(char **text)
 
 void big_buf_display(char *buf, int max_size)
 {
-  char *end, *this, *next;
-  char *text[MAX_LINES_SCROLLBOX];
-  int index = 0, size;
+  char *this, *line, *end;
+  char **text;
+  int index = 0;
 
   end = strchr(buf, EOF);
   if (end == NULL)
-    end = buf+size;
+    end = buf+max_size-1;
 
-  if (end > buf+size)
-    end = buf+size;
+  if (end >= buf+max_size)
+    end = buf+max_size-1;
 
-  this = buf;
-  next = strchr(this, '\n');
-  while(next != NULL && next < end && index < MAX_LINES_SCROLLBOX)
+  /* count newlines */
+  line = buf;
+  while ((this = strchr(line , '\n')) != NULL)
   {
-    size = (next - this);
-    text[index] = (char *)malloc(size+1);
-    memcpy(text[index], this, size);
-    text[index][size] = '\0';
-    this = next+1;
-    if (this < end)
-      next = strchr(this, '\n');
-    else
-      break;
     index++;
+    line = this+1;
   }
 
-  if (index >= MAX_LINES_SCROLLBOX)
-    index = MAX_LINES_SCROLLBOX - 1;
-  text[index] = 0;
+  /* array of strings: extras for non-newline last line and delimeter */
+  text = malloc(sizeof(char *)*(index+2));
+
+  /* change newlines to nul and save a reference */
+  index = 0;
+  line = buf;
+  while ((this = strchr(line, '\n')) != NULL)
+  {
+    text[index++] = line;
+    *this = 0;
+    line = this+1;
+  }
+  *end = 0;
+
+  if(line < end)
+    text[index++] = line;
+
+  text[index] = NULL;
 
   scrollable_window_display(text);
-
-  index = 0;
-  while (text[index] != 0)
-    free(text[index++]);
-
+  free(text);
 }
-
