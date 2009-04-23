@@ -71,8 +71,8 @@ char *creadline(const char *prompt, WINDOW *w, int y, int x, cmd_hist_t *history
         tmp_cmd.count = history->item[history->hist_index].count;
         tmp_cmd.position = history->item[history->hist_index].position;
 
-        werase(w);
-        mvwprintw(w, y, x, prompt);
+        wmove(w, y, x+1);
+        wclrtoeol(w);
 
         for (i=0; i<tmp_cmd.count; i++)
           mvwaddch(w, y, x+i+1, tmp_cmd.cbuff[i]);
@@ -93,8 +93,8 @@ char *creadline(const char *prompt, WINDOW *w, int y, int x, cmd_hist_t *history
         tmp_cmd.count = history->item[history->hist_index].count;
         tmp_cmd.position = history->item[history->hist_index].position;
 
-        werase(w);
-        mvwprintw(w, y, x, prompt);
+        wmove(w, y, x+1);
+        wclrtoeol(w);
 
         for (i=0; i<tmp_cmd.count; i++)
           mvwaddch(w, y, x+i+1, tmp_cmd.cbuff[i]);

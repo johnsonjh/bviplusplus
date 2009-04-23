@@ -1022,7 +1022,7 @@ BOOL file_name_prompt(char *file_name)
 {
   WINDOW *w;
   int c, i, y, position = 0, count = 0;
-  char cbuff[MAX_FILE_NAME];
+  char *fname;
 
   w = newwin(FILE_BOX_H, FILE_BOX_W, FILE_BOX_Y, FILE_BOX_X);
   box(w, 0, 0);
@@ -1032,67 +1032,15 @@ BOOL file_name_prompt(char *file_name)
   wmove(w, y, 1);
   wrefresh(w);
 
-  c = getch();
-  while (c != ESC && c != NL && c != CR && c != KEY_ENTER)
-  {
-    switch(c)
-    {
-      case KEY_RESIZE:
-        break;
-      case BVICTRL('H'):
-      case KEY_BACKSPACE:
-        if (position == 0)
-          break;
-        for (i=position; i<count; i++)
-        {
-          cbuff[i-1] = cbuff[i];
-          mvwaddch(w, y, i, cbuff[i]);
-        }
-        mvwaddch(window_list[WINDOW_STATUS], 0, count, ' ');
-        wclrtoeol(w);
-        box(w, 0, 0);
-        wmove(w, y, position);
-        position--;
-        count--;
-        break;
-      case KEY_LEFT:
-        if (--position < 0)
-          position++;
-        wmove(w, y, position+1);
-        break;
-      case KEY_RIGHT:
-        if (++position > count)
-          position--;
-        wmove(w, y, position+1);
-        break;
-      default:
-        if (count >= MAX_FILE_NAME)
-          break;
-        for (i=count; i>=position; i--)
-          cbuff[i+1] = cbuff[i];
-        cbuff[position] = (char)c;
-        count++;
-        for (i=position; i<count; i++)
-          mvwaddch(w, y, i+1, cbuff[i]);
-        position++;
-        wmove(w, y, position+1);
-        break;
-    }
-    wrefresh(w);
-    c = getch();
-  }
-
-  cbuff[count] = '\0';
+  fname = creadline("", w, y, 1, file_hist);
 
   delwin(w);
   print_screen(display_info.page_start);
 
-  if (c == ESC)
-    return FALSE;
-
-  if (count)
+  if (fname)
   {
-    strncpy(file_name, cbuff, MAX_FILE_NAME);
+    strncpy(file_name, fname, MAX_FILE_NAME);
+    free(fname);
     return TRUE;
   }
 
