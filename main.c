@@ -10,6 +10,7 @@
 #include "key_handler.h"
 #include "display.h"
 #include "app_state.h"
+#include "creadline.h"
 
 #define MILISECONDS(x) ((x) * 1000)
 #define SECONDS(x) (MILISECONDS(x) * 1000)
@@ -36,6 +37,10 @@ int main(int argc, char **argv)
 
   action_init_yank();
   search_init();
+  ascii_search_hist = new_history();
+  hex_search_hist = new_history();
+  cmd_hist = new_history();
+  file_hist = new_history();
 
   initscr();
   keypad(stdscr, TRUE);
@@ -80,6 +85,11 @@ int main(int argc, char **argv)
   destroy_screen();
   endwin();
 
+
+  free_history(ascii_search_hist);
+  free_history(hex_search_hist);
+  free_history(cmd_hist);
+  free_history(file_hist);
   search_cleanup();
   action_clean_yank();
   vf_destroy_fm_ring(file_ring);

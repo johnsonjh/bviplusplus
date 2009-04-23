@@ -1,8 +1,6 @@
 #ifndef __KEY_HANDLER_H__
 #define __KEY_HANDLER_H__
 
-#define MAX_CMD_BUF 256
-#define MAX_CMD_HISTORY 100
 #define CR      '\r'
 #define NL      '\n'
 #define ESC     27

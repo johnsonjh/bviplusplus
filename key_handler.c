@@ -289,159 +289,42 @@ action_code_t cmd_parse(char *cbuff)
   return error;
 }
 
-typedef struct cmd_hist_s
+action_code_t do_search(int c, cursor_t cursor)
 {
-  char cbuff[MAX_CMD_BUF];
-  int position;
-  int count;
-} cmd_hist_t;
+  cmd_hist_t *search_hist;
+  char *cmd, prompt[2];
 
-action_code_t do_cmd_line(int s, cursor_t cursor)
-{
-  static cmd_hist_t cmd_hist[MAX_CMD_HISTORY];
-  static int init_cmd_hist = 1;
-  cmd_hist_t tmp_cmd;
-  static int hist_index = 0;
-  char cmd[MAX_CMD_BUF];
-  int entry_hist_index, tmp_hist_index, i = 0, c;
+  if (c == '/')
+    search_hist = ascii_search_hist;
+  else
+    search_hist = hex_search_hist;
 
-  if (init_cmd_hist)
-  {
-    memset(cmd_hist, 0, sizeof(cmd_hist_t) * MAX_CMD_HISTORY);
-    init_cmd_hist = 0;
-  }
+  prompt[0] = c;
+  prompt[1] = 0;
 
   werase(window_list[WINDOW_STATUS]);
-  mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
+  cmd = creadline(prompt, window_list[WINDOW_STATUS], 0, 0, search_hist);
 
-  entry_hist_index = hist_index;
-  tmp_cmd.count = 0;
-  tmp_cmd.position = 0;
-
-  do
+  if (cmd)
   {
-    update_panels();
-    doupdate();
-    c = getch();
-    switch(c)
-    {
-      case KEY_RESIZE:
-        break;
-      case KEY_UP:
-        if (s == '/' || s == '\\')
-          break;
-        tmp_hist_index = hist_index-1;
-        if (tmp_hist_index < 0)
-          tmp_hist_index = MAX_CMD_HISTORY - 1;
-        if (tmp_hist_index == entry_hist_index)
-          break;
-        if (cmd_hist[tmp_hist_index].count == 0)
-          break;
-
-        hist_index = tmp_hist_index;
-
-        strncpy(tmp_cmd.cbuff, cmd_hist[hist_index].cbuff, MAX_CMD_BUF);
-        tmp_cmd.count = cmd_hist[hist_index].count;
-        tmp_cmd.position = cmd_hist[hist_index].position;
-
-        werase(window_list[WINDOW_STATUS]);
-        mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
-
-        for (i=0; i<tmp_cmd.count; i++)
-          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, tmp_cmd.cbuff[i]);
-        tmp_cmd.position = tmp_cmd.count;
-        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
-        break;
-      case KEY_DOWN:
-        if (s == '/' || s == '\\')
-          break;
-        if (hist_index == entry_hist_index)
-          break;
-        tmp_hist_index = hist_index+1;
-        tmp_hist_index = tmp_hist_index % MAX_CMD_HISTORY;
-
-        hist_index = tmp_hist_index;
-
-        strncpy(tmp_cmd.cbuff, cmd_hist[hist_index].cbuff, MAX_CMD_BUF);
-        tmp_cmd.count = cmd_hist[hist_index].count;
-        tmp_cmd.position = cmd_hist[hist_index].position;
-
-        werase(window_list[WINDOW_STATUS]);
-        mvwaddch(window_list[WINDOW_STATUS], 0, 0, s);
-
-        for (i=0; i<tmp_cmd.count; i++)
-          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, tmp_cmd.cbuff[i]);
-        tmp_cmd.position = tmp_cmd.count;
-        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
-        break;
-      case ESC:
-        return E_NO_ACTION;
-      case BVICTRL('H'):
-      case KEY_BACKSPACE:
-        if (tmp_cmd.position == 0)
-          return E_NO_ACTION;
-        for (i=tmp_cmd.position; i<tmp_cmd.count; i++)
-        {
-          tmp_cmd.cbuff[i-1] = tmp_cmd.cbuff[i];
-          mvwaddch(window_list[WINDOW_STATUS], 0, i, tmp_cmd.cbuff[i]);
-        }
-        mvwaddch(window_list[WINDOW_STATUS], 0, tmp_cmd.count, ' ');
-        wclrtoeol(window_list[WINDOW_STATUS]);
-        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position);
-        tmp_cmd.position--;
-        tmp_cmd.count--;
-        break;
-      case KEY_LEFT:
-        if (--tmp_cmd.position < 0)
-          tmp_cmd.position++;
-        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
-        break;
-      case KEY_RIGHT:
-        if (++tmp_cmd.position > tmp_cmd.count)
-          tmp_cmd.position--;
-        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
-        break;
-      case NL:
-      case CR:
-      case KEY_ENTER:
-        break;
-      default:
-        if (tmp_cmd.count >= MAX_CMD_BUF)
-          break;
-        for (i=tmp_cmd.count; i>=tmp_cmd.position; i--)
-          tmp_cmd.cbuff[i+1] = tmp_cmd.cbuff[i];
-        tmp_cmd.cbuff[tmp_cmd.position] = (char)c;
-        tmp_cmd.count++;
-        for (i=tmp_cmd.position; i<tmp_cmd.count; i++)
-          mvwaddch(window_list[WINDOW_STATUS], 0, i+1, tmp_cmd.cbuff[i]);
-        tmp_cmd.position++;
-        wmove(window_list[WINDOW_STATUS], 0, tmp_cmd.position+1);
-        break;
-    }
-  } while(c != NL && c != CR && c != KEY_ENTER);
-
-  tmp_cmd.cbuff[tmp_cmd.count] = '\0';
-
-  if (tmp_cmd.count)
-  {
-    if (s == '/' || s == '\\')
-    {
-      strncpy(cmd, tmp_cmd.cbuff, MAX_CMD_BUF);
-      action_do_search(s, cmd, cursor);
-    }
-    else
-    {
-      strncpy(cmd, tmp_cmd.cbuff, MAX_CMD_BUF);
-      strncpy(cmd_hist[entry_hist_index].cbuff, tmp_cmd.cbuff, MAX_CMD_BUF);
-      cmd_hist[entry_hist_index].count = tmp_cmd.count;
-      cmd_hist[entry_hist_index].position = tmp_cmd.position;
-      cmd_parse(cmd);
-      hist_index = (entry_hist_index+1) % MAX_CMD_HISTORY;
-    }
+    action_do_search(c, cmd, cursor);
+    free(cmd);
   }
-  else
+
+  return E_SUCCESS;
+}
+
+action_code_t do_cmd_line(cursor_t cursor)
+{
+  char *cmd;
+
+  werase(window_list[WINDOW_STATUS]);
+  cmd = creadline(":", window_list[WINDOW_STATUS], 0, 0, cmd_hist);
+
+  if (cmd)
   {
-    hist_index = entry_hist_index;
+    cmd_parse(cmd);
+    free(cmd);
   }
 
   return E_SUCCESS;
@@ -527,9 +410,11 @@ off_t get_next_motion_addr(void)
         action_move_cursor_prev_search(CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case ':':
+        do_cmd_line(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
       case '/':
       case '\\':
-        do_cmd_line(c, CURSOR_VIRTUAL);
+        do_search(c, CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case ESC:
         return display_info.cursor_addr;
@@ -1138,9 +1023,11 @@ void handle_key(int c)
       break;
     case '?':
     case ':':
+      do_cmd_line(CURSOR_REAL);
+      break;
     case '/':
     case '\\':
-      do_cmd_line(c, CURSOR_REAL);
+      do_search(c, CURSOR_REAL);
       break;
     case '~':
       action_load_next_file();
