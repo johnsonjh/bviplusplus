@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        user_prefs.h
+ * Author:      David Kelley
+ * Description: Defines, structures, and function prototypes
+ *              related to user preferences
+ *
+ *************************************************************/
+
 #include "virt_file.h"
 
 #ifndef __USER_PREFS_H__
@@ -39,3 +48,4 @@ typedef enum
 extern user_pref_t user_prefs[];
 
 #endif /* __USER_PREFS_H__ */
+

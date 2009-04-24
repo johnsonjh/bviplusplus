@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        actions.c
+ * Author:      David Kelley
+ * Description: Implimentation for most of the actions that
+ *              occur as a result of user input
+ *
+ *************************************************************/
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>

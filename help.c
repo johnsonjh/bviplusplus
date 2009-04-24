@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        help.c
+ * Author:      David Kelley
+ * Description: In program help
+ *
+ *************************************************************/
+
 #include <string.h>
 #include <stdlib.h>
 #include "display.h"

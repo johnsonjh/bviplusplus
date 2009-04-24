@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        creadline.h
+ * Author:      David Kelley
+ * Description: Defines, structures, and function prototypes
+ *              relates to reading command line input
+ *
+ *************************************************************/
+
 #include <ncurses.h>
 
 #ifndef __CREADLINE_H__

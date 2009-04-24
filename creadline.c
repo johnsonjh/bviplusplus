@@ -1,3 +1,13 @@
+/*************************************************************
+ *
+ * File:        creadline.c
+ * Author:      David Kelley
+ * Description: Functions for reading command line input,
+ *              similar to gnu realine library but specific
+ *              for ncurses
+ *
+ *************************************************************/
+
 #include <string.h>
 #include <stdlib.h>
 #include "creadline.h"

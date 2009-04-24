@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        main.c
+ * Author:      David Kelley
+ * Description: Program entry point. Contains initialization,
+ *              main program loop, and termination code.
+ *
+ *************************************************************/
+
 #include <stdio.h>
 #include <ncurses.h>
 #include <panel.h>
@@ -19,7 +28,10 @@ int main(int argc, char **argv)
 {
   int i, c;
 
+  /* Create a file ring to contain any open file references for this process */
   file_ring = vf_create_fm_ring();
+
+  /* Fill the file ring with the files the user has listed on the command line */
   for (i=1; i<argc; i++)
   {
     printf("argv[%d] = %s\n", i, argv[i]);
@@ -27,6 +39,8 @@ int main(int argc, char **argv)
     if (vf_init(current_file, argv[i]) == FALSE)
       fprintf(stderr, "Could not open %s\n", argv[i]);
   }
+
+  /* Make sure we have at least one valid open file, otherwise init an empty file */
   current_file = vf_get_current_fm_from_ring(file_ring);
   if (current_file == NULL) /* no file specified in open */
   {
@@ -35,6 +49,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Empty file failed?\n");
   }
 
+  /* Initialize yank, search, and comand line history support */
   action_init_yank();
   search_init();
   ascii_search_hist = new_history();
@@ -42,22 +57,24 @@ int main(int argc, char **argv)
   cmd_hist = new_history();
   file_hist = new_history();
 
+  /* Get our ncurses screen ready */
   initscr();
   keypad(stdscr, TRUE);
   scrollok(stdscr, TRUE);
   nonl();
   //cbreak();
+  raw(); /* use raw instead of cbreak for alt+<key> support */
   noecho();
-  raw();
   attrset(A_NORMAL);
-  start_color();      /* Start color      */
+  start_color();                  /* Start color */
   use_default_colors();
-  init_pair(1, COLOR_YELLOW, -1);
+  init_pair(1, COLOR_YELLOW, -1); /* for blob_grouping */
 
   reset_display_info();
 
   app_state.quit = FALSE;
 
+/* print any debug here before we make our windows */
 //#define SHOW_DEBUG_SCREEN
 #ifdef SHOW_DEBUG_SCREEN
   printw("COLS = %d\n", COLS);
@@ -69,23 +86,29 @@ int main(int argc, char **argv)
   }
 #endif
 
+  /* Create the program windows, set up the pannels, and we're off */
   create_screen();
+
+  /* Print our first screen with hex data */
   print_screen(display_info.page_start);
 
+  /* Main program loop. We loop here until we are told to quit. */
   while (app_state.quit == FALSE)
   {
+    /* Update the status window each keypress so we can always see our current cursor address */
     update_status_window();
     update_panels();
     doupdate();
+    /* Replace the cursor after updating the screen */
     place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
+    /* Get and handle the users next key press */
     c = wgetch(window_list[display_info.cursor_window]);
     handle_key(c);
   }
 
+  /* We're done, start breaking things down */
   destroy_screen();
   endwin();
-
-
   free_history(ascii_search_hist);
   free_history(hex_search_hist);
   free_history(cmd_hist);
@@ -96,16 +119,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
-
-#if 0
-  create warning("") function to show highlighted warning on status line until next key press, but does not capture cursor like msg_box().
-
-  search binary? (bit level)
-  Remember to add tab completion, macros, and a good system for command line parsing, .rc files
-
-  Check bvi man page for min list of command line commands to support
-  Handle KEY_RESIZE wherever we use looped getch for a while
-
-#endif
 

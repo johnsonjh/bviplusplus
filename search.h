@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        search.h
+ * Author:      David Kelley
+ * Description: Defines, structures, and function prototypes
+ *              related to searching
+ *
+ *************************************************************/
+
 #include <regex.h>
 #include "virt_file.h"
 

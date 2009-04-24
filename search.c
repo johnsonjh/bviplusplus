@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        search.c
+ * Author:      David Kelley
+ * Description: Search implimentation
+ *
+ *************************************************************/
+
 #include <regex.h>
 #include <stdlib.h>
 #include <string.h>

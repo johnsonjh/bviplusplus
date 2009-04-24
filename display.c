@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        display.c
+ * Author:      David Kelley
+ * Description: Functions related to rendering the data on
+ *              the screen
+ *
+ *************************************************************/
+
 #include <string.h>
 #include <stdlib.h>
 #include "display.h"

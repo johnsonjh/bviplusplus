@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        key_handler.c
+ * Author:      David Kelley
+ * Description: Handle key presses and other user input
+ *
+ *************************************************************/
+
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>

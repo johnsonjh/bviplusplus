@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        app_state.c
+ * Author:      David Kelley
+ * Description: Aplication state variables
+ *
+ *************************************************************/
+
 #include "virt_file.h"
 #include "app_state.h"
 

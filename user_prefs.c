@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        user_prefs.c
+ * Author:      David Kelley
+ * Description: User preferences and related functions
+ *
+ *************************************************************/
+
 #include "user_prefs.h"
 
  /*------------------------------------------------*/

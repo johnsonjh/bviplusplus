@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        key_handler.h
+ * Author:      David Kelley
+ * Description: Defines and function prototypes related to
+ *              user input
+ *
+ *************************************************************/
+
 #ifndef __KEY_HANDLER_H__
 #define __KEY_HANDLER_H__
 

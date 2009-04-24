@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        actions.h
+ * Author:      David Kelley
+ * Description: Defines, structures, and function prototypes
+ *              related to program actions
+ *
+ *************************************************************/
+
 #include "virt_file.h"
 #include "display.h"
 

@@ -1,3 +1,12 @@
+/*************************************************************
+ *
+ * File:        display.c
+ * Author:      David Kelley
+ * Description: Defines, structures, and functions prototypes
+ *              related to rendering the data on the screen
+ *
+ *************************************************************/
+
 #include <ncurses.h>
 #include <panel.h>
 #include <menu.h>

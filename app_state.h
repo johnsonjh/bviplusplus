@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        app_state.h
+ * Author:      David Kelley
+ * Description: Make available aplication state variables
+ *
+ *************************************************************/
+
 #include "virt_file.h"
 #include "creadline.h"
 

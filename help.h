@@ -1,3 +1,11 @@
+/*************************************************************
+ *
+ * File:        help.h
+ * Author:      David Kelley
+ * Description: Defines, structures, and function prototypes
+ *              related to in program help
+ *
+ *************************************************************/
 
 #ifndef __HELP_H__
 #define __HELP_H__
