@@ -1237,18 +1237,20 @@ action_code_t action_quit_all(BOOL force)
   return error;
 }
 
-action_code_t action_blob_shift_right(void)
+static action_code_t action_blob_shift(int count)
 {
   int new_blob_shift_value;
 
   if (user_prefs[BLOB_GROUPING].value == 0)
     return E_INVALID;
 
-  new_blob_shift_value = user_prefs[BLOB_GROUPING_OFFSET].value;
-  new_blob_shift_value++;
+  new_blob_shift_value = count + user_prefs[BLOB_GROUPING_OFFSET].value;
+  new_blob_shift_value %= 2*user_prefs[BLOB_GROUPING].value;
 
-  if (new_blob_shift_value >= user_prefs[BLOB_GROUPING].value)
-    new_blob_shift_value = -(user_prefs[BLOB_GROUPING].value);
+  if(new_blob_shift_value <= -user_prefs[BLOB_GROUPING].value)
+    new_blob_shift_value += 2*user_prefs[BLOB_GROUPING].value;
+  else if(new_blob_shift_value > user_prefs[BLOB_GROUPING].value)
+    new_blob_shift_value -= 2*user_prefs[BLOB_GROUPING].value;
 
   user_prefs[BLOB_GROUPING_OFFSET].value = new_blob_shift_value;
 
@@ -1256,24 +1258,15 @@ action_code_t action_blob_shift_right(void)
 
   return E_SUCCESS;
 }
-action_code_t action_blob_shift_left(void)
+
+action_code_t action_blob_shift_right(int count)
 {
-  int new_blob_shift_value;
+  return action_blob_shift(count == 0 ? 1 : count);
+}
 
-  if (user_prefs[BLOB_GROUPING].value == 0)
-    return E_INVALID;
-
-  new_blob_shift_value = user_prefs[BLOB_GROUPING_OFFSET].value;
-  new_blob_shift_value--;
-
-  if (new_blob_shift_value <= -user_prefs[BLOB_GROUPING].value)
-    new_blob_shift_value = user_prefs[BLOB_GROUPING].value-1;
-
-  user_prefs[BLOB_GROUPING_OFFSET].value = new_blob_shift_value;
-
-  print_screen(display_info.page_start);
-
-  return E_SUCCESS;
+action_code_t action_blob_shift_left(int count)
+{
+  return action_blob_shift(count == 0 ? -1 : -count);
 }
 
 action_code_t action_blob_inc(void)

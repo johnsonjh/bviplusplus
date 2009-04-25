@@ -897,10 +897,10 @@ void handle_key(int c)
       action_jump_to(jump_addr, CURSOR_REAL);
       break;
     case '<':
-      action_blob_shift_left();
+      action_blob_shift_left(multiplier);
       break;
     case '>':
-      action_blob_shift_right();
+      action_blob_shift_right(multiplier);
       break;
     case 'm':
       mark = getch();
