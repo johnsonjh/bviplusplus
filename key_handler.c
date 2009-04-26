@@ -932,10 +932,12 @@ void handle_key(int c)
         action_jump_to(jump_addr, CURSOR_REAL);
       jump_addr = -1;
       break;
+    case BVICTRL('n'):
     case 'j':
     case KEY_DOWN:
       action_cursor_move_down(multiplier, CURSOR_REAL);
       break;
+    case BVICTRL('p'):
     case 'k':
     case KEY_UP:
       action_cursor_move_up(multiplier, CURSOR_REAL);
@@ -1020,6 +1022,7 @@ void handle_key(int c)
     case 'u':
       action_undo(multiplier);
       break;
+    case BVICTRL('r'):
     case 'U':
       action_redo(multiplier);
       break;
