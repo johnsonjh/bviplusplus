@@ -197,7 +197,7 @@ void update_percent(void)
   else if(display_info.page_end == display_info.file_size-1)
     sprintf(display_info.percent, "Bot");
   else
-    sprintf(display_info.percent, "%2d%%",
+    sprintf(display_info.percent, "%2ld%%",
             (display_info.page_start)/(display_info.file_size/100));
 }
 
@@ -307,7 +307,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
   y++; /* line 0 is the box border */
 
   /* print address */
-  snprintf(addr_text, ADDR_BOX_W, "%08X", line_addr);
+  snprintf(addr_text, ADDR_BOX_W, "%08lX", line_addr);
   mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
   if (screen_buf == NULL)

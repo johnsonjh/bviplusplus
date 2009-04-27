@@ -23,7 +23,6 @@
 #define MARK_LIST_SIZE (26*2)
 #define NUM_YANK_REGISTERS (26*2 + 10)
 
-WINDOW *save_window;
 
 typedef struct yank_buf_s
 {
@@ -1059,6 +1058,7 @@ BOOL file_name_prompt(char *file_name)
 void *save_status_update_thread(void *percent_complete)
 {
   int *complete = percent_complete, i=0;
+  WINDOW *save_window;
   struct timespec sleep;
   struct timespec slept;
 
@@ -1116,6 +1116,7 @@ action_code_t action_save(void)
   }
   if (vf_need_save(current_file))
   {
+    curs_set(0);
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     pthread_create(&save_status_thread, &attr, save_status_update_thread,
