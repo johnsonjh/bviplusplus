@@ -170,6 +170,8 @@ void reset_display_info(void)
   display_info.max_cols = 0;
   display_info.has_color = has_colors();
   display_info.visual_select_addr = -1;
+  sprintf(display_info.percent, "Top");
+  update_status(NULL);
 }
 
 void update_display_info(void)
@@ -184,6 +186,31 @@ void update_display_info(void)
   if (display_info.cursor_addr > display_info.page_end)
     display_info.cursor_addr = display_info.page_end;
   display_info.cursor_addr -= (display_info.cursor_addr % user_prefs[GROUPING].value);
+  update_percent();
+  update_status(NULL);
+}
+
+void update_percent(void)
+{
+  if(display_info.page_start == 0)
+    sprintf(display_info.percent, "Top");
+  else if(display_info.page_end == display_info.file_size-1)
+    sprintf(display_info.percent, "Bot");
+  else
+    sprintf(display_info.percent, "%2d%%",
+            (display_info.page_start)/(display_info.file_size/100));
+}
+
+void update_status(const char *msg)
+{
+  if (vf_need_save(current_file) > 0)
+    snprintf(display_info.status, MAX_STATUS, "[+]");
+  else if (msg != NULL)
+    strncpy(display_info.status, msg, MAX_STATUS);
+  else
+    display_info.status[0] = 0;
+
+  display_info.status[MAX_STATUS-1] = 0;
 }
 
 void search_hl(BOOL on)
@@ -449,52 +476,46 @@ void update_file_tabs_window(void)
 
 void update_status_window(void)
 {
-  int y, x, i, result, str_length = 0;
-  unsigned char tmp[4], bin_text[9], file_name[MAX_FILE_NAME];
-
-  y = get_y_from_addr(display_info.cursor_addr);
-  x = get_x_from_addr(display_info.cursor_addr);
-
-  result = vf_get_buf(current_file, tmp, display_info.cursor_addr, 4);
-
-  if (result > 0)
-  {
-    for (i=0; i<8; i++)
-    {
-      if ((tmp[0] >> (7 - i)) & 1)
-        snprintf(bin_text+i, 2, "%c", '1');
-      else
-        snprintf(bin_text+i, 2, "%c", '0');
-    }
-  }
+  int i, result, len;
+  unsigned char tmp[4], bin_text[9];
+  char line[MAX_FILE_NAME];
 
   werase(window_list[WINDOW_STATUS]);
 
-  snprintf(file_name, MAX_FILE_NAME, "%s", vf_get_fname(current_file));
-  str_length = strlen(file_name);
-  if (vf_need_save(current_file))
-    snprintf(file_name + str_length, MAX_FILE_NAME - str_length, "*(unsaved changes)");
+  len = snprintf(line, MAX_FILE_NAME, "%s", vf_get_fname(current_file));
+  len += snprintf(line+len, MAX_FILE_NAME-len, " %s", display_info.status);
+  line[MAX_FILE_NAME-1] = 0;
+  mvwaddstr(window_list[WINDOW_STATUS], 0, 0, line);
 
-  mvwaddstr(window_list[WINDOW_STATUS], 0, 0, file_name);
+  result = vf_get_buf(current_file, tmp, display_info.cursor_addr, 4);
+  if (result > 0)
+  {
+    for (i=0; i<8; i++)
+      snprintf(bin_text+i, 2, "%c", ((tmp[0] >> (7 - i)) & 1) ? '1' : '0');
+
+    mvwprintw(window_list[WINDOW_STATUS], STATUS_1_Y, STATUS_1_X,
+              "[/x %02x  /d %03u  /b %s  ]",
+              tmp[0], tmp[0], bin_text);
+
+    if (result == 4)
+      mvwprintw(window_list[WINDOW_STATUS], STATUS_2_Y, STATUS_2_X,
+                "[U32: %02x%02x%02x%02x (le: %02x%02x%02x%02x)]",
+                tmp[0], tmp[1], tmp[2], tmp[3],
+                tmp[3], tmp[2], tmp[1], tmp[0]);
+  }
+
   mvwprintw(window_list[WINDOW_STATUS], 1, 0,
-            "Addr: %08x/%08x (%d/%d)",
+            "%s %08x/%08x  %d/%d",
+            display_info.percent,
             display_info.cursor_addr,
             display_info.file_size - 1,
             display_info.cursor_addr,
             display_info.file_size - 1);
 
-  if (result > 0)
-    mvwprintw(window_list[WINDOW_STATUS], STATUS_1_Y, STATUS_1_X,
-              "[/x %02x  /d %03u  /b %s  ]",
-              tmp[0], tmp[0], bin_text);
-  if (result == 4)
-    mvwprintw(window_list[WINDOW_STATUS], STATUS_2_Y, STATUS_2_X,
-              "[U32: %02x%02x%02x%02x (le: %02x%02x%02x%02x)]",
-              tmp[0], tmp[1], tmp[2], tmp[3],
-              tmp[3], tmp[2], tmp[1], tmp[0]);
-
-
-  wmove(window_list[display_info.cursor_window], y, x);
+  /* reset cursor */
+  wmove(window_list[display_info.cursor_window],
+        get_y_from_addr(display_info.cursor_addr),
+        get_x_from_addr(display_info.cursor_addr));
 }
 
 void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
@@ -520,14 +541,18 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
         new_screen_addr++;
       new_screen_addr = display_info.page_start - (new_screen_addr * BYTES_PER_LINE);
       print_screen(new_screen_addr);
+      update_status(NULL);
+      update_percent();
     }
-    if (addr > display_info.page_end)
+    else if (addr > display_info.page_end)
     {
       new_screen_addr = (addr - display_info.page_end) / BYTES_PER_LINE;
       if ((addr - display_info.page_end) % BYTES_PER_LINE)
         new_screen_addr++;
       new_screen_addr = display_info.page_start + (new_screen_addr * BYTES_PER_LINE);
       print_screen(new_screen_addr);
+      update_status(NULL);
+      update_percent();
     }
 
     x = get_x_from_addr(addr);
@@ -545,7 +570,6 @@ void place_cursor(off_t addr, cursor_alignment_e calign, cursor_t cursor)
     display_info.cursor_addr = 0;
     wmove(window_list[display_info.cursor_window], 1, 1);
   }
-
 }
 
 

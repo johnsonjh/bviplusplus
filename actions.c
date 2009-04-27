@@ -1062,22 +1062,34 @@ void *save_status_update_thread(void *percent_complete)
   struct timespec sleep;
   struct timespec slept;
 
-  sleep.tv_sec = 0;
-  sleep.tv_nsec = 100000000;
-
-  while(*complete != 100)
+  for(i=0; i<5; ++i)
   {
+    sleep.tv_sec = 0;
+    sleep.tv_nsec = 100000000;
     nanosleep(&sleep, &slept);
 
-    werase(save_window);
+    if(*complete == 100)
+      pthread_exit(NULL);
+  }
+
+  save_window = newwin(SAVE_BOX_H, SAVE_BOX_W, SAVE_BOX_Y, SAVE_BOX_X);
+
+  sleep.tv_sec = 1;
+  sleep.tv_nsec = 0;
+  while(*complete != 100)
+  {
     box(save_window, 0, 0);
     wattron(save_window, A_STANDOUT);
     for (i=1; i<=((*complete * (SAVE_BOX_W-2))/100); i++)
       mvwprintw(save_window, 1, i, " ");
     wattroff(save_window, A_STANDOUT);
-    mvwprintw(save_window, 2, 1, "Saving... %d%%", *complete);
+    mvwprintw(save_window, 2, 1, "Saving... %3d%%", *complete);
     wrefresh(save_window);
+    nanosleep(&sleep, &slept);
+    werase(save_window);
   }
+
+  delwin(save_window);
   pthread_exit(NULL);
 }
 action_code_t action_save(void)
@@ -1104,11 +1116,6 @@ action_code_t action_save(void)
   }
   if (vf_need_save(current_file))
   {
-    save_window = newwin(SAVE_BOX_H, SAVE_BOX_W, SAVE_BOX_Y, SAVE_BOX_X);
-    box(save_window, 0, 0);
-    curs_set(0);
-    mvwprintw(save_window, 2, 1, "Saving... 0%%");
-
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     pthread_create(&save_status_thread, &attr, save_status_update_thread,
@@ -1120,24 +1127,14 @@ action_code_t action_save(void)
     {
       msg_box("Only saved %d bytes, should have saved %d bytes!!",
               size, display_info.file_size);
+      update_status("[failed save]");
       curs_set(1);
       return E_INVALID;
     }
 
     pthread_join(save_status_thread, &pthread_status);
-    werase(save_window);
-    box(save_window, 0, 0);
-    wattron(save_window, A_STANDOUT);
-    for (i=1; i<(SAVE_BOX_W-1); i++)
-      mvwprintw(save_window, 1, i, " ");
-    wattroff(save_window, A_STANDOUT);
-    mvwprintw(save_window, 2, 1, "Saving... 100%%");
-    wrefresh(save_window);
-    sleep.tv_sec = 1;
-    sleep.tv_nsec = 0;
-    nanosleep(&sleep, &slept);
+    update_status("[saved]");
 
-    delwin(save_window);
     curs_set(1);
     print_screen(display_info.page_start);
   }
@@ -1198,7 +1195,7 @@ action_code_t action_quit(BOOL force)
 {
   action_code_t error = E_SUCCESS;
   if (vf_need_save(current_file) && force == FALSE)
-    msg_box("File has unsaved chages");
+    msg_box("File has unsaved changes");
   else
   {
     vf_remove_fm_from_ring(file_ring, current_file);
@@ -1227,7 +1224,7 @@ action_code_t action_quit_all(BOOL force)
     {
       if (vf_need_save(tmp_file))
       {
-        msg_box("Files have unsaved chages");
+        msg_box("Files have unsaved changes");
         return E_INVALID;
       }
     }

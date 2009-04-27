@@ -106,6 +106,8 @@
 #define SAVE_BOX_Y (((HEX_BOX_H - SAVE_BOX_H) / 2) + HEX_BOX_Y)
 #define SAVE_BOX_X (((HEX_BOX_W - SAVE_BOX_W) / 2) + HEX_BOX_X)
 
+#define MAX_STATUS 64
+
 typedef enum window_e
 {
   WINDOW_MENU,
@@ -127,6 +129,8 @@ typedef struct display_info_s
   window_t cursor_window;
   int      max_cols;
   BOOL     has_color;
+  char     percent[4];
+  char     status[MAX_STATUS];
 } display_info_t;
 
 typedef enum cursor_alignment
@@ -159,6 +163,8 @@ void create_screen(void);
 void msg_box(const char *fmt, ...);
 void reset_display_info(void);
 void update_display_info(void);
+void update_percent(void);
+void update_status(const char *msg);
 void search_hl(BOOL on);
 void blob_standout(BOOL on);
 int is_visual_on(void);
