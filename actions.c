@@ -1006,6 +1006,9 @@ action_code_t action_undo(int count)
     place_cursor(caddr, CALIGN_NONE, CURSOR_REAL);
     print_screen(display_info.page_start);
   }
+  else
+    flash();
+
   return error;
 }
 action_code_t action_redo(int count)

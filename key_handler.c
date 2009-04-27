@@ -592,6 +592,35 @@ void do_insert(int count, int c)
     switch (c2)
     {
       case KEY_BACKSPACE:
+        low_tmp_char_count--;
+        if (low_tmp_char_count < 0)
+        {
+          low_tmp_char_count = chars_per_byte - 1;
+          tmp_char_count--;
+          if (tmp_char_count < 0)
+          {
+            tmp_char_count = user_prefs[GROUPING].value - 1;
+            char_count--;
+            if (char_count < 0)
+            {
+              low_tmp_char_count = 0;
+              tmp_char_count = 0;
+              char_count = 0;
+              flash();
+            }
+            else
+            {
+              memcpy(tmp2, ins_buf + char_count, user_prefs[GROUPING].value);
+              tmp[1] = HEX((tmp2[tmp_char_count] & 0xF0) >> 4);
+              tmp[0] = HEX((tmp2[tmp_char_count] & 0x0F));
+            }
+          }
+          else
+          {
+            tmp[1] = HEX((tmp2[tmp_char_count] & 0xF0) >> 4);
+            tmp[0] = HEX((tmp2[tmp_char_count] & 0x0F));
+          }
+        }
         break;
       case KEY_RESIZE:
         break;
@@ -944,9 +973,11 @@ void handle_key(int c)
       break;
     case 'h':
     case KEY_LEFT:
+    case KEY_BACKSPACE:
       action_cursor_move_left(multiplier, CURSOR_REAL);
       break;
     case 'l':
+    case ' ':
     case KEY_RIGHT:
       action_cursor_move_right(multiplier, CURSOR_REAL);
       break;
