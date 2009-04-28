@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "display.h"
 #include "user_prefs.h"
 #include "app_state.h"
@@ -477,7 +478,7 @@ void update_file_tabs_window(void)
 void update_status_window(void)
 {
   int i, result, len;
-  unsigned char tmp[4], bin_text[9];
+  char tmp[4], bin_text[9];
   char line[MAX_FILE_NAME];
 
   werase(window_list[WINDOW_STATUS]);

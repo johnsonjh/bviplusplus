@@ -48,6 +48,9 @@ extern search_item_t search_item[];
 extern int current_search;
 
 void buf_search(search_aid_t *search_aid);
+void set_search_term(char *pattern);
+void search_init(void);
+void search_cleanup(void);
 void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid);
 void free_search_buf(search_aid_t *search_aid);
 

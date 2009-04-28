@@ -23,6 +23,7 @@ typedef enum action_code_e
 } action_code_t;
 
 
+void          run_external(void);
 action_code_t action_cursor_move_up(int count, cursor_t cursor);
 action_code_t action_cursor_move_down(int count, cursor_t cursor);
 action_code_t action_cursor_move_left(int count, cursor_t cursor);
@@ -40,8 +41,10 @@ action_code_t action_align_bottom(void);
 action_code_t action_delete(int count, off_t end_addr); /* delete from cursor to end_addr (end_addr can be INVALID_ADDR) */
 action_code_t action_insert_before(int count, char *buf, int len);
 action_code_t action_insert_after(int count, char *buf, int len);
+action_code_t action_set_yank_register(int c);
 action_code_t action_paste_before(int count);
 action_code_t action_paste_after(int count);
+action_code_t action_init_yank(void);
 action_code_t action_clean_yank(void);
 action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor); /* yank from cursor to end_addr (end_addr can be INVALID_ADDR) */
 action_code_t action_append(void);
@@ -67,8 +70,10 @@ action_code_t action_set_mark(int m);
 action_code_t action_undo(int count);
 action_code_t action_redo(int count);
 action_code_t action_save(void);
+action_code_t action_save_all(void);
 action_code_t action_save_as(char *name);
 action_code_t action_quit(BOOL force);
+action_code_t action_quit_all(BOOL force);
 action_code_t action_blob_shift_right(int count);
 action_code_t action_blob_shift_left(int count);
 action_code_t action_blob_inc(void);

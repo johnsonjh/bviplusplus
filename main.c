@@ -19,6 +19,7 @@
 #include "key_handler.h"
 #include "display.h"
 #include "app_state.h"
+#include "actions.h"
 #include "creadline.h"
 
 #define MILISECONDS(x) ((x) * 1000)

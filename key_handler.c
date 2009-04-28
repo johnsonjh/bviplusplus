@@ -9,6 +9,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "key_handler.h"
 #include "user_prefs.h"
 #include "display.h"
@@ -344,6 +345,8 @@ off_t get_next_motion_addr(void)
   static int multiplier = 0;
   static off_t jump_addr = -1;
 
+  display_info.virtual_cursor_addr = -1;
+
   c = getch();
   while (c != ESC)
   {
@@ -439,6 +442,7 @@ off_t get_next_motion_addr(void)
     flash();
     c = getch();
   }
+  return display_info.virtual_cursor_addr;
 }
 
 

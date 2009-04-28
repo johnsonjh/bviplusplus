@@ -112,6 +112,7 @@ BOOL vf_remove_fm_from_ring(vf_ring_t *r, file_manager_t *fm);
 file_manager_t *vf_get_next_fm_from_ring(vf_ring_t *r);
 file_manager_t *vf_get_last_fm_from_ring(vf_ring_t *r);
 file_manager_t *vf_get_current_fm_from_ring(vf_ring_t *r);
+BOOL            vf_set_current_fm_from_ring(vf_ring_t *r, file_manager_t *fm);
 file_manager_t *vf_get_head_fm_from_ring(vf_ring_t *r);
 
 BOOL   vf_init(file_manager_t * f, const char *file_name);
@@ -125,10 +126,12 @@ size_t vf_replace(file_manager_t * f, char *buf, off_t offset, size_t len);
 size_t vf_delete(file_manager_t * f, off_t offset, size_t len);
 int    vf_undo(file_manager_t * f, int count, off_t * undo_addr);
 int    vf_redo(file_manager_t * f, int count, off_t * redo_addr);
+BOOL   vf_need_create(file_manager_t * f);
 BOOL   vf_need_save(file_manager_t * f);
 char *vf_get_fname(file_manager_t * f);
 char *vf_get_fname_file(file_manager_t * f);
 BOOL   vf_create_file(file_manager_t * f, const char *file_name);
+BOOL   vf_copy_file(file_manager_t * f, const char *file_name);
 off_t  vf_save(file_manager_t * f, int *complete);
 
 #endif /* __VIRT_FILE_H */

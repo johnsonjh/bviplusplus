@@ -13,12 +13,15 @@
 #include <errno.h>
 #include <signal.h>
 #include <pthread.h>
+#include <ctype.h>
+#include <sys/wait.h>
 #include "actions.h"
 #include "display.h"
 #include "virt_file.h"
 #include "app_state.h"
 #include "user_prefs.h"
 #include "key_handler.h"
+#include "help.h"
 
 #define MARK_LIST_SIZE (26*2)
 #define NUM_YANK_REGISTERS (26*2 + 10)
@@ -1032,7 +1035,7 @@ action_code_t action_redo(int count)
 BOOL file_name_prompt(char *file_name)
 {
   WINDOW *w;
-  int c, i, y, position = 0, count = 0;
+  int y;
   char *fname;
 
   w = newwin(FILE_BOX_H, FILE_BOX_W, FILE_BOX_Y, FILE_BOX_X);
@@ -1098,15 +1101,13 @@ void *save_status_update_thread(void *percent_complete)
 action_code_t action_save(void)
 {
   action_code_t error = E_SUCCESS;
-  int complete, i=0;
+  int complete;
   char file_name[MAX_FILE_NAME];
   BOOL status;
   off_t size;
   pthread_t save_status_thread;
   pthread_attr_t attr;
   void *pthread_status;
-  struct timespec sleep;
-  struct timespec slept;
 
   if (vf_need_create(current_file))
   {
@@ -1340,12 +1341,14 @@ action_code_t action_load_next_file(void)
   current_file = vf_get_next_fm_from_ring(file_ring);
   reset_display_info();
   print_screen(display_info.page_start);
+  return E_SUCCESS;
 }
 action_code_t action_load_prev_file(void)
 {
   current_file = vf_get_last_fm_from_ring(file_ring);
   reset_display_info();
   print_screen(display_info.page_start);
+  return E_SUCCESS;
 }
 
 action_code_t action_do_resize(void)
