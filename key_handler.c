@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <sys/stat.h>
+#include <dirent.h>
 #include "key_handler.h"
 #include "user_prefs.h"
 #include "display.h"
@@ -144,14 +146,127 @@ action_code_t do_set(void)
   return error;
 }
 
+static int all(const struct dirent *unused)
+{ return 1; }
+BOOL file_browser(const char *dir, char *fname, int name_len)
+{
+  int top = 0, selection = 0, count = 0;
+  int c = 0, i, j;
+  int dirchange = 1, update = 1;
+  BOOL found = FALSE;
+  struct stat stat_buf;
+  struct dirent **eps;
+  WINDOW *fb;
+
+  memset(fname, 0, name_len);
+  strncat(fname, dir, name_len);
+
+  fb = newwin(SCROLL_BOX_H, SCROLL_BOX_W, SCROLL_BOX_Y, SCROLL_BOX_X);
+  curs_set(0);
+
+  do
+  {
+    switch (c)
+    {
+      case 'j':
+      case KEY_DOWN:
+        selection++;
+        if (selection >= count)
+          selection = count - 1;
+
+        if (selection - top > SCROLL_BOX_H - 5)
+          top++;
+
+        update = 1;
+        break;
+      case 'k':
+      case KEY_UP:
+        selection--;
+        if (selection < 0)
+          selection = 0;
+
+        if (selection < top)
+          top--;
+
+        update = 1;
+        break;
+      case KEY_ENTER:
+      case 'g':
+        strncat(fname, "/", name_len);
+        strncat(fname, eps[selection]->d_name, name_len);
+        dirchange = 1;
+        update = 1;
+        break;
+      default:
+        break;
+    }
+
+    if (dirchange)
+    {
+      dirchange = 0;
+      selection = 0;
+      top = 0;
+
+      if (stat(fname, &stat_buf))
+      {
+        msg_box("Could not find %s", fname);
+        break;
+      }
+      if (!S_ISDIR(stat_buf.st_mode))
+      {
+        found = TRUE;
+        break;
+      }
+
+      count = scandir (fname, &eps, all, alphasort);
+      if (count < 0)
+      {
+        msg_box("Could not scan directory %s", fname);
+        break;
+      }
+    }
+
+    if (update)
+    {
+      update = 0;
+      werase(fb);
+      box(fb, 0, 0);
+      for (i=top,j=1; i<count; i++)
+      {
+        if (j >= (SCROLL_BOX_H - 3))
+          break;
+        else
+        {
+          if (i == selection)
+            wattron(fb, A_STANDOUT);
+          mvwprintw(fb, j, 1, eps[i]->d_name);
+          wattroff(fb, A_STANDOUT);
+        }
+        j++;
+      }
+      mvwprintw(fb, SCROLL_BOX_H - 3, 1, "__________________________________________________________");
+      mvwprintw(fb, SCROLL_BOX_H - 2, 1, " [j|DOWN] Down  [k|UP] Up  [ENTER] Select  [q|ESC] Cancel |");
+      wrefresh(fb);
+    }
+    c = wgetch(fb);
+  } while(c != ESC && c != 'q' && c != 'Q');
+
+  delwin(fb);
+  curs_set(1);
+  print_screen(display_info.page_start);
+
+  return found;
+}
+
 action_code_t cmd_parse(char *cbuff)
 {
   action_code_t error = E_SUCCESS;
   char *tok = 0, *endptr = 0;
   const char delimiters[] = " =";
   long long num = 0;
-  char fname[MAX_FILE_NAME];
+  char fname[MAX_FILE_NAME], *ftemp;
   off_t caddrsave, paddrsave;
+  struct stat stat_buf;
 
   tok = strtok(cbuff, delimiters);
   if (tok != NULL)
@@ -201,9 +316,25 @@ action_code_t cmd_parse(char *cbuff)
       }
       else
       {
+        if (stat(tok, &stat_buf))
+        {
+          msg_box("Could not find %s", tok);
+          return error;
+        }
+        if (S_ISDIR(stat_buf.st_mode))
+        {
+          if (file_browser(tok, fname, MAX_FILE_NAME) != FALSE)
+            ftemp = fname;
+          else
+            return error;
+        }
+        else
+        {
+          ftemp = tok;
+        }
         current_file = vf_add_fm_to_ring(file_ring);
-        if (vf_init(current_file, tok) == FALSE)
-          fprintf(stderr, "Could not open %s\n", tok);
+        if (vf_init(current_file, ftemp) == FALSE)
+          fprintf(stderr, "Could not open %s\n", ftemp);
         update_display_info();
         print_screen(0);
       }
