@@ -38,7 +38,10 @@ int main(int argc, char **argv)
     printf("argv[%d] = %s\n", i, argv[i]);
     current_file = vf_add_fm_to_ring(file_ring);
     if (vf_init(current_file, argv[i]) == FALSE)
+    {
       fprintf(stderr, "Could not open %s\n", argv[i]);
+      vf_remove_fm_from_ring(file_ring, current_file);
+    }
   }
 
   /* Make sure we have at least one valid open file, otherwise init an empty file */
