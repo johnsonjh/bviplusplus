@@ -190,6 +190,8 @@ BOOL file_browser(const char *dir, char *fname, int name_len)
 
         update = 1;
         break;
+      case NL:
+      case CR:
       case KEY_ENTER:
       case 'g':
         strncat(fname, "/", name_len);
@@ -244,11 +246,11 @@ BOOL file_browser(const char *dir, char *fname, int name_len)
         }
         j++;
       }
-      mvwprintw(fb, SCROLL_BOX_H - 3, 1, "__________________________________________________________");
-      mvwprintw(fb, SCROLL_BOX_H - 2, 1, " [j|DOWN] Down  [k|UP] Up  [ENTER] Select  [q|ESC] Cancel |");
+      mvwprintw(fb, SCROLL_BOX_H - 3, 1, "___________________________________________________________");
+      mvwprintw(fb, SCROLL_BOX_H - 2, 1, " [j|DOWN] Down  [k|UP] Up  [ENTER|g] Select  [q|ESC] Cancel |");
       wrefresh(fb);
     }
-    c = wgetch(fb);
+    c = getch();
   } while(c != ESC && c != 'q' && c != 'Q');
 
   delwin(fb);
