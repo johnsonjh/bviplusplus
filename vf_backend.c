@@ -695,10 +695,7 @@ char _get_char(vbuf_t * vb, char *result, off_t offset)
 {
   off_t shift = 0;
   vbuf_t *tmp = vb->first_child;
-  char value,
-   *dest;
-
-  dest = &value;
+  char value;
 
   /* Offset is not in this set! */
   if(offset >= vb->start + vb->size)
@@ -747,7 +744,7 @@ char _get_char(vbuf_t * vb, char *result, off_t offset)
   /* It is definitely in this set and we didn't find it in the sub vbs, so it must be this one */
   if(TYPE_FILE == vb->buf_type)
   {
-    fseek(vb->fp, offset + shift, SEEK_SET);
+    fseeko(vb->fp, offset + shift, SEEK_SET);
     fread(&value, 1, 1, vb->fp);
   }
   else

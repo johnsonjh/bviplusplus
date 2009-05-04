@@ -198,7 +198,7 @@ void update_percent(void)
   else if(display_info.page_end == display_info.file_size-1)
     sprintf(display_info.percent, "Bot");
   else
-    sprintf(display_info.percent, "%2ld%%",
+    sprintf(display_info.percent, "%2jd%%",
             (display_info.page_start)/(display_info.file_size/100));
 }
 
@@ -298,8 +298,8 @@ off_t visual_addr(void)
 int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_buf_size, search_aid_t *search_aid)
 {
   int i, j, k,
-      y, x = 1,
-      byte_addr;
+      y, x = 1;
+  off_t byte_addr;
   char c, result,
        addr_text[ADDR_DIGITS + 1],
        bin_text[9];
@@ -308,7 +308,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
   y++; /* line 0 is the box border */
 
   /* print address */
-  snprintf(addr_text, ADDR_BOX_W, "%08lX", line_addr);
+  snprintf(addr_text, ADDR_BOX_W, "%08jX", line_addr);
   mvwaddstr(window_list[WINDOW_ADDR], y, 1, addr_text);
 
   if (screen_buf == NULL)
@@ -478,8 +478,10 @@ void update_file_tabs_window(void)
 void update_status_window(void)
 {
   int i, result, len;
-  char tmp[4], bin_text[9];
+  char tmp[4], bin_text[9], size_text[32];
   char line[MAX_FILE_NAME];
+  const char metrics[] = " KMGTPE";
+  off_t adjusted_size = 0, size_shadow = 0;
 
   werase(window_list[WINDOW_STATUS]);
 
@@ -496,22 +498,46 @@ void update_status_window(void)
 
     mvwprintw(window_list[WINDOW_STATUS], STATUS_1_Y, STATUS_1_X,
               "[/x %02x  /d %03u  /b %s  ]",
-              tmp[0], tmp[0], bin_text);
+              (unsigned char)tmp[0], (unsigned char)tmp[0], bin_text);
 
     if (result == 4)
       mvwprintw(window_list[WINDOW_STATUS], STATUS_2_Y, STATUS_2_X,
                 "[U32: %02x%02x%02x%02x (le: %02x%02x%02x%02x)]",
-                tmp[0], tmp[1], tmp[2], tmp[3],
-                tmp[3], tmp[2], tmp[1], tmp[0]);
+                (unsigned char)tmp[0],
+                (unsigned char)tmp[1],
+                (unsigned char)tmp[2],
+                (unsigned char)tmp[3],
+                (unsigned char)tmp[3],
+                (unsigned char)tmp[2],
+                (unsigned char)tmp[1],
+                (unsigned char)tmp[0]);
   }
 
+  adjusted_size = display_info.file_size;
+  i = 0;
+  while (adjusted_size/1024 > 0 && i < 6)
+  {
+    size_shadow = adjusted_size;
+    adjusted_size /= 1024;
+    i++;
+  }
+  size_shadow %= 1024;
+  while (size_shadow > 100)
+    size_shadow /= 10;
+
+  if (i == 0)
+    snprintf(size_text, 31, "(%ju B)", adjusted_size);
+  else
+    snprintf(size_text, 31, "(%ju.%ju %ciB)", adjusted_size, size_shadow, metrics[i]);
+
   mvwprintw(window_list[WINDOW_STATUS], 1, 0,
-            "%s %08x/%08x  %d/%d",
+            "%s %08jx/%08jx  %ju/%ju %s",
             display_info.percent,
             display_info.cursor_addr,
             display_info.file_size - 1,
             display_info.cursor_addr,
-            display_info.file_size - 1);
+            display_info.file_size - 1,
+            size_text);
 
   /* reset cursor */
   wmove(window_list[display_info.cursor_window],
