@@ -9,7 +9,6 @@
 
 #include <ncurses.h>
 #include <panel.h>
-#include <menu.h>
 #include "virt_file.h"
 #include "search.h"
 

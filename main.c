@@ -10,12 +10,10 @@
 #include <stdio.h>
 #include <ncurses.h>
 #include <panel.h>
-#include <menu.h>
 #include <unistd.h> /* usleep */
 #include <stdlib.h> /* calloc */
 #include <ctype.h> /* isprint */
 #include "virt_file.h"
-#include "menus.h"
 #include "key_handler.h"
 #include "display.h"
 #include "app_state.h"
