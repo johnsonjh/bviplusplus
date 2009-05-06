@@ -949,8 +949,8 @@ void do_replace(int count)
     {
         mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2-1, (c&0xF)<<4);
         mvwaddch(window_list[WINDOW_HEX], hy, hx+char_count/2,   (c&0xF));
-        if (isprint(tmpc))
-          mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, tmpc);
+        if (isprint(c))
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, c);
         else
           mvwaddch(window_list[WINDOW_ASCII], ay, ax+char_count/2-1, '.');
 

@@ -48,14 +48,13 @@ void buf_search(search_aid_t *search_aid)
                     MAX_SEARCH_MATCHES,
                     matches,
                     REG_NOTBOL|REG_NOTEOL);
+
     if (error == REG_NOMATCH)
     {
       search_aid->hl_start = -1;
       search_aid->hl_end   = -1;
-      return;
     }
-
-    if (search_item[current_search].search_window == SEARCH_HEX)
+    else if (search_item[current_search].search_window == SEARCH_HEX)
     {
       search_aid->hl_start = matches[0].rm_so + next_search;
       start_remainder = search_aid->hl_start % 2;
@@ -66,7 +65,7 @@ void buf_search(search_aid_t *search_aid)
       search_aid->hl_end   /= 2;
       search_aid->hl_end   += search_aid->buf_start_addr;
     }
-    if (search_item[current_search].search_window == SEARCH_ASCII)
+    else /* search_window == SEARCH_ASCII */
     {
       search_aid->hl_start = search_aid->buf_start_addr + matches[0].rm_so + next_search;
       search_aid->hl_end   = search_aid->buf_start_addr + matches[0].rm_eo + next_search;
@@ -170,7 +169,7 @@ void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid)
                search_aid->buf_size);
     search_aid->buf[search_aid->buf_size] = 0;
   }
-  else
+  else /* search_window == SEARCH_HEX */
   {
     tmp = (char *)malloc(search_aid->buf_size);
     if (tmp == NULL)

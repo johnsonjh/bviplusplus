@@ -322,7 +322,7 @@ int print_line(off_t page_addr, off_t line_addr, char *screen_buf, int screen_bu
       return 0;
   }
 
-  for (i=0; i<HEX_COLS; i++)
+  for (i=0,j=0; i<HEX_COLS; i++)
   {
     /* print hex and ascii */
     for (j=0; j<user_prefs[GROUPING].value; j++)
