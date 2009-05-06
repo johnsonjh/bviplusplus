@@ -46,20 +46,22 @@ endif
 MKDIR := mkdir -p
 SILENT := @
 
+.PHONY: all mkobjdir clean install
+
 # Build all the prereqs and generate dependencies (-MMD)
 $(OBJDIR)/%.o: %.c
 	$(SHORT) "CC $<"
-	$(QUIET)$(MKDIR) $(OBJDIR)
 	$(QUIET)$(CC) $(EXTRA_CFLAGS) $(addprefix -I, $(INCLUDES)) -MMD -c $< -o $@
 
 # Produce our binary
-all: $(TARGET)
+all: mkobjdir $(TARGET)
+
+mkobjdir:
+	$(QUIET)$(MKDIR) $(OBJDIR)
 
 $(TARGET): $(BUILD_OBJS)
 	$(SHORT) "LD $@"
 	$(QUIET)$(CC) $(EXTRA_CFLAGS) $^ $(addprefix -l,$(LIBS)) -o $@
-
-.PHONY: clean install
 
 clean:
 	rm -rf $(OBJDIR) $(TARGET)
@@ -71,3 +73,4 @@ install: $(TARGET)
 
 # Include dependencies
 -include $(BUILD_OBJS:.o=.d)
+
