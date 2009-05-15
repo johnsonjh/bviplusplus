@@ -32,6 +32,13 @@ typedef struct yank_buf_s
   char *buf;
   int len;
 } yank_buf_t;
+typedef struct search_thread_data_s
+{
+  off_t start;
+  off_t end;
+  off_t current;
+  int abort;
+} search_thread_data_t;
 
 static off_t mark_list[MARK_LIST_SIZE];
 static yank_buf_t yank_buf[NUM_YANK_REGISTERS];
@@ -783,19 +790,88 @@ action_code_t action_visual_select_toggle(void)
   return error;
 }
 
+void *search_status_update_thread(void *search_data)
+{
+  int i=0, c = 0;
+  search_thread_data_t *search_data_p = search_data;
+  WINDOW *search_window;
+  struct timespec sleep;
+  struct timespec slept;
+  int complete = 0;
+
+  for(i=0; i<5; ++i)
+  {
+    sleep.tv_sec = 0;
+    sleep.tv_nsec = 100000000;
+    nanosleep(&sleep, &slept);
+
+    if(search_data_p->current == search_data_p->end)
+      pthread_exit(NULL);
+  }
+
+  search_window = newwin(SAVE_BOX_H, SAVE_BOX_W, SAVE_BOX_Y, SAVE_BOX_X);
+  curs_set(0);
+  nodelay(search_window, TRUE);
+
+  sleep.tv_sec = 0;
+  sleep.tv_nsec = 500000000;
+  while(search_data_p->current != search_data_p->end && c != ESC)
+  {
+    if (search_data_p->start >= search_data_p->end) /* reverse search */
+      complete = ((search_data_p->start - search_data_p->current) * 100) / (search_data_p->start - search_data_p->end);
+    else                                            /* forward search */
+      complete = ((search_data_p->current - search_data_p->start) * 100) / (search_data_p->end - search_data_p->start);
+
+    box(search_window, 0, 0);
+    wattron(search_window, A_STANDOUT);
+    for (i=1; i<=((complete * (SAVE_BOX_W-2))/100); i++)
+      mvwprintw(search_window, 1, i, " ");
+    wattroff(search_window, A_STANDOUT);
+    mvwprintw(search_window, 2, 1, "Press ESC to cancel search... %3d%%", complete);
+    while ((c = wgetch(search_window)) != ERR)
+      if (c == ESC)
+        break;
+    wrefresh(search_window);
+    nanosleep(&sleep, &slept);
+    werase(search_window);
+  }
+
+  if (c == ESC)
+    search_data_p->abort = 1;
+
+  delwin(search_window);
+  curs_set(1);
+  pthread_exit(NULL);
+}
+
 action_code_t action_move_cursor_prev_search(cursor_t cursor)
 {
   action_code_t error = E_SUCCESS;
   search_aid_t search_aid;
   off_t addr, tmp;
+  pthread_t search_status_thread;
+  pthread_attr_t attr;
+  void *pthread_status;
+  search_thread_data_t search_data;
 
   addr = display_info.cursor_addr - PAGE_SIZE;
   if (address_invalid(addr))
     addr = 0;
 
+  search_data.start = display_info.cursor_addr;
+  search_data.current = display_info.cursor_addr;
+  search_data.end = 0;
+  search_data.abort = 0;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_create(&search_status_thread, &attr, search_status_update_thread,
+                 (void *)&search_data);
+  pthread_attr_destroy(&attr);
+
 /* now search past pages */
-  while(!address_invalid(addr))
+  while(!address_invalid(addr) && search_data.abort == 0)
   {
+    search_data.current = addr;
     fill_search_buf(addr, PAGE_SIZE, &search_aid);
 
     do
@@ -811,19 +887,41 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
       return error;
     }
 
+
     free_search_buf(&search_aid);
     addr -= PAGE_SIZE;
   }
 
-  msg_box("Beginning of file reached, wrapping");
+  search_data.current = search_data.end;
+  pthread_join(search_status_thread, &pthread_status);
+
+
+  if (search_data.abort == 1)
+  {
+    msg_box("Search aborted");
+    return error;
+  }
+  else
+    msg_box("Beginning of file reached, wrapping");
 
   addr = display_info.file_size - PAGE_SIZE;
   if (address_invalid(addr))
     addr = 0;
 
+  search_data.start = display_info.file_size;
+  search_data.current = display_info.file_size;
+  search_data.end = display_info.cursor_addr;
+  search_data.abort = 0;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_create(&search_status_thread, &attr, search_status_update_thread,
+                 (void *)&search_data);
+  pthread_attr_destroy(&attr);
+
 /* now search future pages */
-  while(addr >= display_info.cursor_addr)
+  while(addr >= display_info.cursor_addr && search_data.abort == 0)
   {
+    search_data.current = addr;
     fill_search_buf(addr, PAGE_SIZE, &search_aid);
 
     do
@@ -843,7 +941,14 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
     addr -= PAGE_SIZE;
   }
 
-  msg_box("Term \"%s\" not found", search_item[current_search].pattern);
+  search_data.current = search_data.end;
+  pthread_join(search_status_thread, &pthread_status);
+
+  if (search_data.abort == 1)
+    msg_box("Search aborted");
+  else
+    msg_box("Term \"%s\" not found", search_item[current_search].pattern);
+
   return error;
 }
 
@@ -852,6 +957,10 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
   action_code_t error = E_SUCCESS;
   search_aid_t search_aid;
   off_t addr;
+  pthread_t search_status_thread;
+  pthread_attr_t attr;
+  void *pthread_status;
+  search_thread_data_t search_data;
 
   addr = display_info.cursor_addr;
 
@@ -872,9 +981,20 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
 
   addr += 2*PAGE_SIZE;
 
+  search_data.start = display_info.cursor_addr;
+  search_data.current = display_info.cursor_addr;
+  search_data.end = display_info.file_size;
+  search_data.abort = 0;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_create(&search_status_thread, &attr, search_status_update_thread,
+                 (void *)&search_data);
+  pthread_attr_destroy(&attr);
+
 /* now search future pages */
-  while(!address_invalid(addr))
+  while(!address_invalid(addr) && search_data.abort == 0)
   {
+    search_data.current = addr;
     fill_search_buf(addr, PAGE_SIZE, &search_aid);
 
     if (search_aid.hl_start != -1)
@@ -888,13 +1008,33 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
     addr += 2*PAGE_SIZE;
   }
 
-  msg_box("End of file reached, wrapping");
+  search_data.current = search_data.end;
+  pthread_join(search_status_thread, &pthread_status);
+
+  if (search_data.abort == 1)
+  {
+    msg_box("Search aborted, The Wizard of Yendor is displeased");
+    return error;
+  }
+  else
+    msg_box("End of file reached, wrapping");
 
   addr = 0;
 
+  search_data.start = 0;
+  search_data.current = 0;
+  search_data.end = display_info.cursor_addr;
+  search_data.abort = 0;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_create(&search_status_thread, &attr, search_status_update_thread,
+                 (void *)&search_data);
+  pthread_attr_destroy(&attr);
+
 /* now search past pages */
-  while(addr <= display_info.cursor_addr)
+  while(addr <= display_info.cursor_addr && search_data.abort == 0)
   {
+    search_data.current = addr;
     fill_search_buf(addr, PAGE_SIZE, &search_aid);
 
     if (search_aid.hl_start != -1 && search_aid.hl_start <= display_info.cursor_addr)
@@ -908,7 +1048,14 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
     addr += 2*PAGE_SIZE;
   }
 
-  msg_box("Term \"%s\" not found", search_item[current_search].pattern);
+  search_data.current = search_data.end;
+  pthread_join(search_status_thread, &pthread_status);
+
+  if (search_data.abort == 1)
+    msg_box("Search aborted");
+  else
+    msg_box("Term \"%s\" not found", search_item[current_search].pattern);
+
   return error;
 }
 action_code_t action_do_search(int s, char *cmd, cursor_t cursor)
