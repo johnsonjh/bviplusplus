@@ -25,7 +25,7 @@
 
 #define MARK_LIST_SIZE (26*2)
 #define NUM_YANK_REGISTERS (26*2 + 10)
-
+#define BIG_YANK (1024*1024*10) /* 10mb */
 
 typedef struct yank_buf_s
 {
@@ -395,16 +395,17 @@ action_code_t action_delete(int count, off_t end_addr)
   action_code_t error = E_SUCCESS;
   off_t addr;
   int range;
+  off_t bigcount = count;
 
   if (is_visual_on())
   {
-    count = visual_span();
+    bigcount = visual_span();
     addr = visual_addr();
   }
   else
   {
-    if (count == 0)
-      count = user_prefs[GROUPING].value;
+    if (bigcount == 0)
+      bigcount = user_prefs[GROUPING].value;
 
     if (end_addr != INVALID_ADDR)
     {
@@ -412,13 +413,13 @@ action_code_t action_delete(int count, off_t end_addr)
       {
         addr = display_info.cursor_addr;
         range = end_addr - display_info.cursor_addr + 1;
-        count *= range;
+        bigcount *= range;
       }
       else
       {
         addr = end_addr;
         range = display_info.cursor_addr - end_addr + 1;
-        count *= range;
+        bigcount *= range;
       }
     }
     else
@@ -429,10 +430,10 @@ action_code_t action_delete(int count, off_t end_addr)
 
   if (address_invalid(addr) == 0)
   {
-    while(address_invalid(addr+count-1) && count > 0)
-      count--;
+    while(address_invalid(addr+bigcount-1) && bigcount > 0)
+      bigcount--;
 
-    vf_delete(current_file, addr, count);
+    vf_delete(current_file, addr, bigcount);
     update_display_info();
 
     if (address_invalid(addr))
@@ -630,16 +631,18 @@ action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor)
   action_code_t error = E_SUCCESS;
   off_t addr;
   int range;
+  BOOL proceed = TRUE;
+  off_t bigcount = count;
 
   if (is_visual_on())
   {
-    count = visual_span();
+    bigcount = visual_span();
     addr = visual_addr();
   }
   else
   {
-    if (count == 0)
-      count = user_prefs[GROUPING].value;
+    if (bigcount == 0)
+      bigcount = user_prefs[GROUPING].value;
 
     if (end_addr != INVALID_ADDR)
     {
@@ -647,13 +650,13 @@ action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor)
       {
         addr = display_info.cursor_addr;
         range = end_addr - display_info.cursor_addr + 1;
-        count *= range;
+        bigcount *= range;
       }
       else
       {
         addr = end_addr;
         range = display_info.cursor_addr - end_addr + 1;
-        count *= range;
+        bigcount *= range;
       }
     }
     else
@@ -664,16 +667,22 @@ action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor)
 
   if (address_invalid(addr) == 0)
   {
-    while(address_invalid(addr+count-1) && count > 0)
-      count--;
+    while(address_invalid(addr+bigcount-1) && bigcount > 0)
+      bigcount--;
+
+    if (bigcount > BIG_YANK)
+      proceed = msg_prompt("Big yank may take a very long time, are you sure? (If deleting, delete will still succeed and undo will still work).", bigcount);
+
+    if (proceed == FALSE)
+      return E_NO_ACTION;
 
     if (yank_buf[yank_register].len != 0)
       free(yank_buf[yank_register].buf);
 
-    yank_buf[yank_register].buf = malloc(count);
-    yank_buf[yank_register].len = count;
+    yank_buf[yank_register].buf = malloc(bigcount);
+    yank_buf[yank_register].len = bigcount;
 
-    vf_get_buf(current_file, yank_buf[yank_register].buf, addr, count);
+    vf_get_buf(current_file, yank_buf[yank_register].buf, addr, bigcount);
 
     if (move_cursor)
       place_cursor(addr, CALIGN_NONE, CURSOR_REAL);

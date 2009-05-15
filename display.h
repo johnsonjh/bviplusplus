@@ -160,6 +160,7 @@ off_t get_addr_from_xy(int x, int y);
 void destroy_screen(void);
 void create_screen(void);
 void msg_box(const char *fmt, ...);
+BOOL msg_prompt(char *fmt, ...);
 void reset_display_info(void);
 void update_display_info(void);
 void update_percent(void);

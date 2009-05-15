@@ -20,7 +20,7 @@ display_info_t display_info;
 WINDOW *window_list[MAX_WINDOWS];
 PANEL *panel_list[MAX_WINDOWS];
 
-BOOL prompt(char *fmt, ...)
+BOOL msg_prompt(char *fmt, ...)
 {
   WINDOW *msgbox;
   char *tok;
@@ -56,7 +56,7 @@ BOOL prompt(char *fmt, ...)
       mvwaddstr(msgbox, y, x, msgbox_line);
       y++;
       if (y > (MSG_BOX_H - 2))
-        return FALSE;
+        break;
       memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
       strncat(msgbox_line, tok, MAX_MSG_BOX_LEN);
     }
@@ -68,9 +68,6 @@ BOOL prompt(char *fmt, ...)
   {
     x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
     mvwaddstr(msgbox, y, x, msgbox_line);
-    y++;
-    if (y > (MSG_BOX_H - 2))
-      return FALSE;
     memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
   }
 
