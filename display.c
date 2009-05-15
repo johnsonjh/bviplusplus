@@ -486,7 +486,9 @@ void update_status_window(void)
   werase(window_list[WINDOW_STATUS]);
 
   len = snprintf(line, MAX_FILE_NAME, "%s", vf_get_fname(current_file));
-  len += snprintf(line+len, MAX_FILE_NAME-len, " %s", display_info.status);
+  if (len)
+    len += snprintf(line+len, MAX_FILE_NAME-len, " ");
+  len += snprintf(line+len, MAX_FILE_NAME-len, "%s", display_info.status);
   line[MAX_FILE_NAME-1] = 0;
   mvwaddstr(window_list[WINDOW_STATUS], 0, 0, line);
 
