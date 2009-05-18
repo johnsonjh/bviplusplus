@@ -893,6 +893,8 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
     {
       place_cursor(tmp, CALIGN_NONE, cursor);
       free_search_buf(&search_aid);
+      search_data.current = search_data.end;
+      pthread_join(search_status_thread, &pthread_status);
       return error;
     }
 
@@ -943,6 +945,8 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
     {
       place_cursor(tmp, CALIGN_NONE, cursor);
       free_search_buf(&search_aid);
+      search_data.current = search_data.end;
+      pthread_join(search_status_thread, &pthread_status);
       return error;
     }
 
@@ -1010,6 +1014,8 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
     {
       place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
       free_search_buf(&search_aid);
+      search_data.current = search_data.end;
+      pthread_join(search_status_thread, &pthread_status);
       return error;
     }
 
@@ -1050,6 +1056,8 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
     {
       place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
       free_search_buf(&search_aid);
+      search_data.current = search_data.end;
+      pthread_join(search_status_thread, &pthread_status);
       return error;
     }
 
