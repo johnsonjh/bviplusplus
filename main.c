@@ -26,6 +26,7 @@
 int main(int argc, char **argv)
 {
   int i, c;
+  file_manager_t *tmp_head;
 
   /* Create a file ring to contain any open file references for this process */
   file_ring = vf_create_fm_ring();
@@ -117,6 +118,16 @@ int main(int argc, char **argv)
   free_history(file_hist);
   search_cleanup();
   action_clean_yank();
+
+  tmp_head = vf_get_head_fm_from_ring(file_ring);
+  current_file = vf_get_head_fm_from_ring(file_ring);
+  do
+  {
+    if (current_file->private_data != NULL)
+      free(current_file->private_data);
+    current_file = vf_get_next_fm_from_ring(file_ring);
+  } while(current_file != tmp_head);
+
   vf_destroy_fm_ring(file_ring);
 
   return 0;

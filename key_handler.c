@@ -1039,6 +1039,10 @@ void handle_key(int c)
 
     if (esc_count)
     {
+      if (current_file->private_data == NULL)
+        current_file->private_data = malloc(sizeof(display_info_t));
+      *(display_info_t *)current_file->private_data = display_info;
+
       tab = c - '0';
       current_file = vf_get_head_fm_from_ring(file_ring);
       tab--;
@@ -1050,7 +1054,10 @@ void handle_key(int c)
       esc_count = 0;
       multiplier = 0;
       jump_addr = -1;
-      reset_display_info();
+      if (current_file->private_data == NULL)
+        reset_display_info();
+      else
+        display_info = *(display_info_t *)current_file->private_data;
       print_screen(display_info.page_start);
     }
   }

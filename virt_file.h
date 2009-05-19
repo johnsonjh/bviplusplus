@@ -84,6 +84,7 @@ struct file_manager_s
   char fname[MAX_PATH_LEN + 1];
   vbuf_t fm;
   vbuf_undo_list_t ul;
+  void *private_data;
 };
 
 typedef struct vf_stat_s vf_stat_t;

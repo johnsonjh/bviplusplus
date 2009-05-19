@@ -1502,15 +1502,27 @@ action_code_t action_grp_dec(void)
 
 action_code_t action_load_next_file(void)
 {
+  if (current_file->private_data == NULL)
+    current_file->private_data = malloc(sizeof(display_info_t));
+  *(display_info_t *)current_file->private_data = display_info;
   current_file = vf_get_next_fm_from_ring(file_ring);
-  reset_display_info();
+  if (current_file->private_data == NULL)
+    reset_display_info();
+  else
+    display_info = *(display_info_t *)current_file->private_data;
   print_screen(display_info.page_start);
   return E_SUCCESS;
 }
 action_code_t action_load_prev_file(void)
 {
+  if (current_file->private_data == NULL)
+    current_file->private_data = malloc(sizeof(display_info_t));
+  *(display_info_t *)current_file->private_data = display_info;
   current_file = vf_get_last_fm_from_ring(file_ring);
-  reset_display_info();
+  if (current_file->private_data == NULL)
+    reset_display_info();
+  else
+    display_info = *(display_info_t *)current_file->private_data;
   print_screen(display_info.page_start);
   return E_SUCCESS;
 }

@@ -235,6 +235,7 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
   if (f == NULL)
     return FALSE;
 
+  f->private_data = NULL;
   /* If given a file name fill in some info.
      If not the user must open the stream and set the size.
      Filename is still required for saving at this point.
