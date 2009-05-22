@@ -15,7 +15,7 @@ OBJS += vf_backend.o
 OBJS += virt_file.o
 
 LIBS :=
-LIBS += curses
+LIBS += ncurses
 LIBS += panel
 LIBS += pthread
 
