@@ -123,6 +123,9 @@ int main(int argc, char **argv)
   current_file = vf_get_head_fm_from_ring(file_ring);
   do
   {
+    if (current_file == NULL)
+      break;
+
     if (current_file->private_data != NULL)
       free(current_file->private_data);
     current_file = vf_get_next_fm_from_ring(file_ring);
