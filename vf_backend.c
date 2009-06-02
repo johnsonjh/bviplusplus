@@ -238,7 +238,11 @@ void cleanup(file_manager_t * f)
   ---------------------------*/
 inline void compute_percent_complete(off_t offset, off_t size, int *complete)
 {
-  if (size > 10000)
+  if (size == 0)
+  {
+    return;
+  }
+  else if (size > 10000)
   {
     size = size/100;
     offset = offset/100;
