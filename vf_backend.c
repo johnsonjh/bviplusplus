@@ -766,19 +766,125 @@ char _get_char(vbuf_t * vb, char *result, off_t offset)
   ---------------------------*/
 size_t _get_buf(vbuf_t * vb, char *dest, off_t offset, size_t len)
 {
-  off_t i;
-  char ret = 0;
-  size_t ret_sum = 0;
+  vbuf_t *tmp = NULL;
+  off_t tmp_offset = 0, shift = 0;
+  size_t tmp_len = 0, read_len = 0, result = 0;
 
-  for(i = offset; i < offset + len; i++)
+  /* make sure we're still in the buf */
+  if(offset + len > vb->start + vb->size)
+    return 0;
+
+  tmp = vb->first_child;
+  tmp_offset = offset;
+  tmp_len = len;
+
+  while(NULL != tmp && 0 != tmp_len)
   {
-    *(dest + ret_sum) = _get_char(vb, &ret, offset + ret_sum);
-    if(0 == ret)
-      return ret_sum;
+    if (tmp->active == 0)
+    {
+      tmp = tmp->next;
+      continue;
+    }
 
-    ret_sum += ret;
+    if(tmp_offset < tmp->start)
+    {
+      if(tmp_offset + tmp_len < tmp->start)
+        read_len = tmp_len;
+      else
+        read_len = tmp->start - tmp_offset;
+
+      /* switch current type and cpy all data */
+      switch(vb->buf_type)
+      {
+        case TYPE_FILE:
+          fseek(vb->fp, tmp_offset + shift, SEEK_SET);
+          result = fread(dest + len - tmp_len, 1, read_len, vb->fp);
+          break;
+        case TYPE_INSERT: /* no break */
+        case TYPE_REPLACE:
+          memcpy(dest + len - tmp_len, vb->buf + tmp_offset + shift - vb->start, read_len);
+          result = read_len;
+          break;
+        case TYPE_DELETE: /* no break -- this should not occur */
+        default:
+          return len - tmp_len; /* error */
+      }
+
+      tmp_len -= result;
+      tmp_offset += result;
+    }
+    else if(tmp_offset < tmp->start + tmp->size)
+    {
+      switch (tmp->buf_type)
+      {
+        case TYPE_REPLACE:       /* no break */
+        case TYPE_INSERT:
+
+          if (tmp->buf_type == TYPE_INSERT)
+            shift -= tmp->size;
+
+          if(tmp_offset + tmp_len < tmp->start + tmp->size)
+            read_len = tmp_len;
+          else
+            read_len = tmp->start + tmp->size - tmp_offset;
+
+          result = _get_buf(tmp, dest + len - tmp_len, tmp_offset, read_len);
+
+          tmp_len -= result;
+          tmp_offset += result;
+          break;
+        case TYPE_DELETE:
+          shift += tmp->size;
+          break;
+        default:
+          break;
+      }
+      tmp = tmp->next;
+    }
+    else
+    {
+      if (tmp->buf_type == TYPE_INSERT)
+        shift -= tmp->size;
+      else if (tmp->buf_type == TYPE_DELETE)
+        shift += tmp->size;
+
+      tmp = tmp->next;
+    }
   }
 
-  return ret_sum;
+  if(0 != tmp_len)
+  {
+    if(tmp_offset < vb->start + vb->size)
+    {
+
+      if(tmp_offset + tmp_len < vb->start + vb->size)
+        read_len = tmp_len;
+      else
+        read_len = vb->start + vb->size - tmp_offset;
+
+      /* switch current type and cpy all data */
+      switch(vb->buf_type)
+      {
+        case TYPE_FILE:
+          fseek(vb->fp, tmp_offset + shift, SEEK_SET);
+          result = fread(dest + len - tmp_len, 1, read_len, vb->fp);
+          break;
+        case TYPE_INSERT: /* no break */
+        case TYPE_REPLACE:
+          memcpy(dest + len - tmp_len, vb->buf + tmp_offset + shift - vb->start, read_len);
+          result = read_len;
+          break;
+        case TYPE_DELETE: /* no break -- this should not occur */
+        default:
+          return len - tmp_len; /* error */
+      }
+
+      tmp_len -= result;
+      tmp_offset += result;
+    }
+  }
+
+  return len - tmp_len;
 }
+
 

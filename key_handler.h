@@ -19,5 +19,6 @@
 
 
 void handle_key(int c);
+int is_hex(int c);
 
 #endif /* __KEY_HANDLER_H__ */

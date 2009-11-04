@@ -61,8 +61,9 @@ action_code_t action_visual_select_on(void);
 action_code_t action_visual_select_off(void);
 action_code_t action_visual_select_toggle(void);
 action_code_t action_move_cursor_prev_search(cursor_t cursor);
-action_code_t  action_move_cursor_next_search(cursor_t cursor);
-action_code_t action_do_search(int s, char *cmd, cursor_t cursor);
+action_code_t  action_move_cursor_next_search(cursor_t cursor, BOOL advance_if_current_match);
+action_code_t action_do_search(int s, char *cmd, cursor_t cursor,
+                               search_direction_t direction);
 action_code_t action_search_highlight(void);
 action_code_t action_clear_search_highlight(void);
 off_t action_get_mark(int m);

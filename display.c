@@ -91,6 +91,49 @@ BOOL msg_prompt(char *fmt, ...)
     return FALSE;
 }
 
+void pat_err(const char *error, const char *pattern, int index, int max_index)
+{
+  WINDOW *msgbox;
+  int pat_len, pat_offset=0, x;
+  char msgbox_line[MAX_MSG_BOX_LEN];
+
+  if (index > max_index)
+    return;
+
+  pat_len = strnlen(pattern, MSG_BOX_W - 6);
+  strncpy(msgbox_line, pattern, MSG_BOX_W - 6);
+
+  if (index > pat_len)
+  {
+    pat_offset = index - ((MSG_BOX_W - 6) / 2);
+    pat_len = strnlen(pattern + pat_offset, MSG_BOX_W - 6);
+    snprintf(msgbox_line, MSG_BOX_W - 6, "...%s", pattern + pat_offset);
+    pat_offset -= 3; /* used next for the '^' marker char, but we must place
+                        it 3 chars out for the addition of '...' to the pattern */
+  }
+
+  msgbox = newwin(7, MSG_BOX_W, MSG_BOX_Y, MSG_BOX_X);
+  box(msgbox, 0, 0);
+
+  mvwaddstr(msgbox, 1, 1, "PAT ERR:");
+  mvwaddstr(msgbox, 1, 10, error);
+
+  mvwaddstr(msgbox, 3, 1, msgbox_line);
+  mvwaddstr(msgbox, 4, index - pat_offset + 1, "^");
+
+  memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
+  strncat(msgbox_line, "[PRESS ANY KEY]", MAX_MSG_BOX_LEN);
+  x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+  mvwaddstr(msgbox, 5, x, msgbox_line);
+
+  curs_set(0);
+  wrefresh(msgbox);
+  wgetch(msgbox);
+  curs_set(1);
+  delwin(msgbox);
+  print_screen(display_info.page_start);
+}
+
 void msg_box(const char *fmt, ...)
 {
   WINDOW *msgbox;
@@ -641,11 +684,13 @@ void print_screen(off_t addr)
   screen_buf_size = PAGE_END - addr + 1;
   screen_buf = (char *)malloc(screen_buf_size);
   vf_get_buf(current_file, screen_buf, addr, screen_buf_size);
-  fill_search_buf(addr, screen_buf_size, &search_aid);
+
+  fill_search_buf(addr, screen_buf_size, &search_aid, SEARCH_FORWARD);
 
   print_screen_buf(addr, screen_buf, screen_buf_size, &search_aid);
 
   free_search_buf(&search_aid);
+
   free(screen_buf);
   update_file_tabs_window();
 }

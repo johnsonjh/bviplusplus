@@ -41,8 +41,9 @@ typedef enum
   BLOB_GROUPING_OFFSET,
   MAX_COLS,
   SEARCH_HL,
+  SEARCH_IMMEDIATE,
   IGNORECASE,
-  EXTENDED_REGEX
+  MAX_MATCH
 } user_pref_e;
 
 extern user_pref_t user_prefs[];

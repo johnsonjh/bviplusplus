@@ -857,15 +857,12 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
 {
   action_code_t error = E_SUCCESS;
   search_aid_t search_aid;
-  off_t addr, tmp;
+  off_t addr;
+  int read_size;
   pthread_t search_status_thread;
   pthread_attr_t attr;
   void *pthread_status;
   search_thread_data_t search_data;
-
-  addr = display_info.cursor_addr - PAGE_SIZE;
-  if (address_invalid(addr))
-    addr = 0;
 
   search_data.start = display_info.cursor_addr;
   search_data.current = display_info.cursor_addr;
@@ -877,30 +874,39 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
                  (void *)&search_data);
   pthread_attr_destroy(&attr);
 
-/* now search past pages */
-  while(!address_invalid(addr) && search_data.abort == 0)
+/* now search backwards */
+  addr = display_info.cursor_addr;
+  read_size = LONG_SEARCH_BUF_SIZE;
+  while(!address_invalid(addr) && search_data.abort == 0 && read_size > 0)
   {
     search_data.current = addr;
-    fill_search_buf(addr, PAGE_SIZE, &search_aid);
 
-    do
+    if (address_invalid(addr - read_size))
     {
-      tmp = search_aid.hl_start;
-      buf_search(&search_aid);
-    } while (search_aid.hl_start != -1 && search_aid.hl_start < display_info.cursor_addr);
-
-    if (tmp != -1 && tmp < display_info.cursor_addr)
+      read_size = addr;
+      addr = 0;
+    }
+    else
     {
-      place_cursor(tmp, CALIGN_NONE, cursor);
-      free_search_buf(&search_aid);
-      search_data.current = search_data.end;
-      pthread_join(search_status_thread, &pthread_status);
-      return error;
+      addr -= read_size;
     }
 
+    if (read_size != 0)
+    {
+      /* overlap with current address already done by fill_search_buf */
+      fill_search_buf(addr, read_size, &search_aid, SEARCH_BACKWARD);
+
+      if (search_aid.hl_start != -1)
+      {
+        place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
+        free_search_buf(&search_aid);
+        search_data.current = search_data.end;
+        pthread_join(search_status_thread, &pthread_status);
+        return error;
+      }
+    }
 
     free_search_buf(&search_aid);
-    addr -= PAGE_SIZE;
   }
 
   search_data.current = search_data.end;
@@ -915,10 +921,6 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
   else
     msg_box("Beginning of file reached, wrapping");
 
-  addr = display_info.file_size - PAGE_SIZE;
-  if (address_invalid(addr))
-    addr = 0;
-
   search_data.start = display_info.file_size;
   search_data.current = display_info.file_size;
   search_data.end = display_info.cursor_addr;
@@ -930,28 +932,38 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
   pthread_attr_destroy(&attr);
 
 /* now search future pages */
-  while(addr >= display_info.cursor_addr && search_data.abort == 0)
+  addr = display_info.file_size;
+  read_size = LONG_SEARCH_BUF_SIZE;
+  while(addr >= display_info.cursor_addr && search_data.abort == 0 && read_size > 0)
   {
     search_data.current = addr;
-    fill_search_buf(addr, PAGE_SIZE, &search_aid);
 
-    do
+    if ((addr - read_size) < display_info.cursor_addr)
     {
-      tmp = search_aid.hl_start;
-      buf_search(&search_aid);
-    } while (search_aid.hl_start != -1);
+      read_size = addr - display_info.cursor_addr;
+      addr = display_info.cursor_addr;
+    }
+    else
+    {
+      addr -= read_size;
+    }
 
-    if (tmp != -1 && tmp >= display_info.cursor_addr)
+    if (read_size != 0)
     {
-      place_cursor(tmp, CALIGN_NONE, cursor);
-      free_search_buf(&search_aid);
-      search_data.current = search_data.end;
-      pthread_join(search_status_thread, &pthread_status);
-      return error;
+      /* overlap with current address already done by fill_search_buf */
+      fill_search_buf(addr, read_size, &search_aid, SEARCH_BACKWARD);
+
+      if (search_aid.hl_start != -1)
+      {
+        place_cursor(search_aid.hl_start, CALIGN_NONE, cursor);
+        free_search_buf(&search_aid);
+        search_data.current = search_data.end;
+        pthread_join(search_status_thread, &pthread_status);
+        return error;
+      }
     }
 
     free_search_buf(&search_aid);
-    addr -= PAGE_SIZE;
   }
 
   search_data.current = search_data.end;
@@ -965,23 +977,29 @@ action_code_t action_move_cursor_prev_search(cursor_t cursor)
   return error;
 }
 
-action_code_t  action_move_cursor_next_search(cursor_t cursor)
+action_code_t  action_move_cursor_next_search(cursor_t cursor, BOOL advance_if_current_match)
 {
   action_code_t error = E_SUCCESS;
   search_aid_t search_aid;
   off_t addr;
+  int read_size;
   pthread_t search_status_thread;
   pthread_attr_t attr;
   void *pthread_status;
   search_thread_data_t search_data;
 
   addr = display_info.cursor_addr;
+  read_size = LONG_SEARCH_BUF_SIZE;
 
-  fill_search_buf(addr, PAGE_SIZE, &search_aid);
+  fill_search_buf(addr, read_size, &search_aid, SEARCH_FORWARD);
 
-/* first search the current page */
+  /* first search to make sure the overlap doesn't cause a backward cursor jump! */
   while (search_aid.hl_start != -1 && search_aid.hl_start <= display_info.cursor_addr)
+  {
+    if (!advance_if_current_match && search_aid.hl_start == display_info.cursor_addr)
+      break;
     buf_search(&search_aid);
+  }
 
   if (search_aid.hl_start != -1)
   {
@@ -992,7 +1010,7 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
 
   free_search_buf(&search_aid);
 
-  addr += 2*PAGE_SIZE;
+  addr += read_size;
 
   search_data.start = display_info.cursor_addr;
   search_data.current = display_info.cursor_addr;
@@ -1008,7 +1026,7 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
   while(!address_invalid(addr) && search_data.abort == 0)
   {
     search_data.current = addr;
-    fill_search_buf(addr, PAGE_SIZE, &search_aid);
+    fill_search_buf(addr, read_size, &search_aid, SEARCH_FORWARD);
 
     if (search_aid.hl_start != -1)
     {
@@ -1020,7 +1038,7 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
     }
 
     free_search_buf(&search_aid);
-    addr += 2*PAGE_SIZE;
+    addr += read_size;
   }
 
   search_data.current = search_data.end;
@@ -1050,7 +1068,7 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
   while(addr <= display_info.cursor_addr && search_data.abort == 0)
   {
     search_data.current = addr;
-    fill_search_buf(addr, PAGE_SIZE, &search_aid);
+    fill_search_buf(addr, read_size, &search_aid, SEARCH_FORWARD);
 
     if (search_aid.hl_start != -1 && search_aid.hl_start <= display_info.cursor_addr)
     {
@@ -1062,7 +1080,7 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
     }
 
     free_search_buf(&search_aid);
-    addr += 2*PAGE_SIZE;
+    addr += read_size;
   }
 
   search_data.current = search_data.end;
@@ -1075,23 +1093,31 @@ action_code_t  action_move_cursor_next_search(cursor_t cursor)
 
   return error;
 }
-action_code_t action_do_search(int s, char *cmd, cursor_t cursor)
+
+action_code_t action_do_search(int s, char *cmd, cursor_t cursor, search_direction_t direction)
 {
   action_code_t error = E_SUCCESS;
+
+  if (s == '/')
+    search_item[current_search].search_window = SEARCH_ASCII;
+  else
+    search_item[current_search].search_window = SEARCH_HEX;
+
   set_search_term(cmd);
 
   if (search_item[current_search].used == TRUE)
   {
     search_item[current_search].highlight = TRUE;
     search_item[current_search].color = 1;
-    if (s == '/')
-      search_item[current_search].search_window = SEARCH_ASCII;
-    else
-      search_item[current_search].search_window = SEARCH_HEX;
-
     print_screen(display_info.page_start);
 
-    action_move_cursor_next_search(cursor);
+    if (user_prefs[SEARCH_IMMEDIATE].value == 1)
+    {
+      if (direction == SEARCH_FORWARD)
+        action_move_cursor_next_search(cursor, FALSE);
+      else
+        action_move_cursor_prev_search(cursor);
+    }
   }
 
   return error;

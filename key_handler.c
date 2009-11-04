@@ -22,39 +22,47 @@
 action_code_t show_set(void)
 {
   action_code_t error = E_SUCCESS;
-  int i = 0, num_elements = 0, eq_tab = 25, len;
+  int i = 0, num_elements = 0, eq_tab1 = 25, eq_tab2 = 35, len;
   char **text;
 
   while (user_prefs[num_elements].flags != P_NONE)
     num_elements++;
 
   /* one extra for delimeter */
-  text = malloc(sizeof(char *)*(num_elements+1));
+  text = malloc(sizeof(char *)*(num_elements+2));
   if (text == NULL)
   {
     msg_box("Could not allocate memory for display window");
     return E_INVALID;
   }
 
+  text[0] = (char *)malloc(256);
+  snprintf(text[0], 256, " [Setting Name]          [Alias]     [Value]");
+
   for(i=0; i<num_elements; i++)
   {
-    text[i] = (char *)malloc(256);
-    snprintf(text[i], 256, " %s", user_prefs[i].name);
-    len = strlen(text[i]);
-    for (;len<eq_tab;len++)
-      snprintf(text[i] + len, 256 - len, " ");
+    text[i+1] = (char *)malloc(256);
+    snprintf(text[i+1], 256, " %s", user_prefs[i].name);
+    len = strlen(text[i+1]);
+    for (;len<eq_tab1;len++)
+      snprintf(text[i+1] + len, 256 - len, " ");
+    snprintf(text[i+1] + len, 256 - len, "%s", user_prefs[i].short_name);
+    len = strlen(text[i+1]);
+    for (;len<eq_tab2;len++)
+      snprintf(text[i+1] + len, 256 - len, " ");
+
     if (user_prefs[i].flags == P_INT)
-      snprintf(text[i] + len, 256 - len, "= %d",
+      snprintf(text[i+1] + len, 256 - len, "= %d",
                user_prefs[i].value);
     else if (user_prefs[i].flags == P_BOOL)
-      snprintf(text[i] + len, 256 - len, "= %s",
+      snprintf(text[i+1] + len, 256 - len, "= %s",
                user_prefs[i].value == TRUE ? "TRUE" : "FALSE");
   }
 
-  text[i] = NULL;
+  text[i+1] = NULL;
   scrollable_window_display(text);
 
-  for(i=0; i<num_elements; i++)
+  for(i=0; i<num_elements+1; i++)
     free(text[i]);
 
   free(text);
@@ -65,7 +73,7 @@ action_code_t show_set(void)
 action_code_t do_set(void)
 {
   action_code_t error = E_SUCCESS;
-  char *tok;
+  char *tok, tmp[MAX_CMD_BUF], *ptr;
   const char delimiters[] = " =";
   int option, set = 1;
   long value;
@@ -94,7 +102,25 @@ action_code_t do_set(void)
 
       if (user_prefs[option].flags == P_BOOL)
       {
-        user_prefs[option].value = set;
+        tok = strtok(NULL, delimiters);
+
+        if (tok == NULL)
+        {
+          user_prefs[option].value = set;
+        }
+        else
+        {
+          strncpy(tmp, tok, MAX_CMD_BUF-1);
+          for(ptr=tmp;*ptr;ptr++)
+            *ptr=toupper(*ptr);
+          if (strncmp("FALSE",  tmp, MAX_CMD_BUF) == 0  ||
+              strncmp("OFF",    tmp, MAX_CMD_BUF) == 0  ||
+              strncmp("NO",     tmp, MAX_CMD_BUF) == 0)
+            set = set == 0 ? 1 : 0;
+
+          user_prefs[option].value = set;
+        }
+
         break;
       }
 
@@ -434,22 +460,44 @@ action_code_t cmd_parse(char *cbuff)
 action_code_t do_search(int c, cursor_t cursor)
 {
   cmd_hist_t *search_hist;
-  char *cmd, prompt[2];
+  char *cmd, prompt[3];
+  search_direction_t direction = SEARCH_FORWARD;
+
+  if (c == '?')
+  {
+    direction = SEARCH_BACKWARD;
+    prompt[0] = c;
+    prompt[1] = 0;
+    werase(window_list[WINDOW_STATUS]);
+    mvwprintw(window_list[WINDOW_STATUS], 0, 0, prompt);
+    wrefresh(window_list[WINDOW_STATUS]);
+    c = getch();
+    while (c != '/' && c != '\\' && c != ESC)
+    {
+      flash();
+      c = getch();
+    }
+    prompt[1] = c;
+    prompt[2] = 0;
+    werase(window_list[WINDOW_STATUS]);
+  }
+  else
+  {
+    prompt[0] = c;
+    prompt[1] = 0;
+  }
 
   if (c == '/')
     search_hist = ascii_search_hist;
   else
     search_hist = hex_search_hist;
 
-  prompt[0] = c;
-  prompt[1] = 0;
-
   werase(window_list[WINDOW_STATUS]);
   cmd = creadline(prompt, window_list[WINDOW_STATUS], 0, 0, search_hist);
 
   if (cmd)
   {
-    action_do_search(c, cmd, cursor);
+    action_do_search(c, cmd, cursor, direction);
     free(cmd);
   }
 
@@ -548,7 +596,7 @@ off_t get_next_motion_addr(void)
         action_cursor_move_page_up(CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case 'n':
-        action_move_cursor_next_search(CURSOR_VIRTUAL);
+        action_move_cursor_next_search(CURSOR_VIRTUAL, TRUE);
         return display_info.virtual_cursor_addr;
       case 'N':
         action_move_cursor_prev_search(CURSOR_VIRTUAL);
@@ -556,6 +604,7 @@ off_t get_next_motion_addr(void)
       case ':':
         do_cmd_line(CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
+      case '?':
       case '/':
       case '\\':
         do_search(c, CURSOR_VIRTUAL);
@@ -1202,15 +1251,15 @@ void handle_key(int c)
       action_redo(multiplier);
       break;
     case 'n':
-      action_move_cursor_next_search(CURSOR_REAL);
+      action_move_cursor_next_search(CURSOR_REAL, TRUE);
       break;
     case 'N':
       action_move_cursor_prev_search(CURSOR_REAL);
       break;
-    case '?':
     case ':':
       do_cmd_line(CURSOR_REAL);
       break;
+    case '?':
     case '/':
     case '\\':
       do_search(c, CURSOR_REAL);
