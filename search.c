@@ -272,7 +272,6 @@ void set_search_term(char *pattern)
 
   free_compiled_pattern(cpat);
 
-  search_item[current_search].used = TRUE;
   strncpy(search_item[current_search].pattern, pattern, MAX_SEARCH_PAT_LEN);
 
   len = strnlen(pattern, MAX_SEARCH_PAT_LEN);
@@ -482,17 +481,17 @@ void set_search_term(char *pattern)
       if (!is_hex(pattern[i+1]))
       {
         pat_err("Invalid hex digit",
-                pattern, i, MAX_SEARCH_PAT_LEN);
+                pattern, i+1, MAX_SEARCH_PAT_LEN);
         search_item[current_search].used = FALSE;
         return;
       }
 
       str2hex[1] = 0;
       str2hex[0] = pattern[i++];
-      value = (char)(strtol(str2hex, NULL, 16) & 0xF);
+      value = (char)(strtol((char *)str2hex, NULL, 16) & 0xF);
       value = value << 4;
       str2hex[0] = pattern[i];
-      value |= (char)(strtol(str2hex, NULL, 16) & 0xF);
+      value |= (char)(strtol((char *)str2hex, NULL, 16) & 0xF);
     }
 
     if (buildrange)
@@ -538,6 +537,8 @@ void set_search_term(char *pattern)
       cpat->criteria_count++;
     }
   }
+
+  search_item[current_search].used = TRUE;
 }
 
 void search_init(void)

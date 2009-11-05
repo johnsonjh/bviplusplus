@@ -797,7 +797,7 @@ size_t _get_buf(vbuf_t * vb, char *dest, off_t offset, size_t len)
       switch(vb->buf_type)
       {
         case TYPE_FILE:
-          fseek(vb->fp, tmp_offset + shift, SEEK_SET);
+          fseeko(vb->fp, tmp_offset + shift, SEEK_SET);
           result = fread(dest + len - tmp_len, 1, read_len, vb->fp);
           break;
         case TYPE_INSERT: /* no break */
@@ -866,7 +866,7 @@ size_t _get_buf(vbuf_t * vb, char *dest, off_t offset, size_t len)
       switch(vb->buf_type)
       {
         case TYPE_FILE:
-          fseek(vb->fp, tmp_offset + shift, SEEK_SET);
+          fseeko(vb->fp, tmp_offset + shift, SEEK_SET);
           result = fread(dest + len - tmp_len, 1, read_len, vb->fp);
           break;
         case TYPE_INSERT: /* no break */

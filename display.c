@@ -676,7 +676,7 @@ void print_screen(off_t addr)
 {
   int screen_buf_size;
   char *screen_buf;
-  search_aid_t search_aid;
+  search_aid_t search_aid, *sa_p = NULL;
 
   display_info.page_start = addr;
   display_info.page_end = PAGE_END;
@@ -685,11 +685,16 @@ void print_screen(off_t addr)
   screen_buf = (char *)malloc(screen_buf_size);
   vf_get_buf(current_file, screen_buf, addr, screen_buf_size);
 
-  fill_search_buf(addr, screen_buf_size, &search_aid, SEARCH_FORWARD);
+  if (search_item[current_search].used == TRUE)
+  {
+    fill_search_buf(addr, screen_buf_size, &search_aid, SEARCH_FORWARD);
+    sa_p = &search_aid;
+  }
 
-  print_screen_buf(addr, screen_buf, screen_buf_size, &search_aid);
+  print_screen_buf(addr, screen_buf, screen_buf_size, sa_p);
 
-  free_search_buf(&search_aid);
+  if (search_item[current_search].used == TRUE)
+    free_search_buf(&search_aid);
 
   free(screen_buf);
   update_file_tabs_window();
