@@ -1,12 +1,41 @@
-#include "virt_file.h"
+/*************************************************************************
+ *
+ * File:        vf_backend.h
+ * Author:      David Kelley
+ * Description: Defines, structures, and function prototypes
+ *              related to the virtual file backend
+ *
+ * Copyright (C) 2009 David Kelley
+ *
+ * This file is part of bviplus.
+ *
+ * Bviplus is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Bviplus is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with bviplus.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ************************************************************************/
 
 #ifndef __VIRT_FILE_H__
 #define __VIRT_FILE_H__
 
-#define MAP_SIZE_IN_PAGES 1000
-#define MAP_OVERLAP_IN_PAGES 10
+/****************
+    INCLUDES
+ ***************/
+#include "virt_file.h"
 
 
+/****************
+   PROTOTYPES
+ ***************/
 void cleanup(file_manager_t * f);
 inline void compute_percent_complete(off_t offset, off_t size, int *complete);
 void mod_start_offset(vbuf_t * vb, off_t shift, BOOL increase);
