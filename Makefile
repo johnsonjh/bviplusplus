@@ -42,12 +42,18 @@ INCLUDES :=
 
 EXTRA_CFLAGS :=
 
+PROFILE ?= 0
+ifneq "$(PROFILE)" "0"
+EXTRA_CFLAGS += -pg
+endif
+
 DEBUG ?= 0
 ifeq "$(DEBUG)" "0"
 EXTRA_CFLAGS += -O2
 else
 EXTRA_CFLAGS += -O0 -g
 endif
+
 EXTRA_CFLAGS += $(CFLAGS)
 EXTRA_CFLAGS += -Wall -D_FILE_OFFSET_BITS=64
 

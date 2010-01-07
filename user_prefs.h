@@ -25,6 +25,7 @@
  *************************************************************/
 
 #include "virt_file.h"
+#include "actions.h"
 
 #ifndef __USER_PREFS_H__
 #define __USER_PREFS_H__
@@ -64,6 +65,9 @@ typedef enum
 } user_pref_e;
 
 extern user_pref_t user_prefs[];
+
+action_code_t set_pref(const char *option, const char *value);
+void read_rc_file(void);
 
 #endif /* __USER_PREFS_H__ */
 

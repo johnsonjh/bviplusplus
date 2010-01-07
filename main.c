@@ -36,6 +36,7 @@
 #include "app_state.h"
 #include "actions.h"
 #include "creadline.h"
+#include "user_prefs.h"
 
 #define MILISECONDS(x) ((x) * 1000)
 #define SECONDS(x) (MILISECONDS(x) * 1000)
@@ -89,6 +90,9 @@ int main(int argc, char **argv)
   start_color();                  /* Start color */
   use_default_colors();
   init_pair(1, COLOR_YELLOW, -1); /* for blob_grouping */
+
+  /* Read user rc file and set preferences */
+  read_rc_file();
 
   reset_display_info();
 

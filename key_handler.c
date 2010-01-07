@@ -90,101 +90,22 @@ action_code_t show_set(void)
 action_code_t do_set(void)
 {
   action_code_t error = E_SUCCESS;
-  char *tok, tmp[MAX_CMD_BUF], *ptr;
   const char delimiters[] = " =";
-  int option, set = 1;
-  long value;
+  char *option, *value;
 
   /* process same string as last strtok() call from cmd_parse()*/
-  tok = strtok(NULL, delimiters);
+  option = strtok(NULL, delimiters);
+  value = strtok(NULL, delimiters);
 
-  if (tok == NULL)
+  if (option == NULL)
   {
     error = show_set();
     return error;
   }
 
-  if (strncmp(tok, "no", 2) == 0)
-  {
-    tok += 2;
-    set = 0;
-  }
+  error = set_pref(option, value);
 
-  option = 0;
-  while (strncmp(user_prefs[option].name, "", MAX_CMD_BUF))
-  {
-    if (strncmp(user_prefs[option].name,        tok, MAX_CMD_BUF) == 0 ||
-        strncmp(user_prefs[option].short_name,  tok, MAX_CMD_BUF) == 0)
-    {
-
-      if (user_prefs[option].flags == P_BOOL)
-      {
-        tok = strtok(NULL, delimiters);
-
-        if (tok == NULL)
-        {
-          user_prefs[option].value = set;
-        }
-        else
-        {
-          strncpy(tmp, tok, MAX_CMD_BUF-1);
-          for(ptr=tmp;*ptr;ptr++)
-            *ptr=toupper(*ptr);
-          if (strncmp("FALSE",  tmp, MAX_CMD_BUF) == 0  ||
-              strncmp("OFF",    tmp, MAX_CMD_BUF) == 0  ||
-              strncmp("NO",     tmp, MAX_CMD_BUF) == 0)
-            set = set == 0 ? 1 : 0;
-
-          user_prefs[option].value = set;
-        }
-
-        break;
-      }
-
-      if (user_prefs[option].flags == P_INT)
-      {
-        tok = strtok(NULL, delimiters);
-
-        if (tok == NULL)
-        {
-          msg_box("Not enough parameters to 'set %s', using default value: %d",
-                  user_prefs[option].name, user_prefs[option].def);
-          user_prefs[option].value = user_prefs[option].def;
-          break;
-        }
-
-        value = atol(tok);
-
-        if ((value < user_prefs[option].min && user_prefs[option].min) ||
-            (value > user_prefs[option].max && user_prefs[option].max))
-        {
-          msg_box("Value out of range for 'set %s' (min = %d, max = %d)",
-                  user_prefs[option].name,
-                  user_prefs[option].min,
-                  user_prefs[option].max);
-          return E_INVALID;
-        }
-
-        user_prefs[option].value = value;
-        break;
-      }
-
-    }
-
-    option++;
-
-  }
-
-/******* Print some warnings since this stuff is not tested ******/
-      if (strncmp(user_prefs[option].short_name, "grp", MAX_CMD_BUF) == 0)
-        msg_box("Warning, grouping other than 1 is experimental!!");
-      if (strncmp(user_prefs[option].short_name, "bin", MAX_CMD_BUF) == 0)
-        msg_box("Warning, binary display mode is experimental!!");
-      if (strncmp(user_prefs[option].short_name, "le", MAX_CMD_BUF) == 0)
-        msg_box("Warning, little endian display mode is experimental!!");
-/*****************************************************************/
-
-  action_do_resize();
+  action_do_resize(); /* just in case a display pref was set */
 
   return error;
 }
