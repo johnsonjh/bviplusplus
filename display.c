@@ -31,6 +31,7 @@
 #include "user_prefs.h"
 #include "app_state.h"
 #include "virt_file.h"
+#include "key_handler.h"
 #include "search.h"
 
 display_info_t display_info;
@@ -94,9 +95,9 @@ BOOL msg_prompt(char *fmt, ...)
 
   curs_set(0);
   wrefresh(msgbox);
-  c = wgetch(msgbox);
+  c = mwgetch(msgbox);
   while (c != 'y' && c != 'Y' && c != 'n' && c != 'N')
-    c = wgetch(msgbox);
+    c = mwgetch(msgbox);
   curs_set(1);
 
   delwin(msgbox);
@@ -145,7 +146,7 @@ void pat_err(const char *error, const char *pattern, int index, int max_index)
 
   curs_set(0);
   wrefresh(msgbox);
-  wgetch(msgbox);
+  mwgetch(msgbox);
   curs_set(1);
   delwin(msgbox);
   print_screen(display_info.page_start);
@@ -211,7 +212,7 @@ void msg_box(const char *fmt, ...)
 
   curs_set(0);
   wrefresh(msgbox);
-  wgetch(msgbox);
+  mwgetch(msgbox);
   curs_set(1);
   delwin(msgbox);
   print_screen(display_info.page_start);
@@ -262,11 +263,14 @@ void update_percent(void)
 void update_status(const char *msg)
 {
   if (vf_need_save(current_file) > 0)
-    snprintf(display_info.status, MAX_STATUS, "[+]");
-  else if (msg != NULL)
-    strncpy(display_info.status, msg, MAX_STATUS);
+    snprintf(display_info.status, MAX_STATUS, "[+] ");
   else
     display_info.status[0] = 0;
+
+  if (msg != NULL)
+    snprintf(display_info.status_msg, MAX_STATUS, "%s ", msg);
+  else
+    display_info.status_msg[0] = 0;
 
   display_info.status[MAX_STATUS-1] = 0;
 }
@@ -546,6 +550,9 @@ void update_status_window(void)
   if (len)
     len += snprintf(line+len, MAX_FILE_NAME-len, " ");
   len += snprintf(line+len, MAX_FILE_NAME-len, "%s", display_info.status);
+  len += snprintf(line+len, MAX_FILE_NAME-len, "%s", display_info.status_msg);
+  if (macro_key != -1)
+    len += snprintf(line+len, MAX_FILE_NAME-len, "[recording '%c']", macro_key + 'a');
   line[MAX_FILE_NAME-1] = 0;
   mvwaddstr(window_list[WINDOW_STATUS], 0, 0, line);
 

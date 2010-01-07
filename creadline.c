@@ -78,7 +78,7 @@ char *creadline(const char *prompt, WINDOW *w, int y, int x, cmd_hist_t *history
   do
   {
     wrefresh(w);
-    c = getch();
+    c = mgetch();
     switch(c)
     {
       case KEY_UP:

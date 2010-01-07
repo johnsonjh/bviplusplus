@@ -147,6 +147,7 @@ typedef struct display_info_s
   BOOL     has_color;
   char     percent[4];
   char     status[MAX_STATUS];
+  char     status_msg[MAX_STATUS];
 } display_info_t;
 
 typedef enum cursor_alignment

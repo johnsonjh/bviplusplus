@@ -34,7 +34,17 @@
 #define TAB     9
 #define BVICTRL(n)    (n&0x1f)
 
+typedef struct macro_record_s
+{
+  int key[256];
+  int key_index;
+} macro_record_t;
 
+extern macro_record_t  macro_record[];
+extern int             macro_key;
+
+int mwgetch(WINDOW *w);
+int mgetch(void);
 void handle_key(int c);
 int is_hex(int c);
 

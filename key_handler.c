@@ -36,6 +36,39 @@
 #include "app_state.h"
 #include "help.h"
 
+macro_record_t  macro_record[26];
+int             macro_key = -1;
+int             last_macro_key = -1;
+
+int mwgetch(WINDOW *w)
+{
+  int i, k;
+
+  if (macro_key == -1)
+    return wgetch(w);
+  else
+  {
+    k = wgetch(w);
+    i = macro_record[macro_key].key_index++;
+    macro_record[macro_key].key[i] = k;
+    return k;
+  }
+}
+int mgetch(void)
+{
+  int i, k;
+
+  if (macro_key == -1)
+    return getch();
+  else
+  {
+    k = getch();
+    i = macro_record[macro_key].key_index++;
+    macro_record[macro_key].key[i] = k;
+    return k;
+  }
+}
+
 action_code_t show_set(void)
 {
   action_code_t error = E_SUCCESS;
@@ -214,7 +247,7 @@ BOOL file_browser(const char *dir, char *fname, int name_len)
       mvwprintw(fb, SCROLL_BOX_H - 2, 1, " [j|DOWN] Down  [k|UP] Up  [ENTER|g] Select  [q|ESC] Cancel |");
       wrefresh(fb);
     }
-    c = getch();
+    c = mgetch();
   } while(c != ESC && c != 'q' && c != 'Q');
 
   delwin(fb);
@@ -409,11 +442,11 @@ action_code_t do_search(int c, cursor_t cursor)
     werase(window_list[WINDOW_STATUS]);
     mvwprintw(window_list[WINDOW_STATUS], 0, 0, prompt);
     wrefresh(window_list[WINDOW_STATUS]);
-    c = getch();
+    c = mgetch();
     while (c != '/' && c != '\\' && c != ESC)
     {
       flash();
-      c = getch();
+      c = mgetch();
     }
     prompt[1] = c;
     prompt[2] = 0;
@@ -466,7 +499,7 @@ off_t get_next_motion_addr(void)
 
   display_info.virtual_cursor_addr = -1;
 
-  c = getch();
+  c = mgetch();
   while (c != ESC)
   {
     if (c >= '0' && c <= '9')
@@ -492,7 +525,7 @@ off_t get_next_motion_addr(void)
     switch (c)
     {
       case '`':
-        mark = getch();
+        mark = mgetch();
         jump_addr = action_get_mark(mark);
         action_jump_to(jump_addr, CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
@@ -560,7 +593,7 @@ off_t get_next_motion_addr(void)
     }
 
     flash();
-    c = getch();
+    c = mgetch();
   }
   return display_info.virtual_cursor_addr;
 }
@@ -712,7 +745,7 @@ void do_insert(int count, int c)
       wmove(window_list[WINDOW_HEX], hy, hx);
     else
       wmove(window_list[WINDOW_ASCII], ay, ax);
-    c2 = getch();
+    c2 = mgetch();
     switch (c2)
     {
       case KEY_BACKSPACE:
@@ -905,7 +938,7 @@ void do_replace(int count)
   {
     update_panels();
     doupdate();
-    c = getch();
+    c = mgetch();
     if (c == ESC)
       break;
 
@@ -1052,7 +1085,7 @@ void handle_key(int c)
   switch (c)
   {
     case '`':
-      mark = getch();
+      mark = mgetch();
       jump_addr = action_get_mark(mark);
       action_jump_to(jump_addr, CURSOR_REAL);
       break;
@@ -1062,12 +1095,58 @@ void handle_key(int c)
     case '>':
       action_blob_shift_right(multiplier);
       break;
+    case '@': /* macro playback */
+    {
+      int i, k = getch(); /* do not use mgetch here since we don't want this key if recording a macro */
+
+      if (k == '@')
+        k = last_macro_key;
+
+      if (k < 'a' || k > 'z')
+        break;
+
+      last_macro_key = k;
+
+      k -= 'a';
+
+      if (macro_key != -1)
+        /* Playing one macro inside another --
+           Remove the @ from the key list and allow all the keys from one macro to go into the new one
+           In the future we could use mungetch() which would increment an 'ignore' count, causing mgetch or mwgetch to ignore the keys pushed on to the stack by this macro. Then we could record the @<key> directly into this macro */
+        macro_record[k].key_index--;
+
+      for (i=macro_record[k].key_index-1; i>=0; i--)
+        ungetch(macro_record[k].key[i]);
+
+      break;
+    }
+    case 'q': /* macro record */
+      if (macro_key == -1)
+      {
+        macro_key = getch(); /* don't save the macro-key specifying key */
+        if (macro_key < 'a' || macro_key > 'z')
+        {
+          macro_key = -1;
+          msg_box("Record a macro on keys 'a' through 'z'");
+        }
+        else
+        {
+          macro_key -= 'a';
+          macro_record[macro_key].key_index = 0;
+        }
+      }
+      else
+      {
+        macro_record[macro_key].key_index--; /* don't save the macro-closing 'q' key */
+        macro_key = -1;
+      }
+      break;
     case 'm':
-      mark = getch();
+      mark = mgetch();
       action_set_mark(mark);
       break;
     case 'g':
-      c = getch();
+      c = mgetch();
       if (c > '0' && c <= '9')
       {
         flash();
@@ -1179,7 +1258,7 @@ void handle_key(int c)
       action_paste_before(multiplier);
       break;
     case '"':
-      mark = getch();
+      mark = mgetch();
       action_set_yank_register(mark);
     case 'u':
       action_undo(multiplier);

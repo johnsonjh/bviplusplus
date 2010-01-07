@@ -30,6 +30,7 @@
 #include <unistd.h> /* usleep */
 #include <stdlib.h> /* calloc */
 #include <ctype.h> /* isprint */
+#include <string.h> /* memset */
 #include "virt_file.h"
 #include "key_handler.h"
 #include "display.h"
@@ -70,7 +71,8 @@ int main(int argc, char **argv)
       fprintf(stderr, "Empty file failed?\n");
   }
 
-  /* Initialize yank, search, and comand line history support */
+  /* Initialize macros, yank, search, and comand line history support */
+  memset(macro_record, 0, sizeof(macro_record_t) * 26);
   action_init_yank();
   search_init();
   ascii_search_hist = new_history();
@@ -126,7 +128,8 @@ int main(int argc, char **argv)
     /* Replace the cursor after updating the screen */
     place_cursor(display_info.cursor_addr, CALIGN_NONE, CURSOR_REAL);
     /* Get and handle the users next key press */
-    c = wgetch(window_list[display_info.cursor_window]);
+    c = mwgetch(window_list[display_info.cursor_window]);
+    update_status(NULL);
     handle_key(c);
   }
 

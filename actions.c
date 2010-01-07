@@ -854,7 +854,7 @@ void *search_status_update_thread(void *search_data)
       mvwprintw(search_window, 1, i, " ");
     wattroff(search_window, A_STANDOUT);
     mvwprintw(search_window, 2, 1, "Press ESC to cancel search... %3d%%", complete);
-    while ((c = wgetch(search_window)) != ERR)
+    while ((c = mwgetch(search_window)) != ERR)
       if (c == ESC)
         break;
     wrefresh(search_window);
