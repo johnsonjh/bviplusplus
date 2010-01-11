@@ -65,7 +65,7 @@ action_code_t action_init_yank(void);
 action_code_t action_clean_yank(void);
 action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor); /* yank from cursor to end_addr (end_addr can be INVALID_ADDR) */
 action_code_t action_append(void);
-action_code_t action_replace(int count);
+action_code_t action_replace(int count, char *buf, int buf_size);
 action_code_t action_discard_changes(void);
 action_code_t action_close_file(void);
 action_code_t action_open_file(void);

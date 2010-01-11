@@ -715,9 +715,18 @@ action_code_t action_append(void)
     return E_INVALID;
   return error;
 }
-action_code_t action_replace(int count)
+action_code_t action_replace(int count, char *buf, int buf_size)
 {
   action_code_t error = E_SUCCESS;
+  off_t addr = display_info.cursor_addr;
+  int i;
+
+  for (i=0; i<count; i++)
+  {
+    vf_replace(current_file, buf, addr, buf_size);
+    addr += buf_size;
+  }
+
   return error;
 }
 

@@ -1012,14 +1012,229 @@ void do_replace(int count)
   print_screen(display_info.page_start);
 
 }
+
 void do_overwrite(int count)
 {
-  char *tmp_buf;
-  int tmp_buf_size = 4;
+  char *screen_buf, *rep_buf, *tmp_rep_buf;
+  char tmp[9], tmp2[MAX_GRP], tmpc;
+  int c2 = 0, i;
+  int hy, hx, ay, ax;
+  int rep_buf_size;
+  int chars_per_byte, char_count = 0, tmp_char_count = 0, low_tmp_char_count = 0;
+  int offset = 0, len1, rep_buf_offset, len2, len3;
+  off_t ins_addr, page_start;
 
-  tmp_buf = malloc(tmp_buf_size);
+  if (is_visual_on())
+  {
+    /* What should we do if user tries to OVERWRITE in visual select mode? */
+    flash();
+    return;
+  }
 
-  free(tmp_buf);
+  screen_buf = (char *)malloc(2 * PAGE_SIZE); /* fix this later, but make it big for now */
+  rep_buf_size = user_prefs[GROUPING].value;
+  rep_buf = (char *)malloc(rep_buf_size);
+
+  ins_addr = display_info.cursor_addr;
+
+  page_start = display_info.page_start;
+
+  while (c2 != ESC)
+  {
+    if ((offset + char_count) > PAGE_SIZE)
+      page_start += BYTES_PER_LINE;
+    offset = ins_addr - page_start;
+    if (offset < 0)
+    {
+      len1 = 0;
+      rep_buf_offset = page_start - ins_addr;
+      len2 = char_count - rep_buf_offset;
+    }
+    else
+    {
+      len1 = offset;
+      len2 = char_count;
+      rep_buf_offset = 0;
+    }
+    if ((len1 + len2) > PAGE_SIZE)
+      len3 = 0;
+    else
+      len3 = PAGE_SIZE - (len1 + len2);
+
+    if (len1 != 0)
+      vf_get_buf(current_file, screen_buf, page_start, len1);
+    if (len2 != 0)
+      memcpy(screen_buf + len1, rep_buf + rep_buf_offset, len2);
+    if (len3 > 0)
+      vf_get_buf(current_file, screen_buf + len1 + len2, ins_addr + len2, len3);
+    else
+      len3 = 0;
+
+    print_screen_buf(page_start, screen_buf, len1+len2+len3, NULL);
+
+    if (display_info.cursor_window == WINDOW_HEX)
+    {
+      hy = get_y_from_page_offset(len1+len2);
+      hx = get_x_from_page_offset(len1+len2);
+      display_info.cursor_window = WINDOW_ASCII;
+      ay = get_y_from_page_offset(len1+len2);
+      ax = get_x_from_page_offset(len1+len2);
+      display_info.cursor_window = WINDOW_HEX;
+      chars_per_byte = 2;
+    }
+    else
+    {
+      display_info.cursor_window = WINDOW_HEX;
+      hy = get_y_from_page_offset(len1+len2);
+      hx = get_x_from_page_offset(len1+len2);
+      display_info.cursor_window = WINDOW_ASCII;
+      ay = get_y_from_page_offset(len1+len2);
+      ax = get_x_from_page_offset(len1+len2);
+      chars_per_byte = 1;
+    }
+
+    if (tmp_char_count > 0 || low_tmp_char_count)
+    {
+      for (i=0; i<user_prefs[GROUPING].value; i++) /* print from temp buf here to clear or print partial insert */
+      {
+        if (i>=tmp_char_count)
+        {
+          if (low_tmp_char_count && i == tmp_char_count)
+            mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), tmp[0]);
+          else
+            mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), ' ');
+          mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i)+1, ' ');
+          mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, ' ');
+        }
+        else
+        {
+          mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i), HEX(tmp2[i]>>4&0xF));
+          mvwaddch(window_list[WINDOW_HEX], hy, hx+(2*i)+1, HEX(tmp2[i]>>0&0xF));
+          if (isprint(tmp2[i]))
+            mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, tmp2[i]);
+          else
+            mvwaddch(window_list[WINDOW_ASCII], ay, ax+i, '.');
+        }
+      }
+    }
+
+    update_panels();
+    doupdate();
+    if (display_info.cursor_window == WINDOW_HEX)
+      wmove(window_list[WINDOW_HEX], hy, hx);
+    else
+      wmove(window_list[WINDOW_ASCII], ay, ax);
+    c2 = mgetch();
+    switch (c2)
+    {
+      case KEY_BACKSPACE:
+        low_tmp_char_count--;
+        if (low_tmp_char_count < 0)
+        {
+          low_tmp_char_count = chars_per_byte - 1;
+          tmp_char_count--;
+          if (tmp_char_count < 0)
+          {
+            tmp_char_count = user_prefs[GROUPING].value - 1;
+            char_count--;
+            if (char_count < 0)
+            {
+              low_tmp_char_count = 0;
+              tmp_char_count = 0;
+              char_count = 0;
+              flash();
+            }
+            else
+            {
+              memcpy(tmp2, rep_buf + char_count, user_prefs[GROUPING].value);
+              tmp[1] = HEX((tmp2[tmp_char_count] & 0xF0) >> 4);
+              tmp[0] = HEX((tmp2[tmp_char_count] & 0x0F));
+            }
+          }
+          else
+          {
+            tmp[1] = HEX((tmp2[tmp_char_count] & 0xF0) >> 4);
+            tmp[0] = HEX((tmp2[tmp_char_count] & 0x0F));
+          }
+        }
+        break;
+      case KEY_RESIZE:
+        break;
+      case ESC:
+        break;
+      default:
+        if (display_info.cursor_window == WINDOW_HEX)
+        {
+          if (is_hex(c2) == 0)
+          {
+            flash();
+            continue;
+          }
+          tmp[low_tmp_char_count] = (char)c2;
+          low_tmp_char_count++;
+          if ((low_tmp_char_count % chars_per_byte) == 0)
+          {
+            low_tmp_char_count = 0;
+            tmp[chars_per_byte] = 0;
+            tmpc = (char)strtol(tmp, NULL, 16);
+            tmp2[tmp_char_count % user_prefs[GROUPING].value] = tmpc;
+            tmp_char_count++;
+
+            if ((tmp_char_count % user_prefs[GROUPING].value) == 0)
+            {
+              while (char_count + tmp_char_count >= rep_buf_size)
+              {
+                tmp_rep_buf = calloc(1, rep_buf_size * 2);
+                memcpy(tmp_rep_buf, rep_buf, rep_buf_size);
+                rep_buf_size *= 2;
+                free(rep_buf);
+                rep_buf = tmp_rep_buf;
+              }
+
+              memcpy(rep_buf + char_count, tmp2, tmp_char_count);
+              char_count += tmp_char_count;
+              tmp_char_count = 0;
+            }
+          }
+        }
+        else /* cursor in ascii window */
+        {
+          tmp2[tmp_char_count % user_prefs[GROUPING].value] = (char)c2;
+          tmp_char_count++;
+
+          if ((tmp_char_count % user_prefs[GROUPING].value) == 0)
+          {
+            while (char_count + tmp_char_count >= rep_buf_size)
+            {
+              tmp_rep_buf = calloc(1, rep_buf_size * 2);
+              memcpy(tmp_rep_buf, rep_buf, rep_buf_size);
+              rep_buf_size *= 2;
+              free(rep_buf);
+              rep_buf = tmp_rep_buf;
+            }
+
+            memcpy(rep_buf + char_count, tmp2, tmp_char_count);
+            char_count += tmp_char_count;
+            tmp_char_count = 0;
+          }
+        }
+        break;
+    }
+  }
+
+  if (char_count)
+  {
+    if (count == 0)
+      count = 1;
+
+    action_replace(count,rep_buf,char_count);
+  }
+
+  free(rep_buf);
+  free(screen_buf);
+
+  place_cursor(ins_addr+char_count, CALIGN_NONE, CURSOR_REAL);
+  print_screen(page_start);
 }
 
 void do_delete(int count, int c)
