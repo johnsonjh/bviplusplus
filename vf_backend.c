@@ -789,6 +789,8 @@ size_t _get_buf(vbuf_t * vb, char *dest, off_t offset, size_t len)
 
   /* make sure we're still in the buf */
   if(offset + len > vb->start + vb->size)
+    len = vb->start + vb->size - offset;
+  if (len < 1)
     return 0;
 
   tmp = vb->first_child;

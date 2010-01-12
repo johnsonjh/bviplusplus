@@ -36,6 +36,9 @@
 #include "app_state.h"
 #include "help.h"
 
+#define ALPHANUMERIC(x) ((x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z') ||  (x >= '0' && x <= '9'))
+#define WHITESPACE(x) (x == ' ' || x == '\t' || !isprint(x)) /* includes all non-print chars */
+
 macro_record_t  macro_record[26];
 int             macro_key = -1;
 int             last_macro_key = -1;
@@ -475,6 +478,170 @@ action_code_t do_search(int c, cursor_t cursor)
   return E_SUCCESS;
 }
 
+action_code_t word_move(int c, cursor_t cursor)
+{
+  int i, size = 0;
+  off_t cur_addr, next_addr;
+  char buf[256], current_char;
+  int require_whitespace = 0;
+
+  cur_addr = display_info.cursor_addr;
+  next_addr = cur_addr;
+
+  size = vf_get_buf(current_file, buf, cur_addr, 256);
+
+  current_char = buf[0];
+
+  /* This seems like an ugly hack to me, but when a user presses 'w' they expect to go
+     to the next word, but when they type 'cw' they expect to change the current word,
+     and not the trailing whitespace or the first character of the next word */
+  if (cursor == CURSOR_VIRTUAL)
+  {
+    if (c == 'w')
+      c = 'e';
+    if (c == 'W')
+      c = 'E';
+  }
+
+  switch(c)
+  {
+    case 'W': /* next word, only whilespace are delimeters */
+      require_whitespace = 1;
+      /* no break */
+    case 'w': /* next word, any non-alphanumeric is delimiter,
+                 and whitespace delimits groups of delimeters */
+      while (size > 1)
+      {
+        for (i=0; i<size; i++)
+        {
+          if (ALPHANUMERIC(current_char))
+          {
+            if (WHITESPACE(buf[i]))
+            {
+              current_char = buf[i];
+              continue;
+            }
+            else if (!ALPHANUMERIC(buf[i]) && require_whitespace == 0)
+            {
+              place_cursor(next_addr + i, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+          else if (WHITESPACE(current_char))
+          {
+            if (!WHITESPACE(buf[i]))
+            {
+              place_cursor(next_addr + i, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+          else
+          {
+            if (WHITESPACE(buf[i]))
+            {
+              current_char = buf[i];
+              continue;
+            }
+            else if (ALPHANUMERIC(buf[i]) && require_whitespace == 0)
+            {
+              place_cursor(next_addr + i, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+        }
+
+        next_addr += size;
+        size = vf_get_buf(current_file, buf, cur_addr, 256);
+      }
+
+      break;
+    case 'E': /* end of word, same delimit rules as W */
+      require_whitespace = 1;
+      /* no break */
+    case 'e': /* end of word, same delimit rules as w */
+      while (size > 1)
+      {
+        for (i=0; i<size; i++)
+        {
+          if (ALPHANUMERIC(current_char))
+          {
+            if (WHITESPACE(buf[i]))
+            {
+              if (i == 1 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i - 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+            else if (!ALPHANUMERIC(buf[i]) && require_whitespace == 0)
+            {
+              if (i == 1 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i - 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+          else if (WHITESPACE(current_char))
+          {
+            if (!WHITESPACE(buf[i]))
+            {
+              current_char = buf[i];
+              continue;
+            }
+          }
+          else
+          {
+            if (WHITESPACE(buf[i]))
+            {
+              if (i == 1 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i - 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+            else if (ALPHANUMERIC(buf[i]) && require_whitespace == 0)
+            {
+              if (i == 1 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i - 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+        }
+
+        next_addr += size;
+        size = vf_get_buf(current_file, buf, cur_addr, 256);
+      }
+
+      break;
+    case 'b': /* previous word, same delimit rules as w */
+      break;
+    case 'B': /* previous word, same delimit rules as W */
+      break;
+  }
+
+  flash();
+  return E_NO_ACTION;
+}
+
 action_code_t do_cmd_line(cursor_t cursor)
 {
   char *cmd;
@@ -574,6 +741,14 @@ off_t get_next_motion_addr(void)
         return display_info.virtual_cursor_addr;
       case ':':
         do_cmd_line(CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
+      case 'w':
+      case 'W':
+      case 'e':
+      case 'E':
+      case 'b':
+      case 'B':
+        word_move(c, CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case '?':
       case '/':
@@ -892,6 +1067,7 @@ void do_yank(int count, int c)
 
   action_yank(count, end_addr, TRUE);
 }
+
 void do_replace(int count)
 {
   int hx, hy, ax, ay, c, i, char_count = 0, chars_per_byte = 0;
@@ -1011,6 +1187,38 @@ void do_replace(int count)
 
   print_screen(display_info.page_start);
 
+}
+
+void do_change(int multiplier, int c)
+{
+  off_t end_addr = 0;
+  /* later we may want to create a real change operation on the file backend,
+     but for now we have to do a delete/insert, so just do it as two operations,
+     which will make this implimentation easy */
+
+  if (is_visual_on())
+  {
+    action_delete(1, INVALID_ADDR);
+  }
+  else
+  {
+    switch(c)
+    {
+      case 'c':
+      case 'C':
+        end_addr = get_next_motion_addr();
+        break;
+      case 's':
+      case 'S':
+        end_addr = display_info.cursor_addr;
+        break;
+    }
+
+    action_delete(multiplier, end_addr);
+  }
+
+  action_visual_select_off();
+  do_insert(1, 'i');
 }
 
 void do_overwrite(int count)
@@ -1436,12 +1644,20 @@ void handle_key(int c)
     case 'v':
       action_visual_select_toggle();
       break;
-/* These are not handled yet */
     case 'c':
     case 'C':
     case 's':
     case 'S':
-/*****************************/
+      do_change(multiplier, c);
+      break;
+    case 'w':
+    case 'W':
+    case 'e':
+    case 'E':
+    case 'b':
+    case 'B':
+      word_move(c, CURSOR_REAL);
+      break;
     case INS:
     case 'i':
     case 'I':
