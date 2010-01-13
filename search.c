@@ -600,7 +600,7 @@ void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid, sea
 
   a = addr + display_size + user_prefs[MAX_MATCH].value;
   if (address_invalid(a))
-    a = display_info.file_size - 1;
+    a = display_info.file_size;
 
   search_aid->buf_size = a - search_aid->buf_start_addr;
 
