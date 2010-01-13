@@ -551,7 +551,7 @@ action_code_t word_move(int c, cursor_t cursor)
         }
 
         next_addr += size;
-        size = vf_get_buf(current_file, buf, cur_addr, 256);
+        size = vf_get_buf(current_file, buf, next_addr, 256);
       }
 
       break;
@@ -628,13 +628,123 @@ action_code_t word_move(int c, cursor_t cursor)
         }
 
         next_addr += size;
-        size = vf_get_buf(current_file, buf, cur_addr, 256);
+        size = vf_get_buf(current_file, buf, next_addr, 256);
       }
+      break;
+    default:
+      break;
+  }
 
+  flash();
+  return E_NO_ACTION;
+}
+
+action_code_t word_move_back(int c, cursor_t cursor)
+{
+  int i, size = 0;
+  off_t cur_addr, next_addr = 0;
+  char buf[256], current_char;
+  int require_whitespace = 0;
+
+  size = 256;
+  cur_addr = display_info.cursor_addr - (size-1);
+  if (address_invalid(cur_addr))
+  {
+    cur_addr = 0;
+    size = display_info.cursor_addr;
+  }
+
+  size = vf_get_buf(current_file, buf, cur_addr, size);
+
+  current_char = buf[size-1];
+
+  next_addr = cur_addr;
+
+  switch(c)
+  {
+    case 'B': /* end of word, same delimit rules as W */
+      require_whitespace = 1;
+      /* no break */
+    case 'b': /* end of word, same delimit rules as w */
+      while (size > 1)
+      {
+        for (i=size-1; i>=0; i--)
+        {
+          if (ALPHANUMERIC(current_char))
+          {
+            if (WHITESPACE(buf[i]))
+            {
+              if (i == size-2 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i + 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+            else if (!ALPHANUMERIC(buf[i]) && require_whitespace == 0)
+            {
+              if (i == size-2 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i + 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+          else if (WHITESPACE(current_char))
+          {
+            if (!WHITESPACE(buf[i]))
+            {
+              current_char = buf[i];
+              continue;
+            }
+          }
+          else
+          {
+            if (WHITESPACE(buf[i]))
+            {
+              if (i == size-2 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i + 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+            else if (ALPHANUMERIC(buf[i]) && require_whitespace == 0)
+            {
+              if (i == size-2 && next_addr == cur_addr)
+              {
+                /* if we were on the last character in a word we need
+                   to move on to the next word */
+                current_char = buf[i];
+                continue;
+              }
+              place_cursor(next_addr + i + 1, CALIGN_NONE, cursor);
+              return E_SUCCESS;
+            }
+          }
+        }
+
+        next_addr -= size;
+        if (address_invalid(next_addr))
+        {
+          size = size + next_addr;
+          next_addr = 0;
+        }
+
+        size = vf_get_buf(current_file, buf, next_addr, size);
+      }
       break;
-    case 'b': /* previous word, same delimit rules as w */
-      break;
-    case 'B': /* previous word, same delimit rules as W */
+    default:
       break;
   }
 
@@ -746,9 +856,11 @@ off_t get_next_motion_addr(void)
       case 'W':
       case 'e':
       case 'E':
+        word_move(c, CURSOR_VIRTUAL);
+        return display_info.virtual_cursor_addr;
       case 'b':
       case 'B':
-        word_move(c, CURSOR_VIRTUAL);
+        word_move_back(c, CURSOR_VIRTUAL);
         return display_info.virtual_cursor_addr;
       case '?':
       case '/':
@@ -1654,9 +1766,11 @@ void handle_key(int c)
     case 'W':
     case 'e':
     case 'E':
+      word_move(c, CURSOR_REAL);
+      break;
     case 'b':
     case 'B':
-      word_move(c, CURSOR_REAL);
+      word_move_back(c, CURSOR_REAL);
       break;
     case INS:
     case 'i':
