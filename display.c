@@ -84,13 +84,13 @@ BOOL msg_prompt(char *fmt, ...)
 
   if (strlen(msgbox_line))
   {
-    x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+    x = 1 + ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
     mvwaddstr(msgbox, y, x, msgbox_line);
     memset(msgbox_line, 0, MAX_MSG_BOX_LEN);
   }
 
   strncat(msgbox_line, "Y / N", MAX_MSG_BOX_LEN);
-  x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+  x = 1 + ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
   mvwaddstr(msgbox, MSG_BOX_H - 2, x, msgbox_line);
 
   curs_set(0);
