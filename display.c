@@ -198,7 +198,7 @@ void msg_box(const char *fmt, ...)
 
   if (strlen(msgbox_line))
   {
-    x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+    x = 1 + ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
     mvwaddstr(msgbox, y, x, msgbox_line);
     y++;
     if (y > (MSG_BOX_H - 2))
@@ -207,7 +207,7 @@ void msg_box(const char *fmt, ...)
   }
 
   strncat(msgbox_line, "[PRESS ANY KEY]", MAX_MSG_BOX_LEN);
-  x = ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
+  x = 1 + ((MSG_BOX_W - 2) - strlen(msgbox_line))/2;
   mvwaddstr(msgbox, MSG_BOX_H - 2, x, msgbox_line);
 
   curs_set(0);

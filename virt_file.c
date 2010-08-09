@@ -470,6 +470,12 @@ off_t vf_save(file_manager_t * f, int *complete)
   fclose(f->fm.fp);
   f->fm.fp = fopen(f->fname, "r+");
 
+  if (f->fm.fp == NULL) /* can't open for writing, permissions? */
+  {
+    f->fm.fp = fopen(f->fname, "r");
+    return 0;
+  }
+
   while(NULL != tmp)
   {
     if(FALSE == tmp->active || 0 == tmp->size)

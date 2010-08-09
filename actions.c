@@ -1346,15 +1346,17 @@ action_code_t action_save(void)
     size = vf_save(current_file, &complete);
     if (size != display_info.file_size)
     {
-      msg_box("Only saved %d bytes, should have saved %d bytes!!",
+      complete = 100;
+      msg_box("Only saved %jd bytes, should have saved %jd bytes!!",
               size, display_info.file_size);
+      error = E_INVALID;
       update_status("[failed save]");
-      curs_set(1);
-      return E_INVALID;
     }
 
     pthread_join(save_status_thread, &pthread_status);
-    update_status("[saved]");
+
+    if (error == E_SUCCESS)
+      update_status("[saved]");
 
     curs_set(1);
     print_screen(display_info.page_start);
