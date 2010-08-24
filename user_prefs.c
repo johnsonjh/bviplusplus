@@ -41,7 +41,7 @@ user_pref_t user_prefs[] = {
   { "search_hl",            "hl",               1,         1,     0,     0,       P_BOOL },
   { "search_immediate",     "si",               1,         1,     0,     0,       P_BOOL },
   { "ignorecase",           "ic",               0,         0,     0,     0,       P_BOOL },
-  { "max_match",            "mm",             256,       256,     0,     0,       P_INT },
+  { "max_match",            "mm",              64,        64,     0,     0,       P_INT },
   { "",                     "",                 0,         0,     0,     0,       P_NONE },
 };
 

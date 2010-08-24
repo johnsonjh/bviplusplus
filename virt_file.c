@@ -262,6 +262,10 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
     snprintf(f->fname, MAX_PATH_LEN - 1, "%s", file_name);
     f->fname[MAX_PATH_LEN] = 0;
 
+    f->fm.fp = fopen(f->fname, "a");
+    if(NULL != f->fm.fp)
+      fclose(f->fm.fp);
+
     if (stat(f->fname, &stat_buf))
     {
       vf_term(f);
@@ -274,9 +278,6 @@ BOOL vf_init(file_manager_t * f, const char *file_name)
       f->fm.size = stat_buf.st_size;
     }
 
-    f->fm.fp = fopen(f->fname, "a");
-    if(NULL != f->fm.fp)
-      fclose(f->fm.fp);
     f->fm.fp = fopen(f->fname, "r");
     if(NULL == f->fm.fp)
     {
