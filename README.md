@@ -1,22 +1,28 @@
-# bviplusplus (bvi++)
+# ***`bviplusplus`*** (**`bvi++`**)
 
 ## Overview
 
 ***`bviplusplus`*** (**`bvi++`**) is an *ncurses*-based hex editor
-(forked from [**`bviplus`**](https://sourceforge.net/p/bviplus))
+derived from [**`bviplus`**](https://sourceforge.net/p/bviplus)
 
 ## Links
 
-* [**`bvi`**](https://github.com/buergmann/bvi), the *original* **`bvi`**
-  hex editor by [*Gerhard Bürgmann*](https://github.com/buergmann)
-* [**`bviplus`**](https://sourceforge.net/p/bviplus) by *David Kelley* and
-  *Steve Lewis*, based on **`bvi`**
+### Other **`bviplus`** derivatives
+
 * [**`bviplus`**](https://github.com/baranovskiykonstantin/bviplus) by
   [*Baranovskiy Konstantin*](https://github.com/baranovskiykonstantin),
   another enhanced fork of **`bviplus`**, likely more featured than this
   version *for now*
 
-## Alternatives
+### ***`bviplusplus`*** ancestors
+
+* [**`bvi`**](https://github.com/buergmann/bvi), the *original* **`bvi`**
+  hex editor by [*Gerhard Bürgmann*](https://github.com/buergmann)
+* [**`bviplus`**](https://sourceforge.net/p/bviplus) by *David Kelley* and
+  *Steve Lewis*, based on **`bvi`**
+
+
+### ***`bviplusplus`*** / **`bviplus`** alternatives
 
 * [**`hyx`**](https://yx7.cc/code/), a fast and minimal *ncurses*-based hex
   editor with `vi`-like keybindings by [*Lorenz Pany*](https://yx7.cc/)
