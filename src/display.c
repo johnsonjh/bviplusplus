@@ -2,6 +2,7 @@
  * Functions related to rendering the data on the screen
  *
  * Copyright (c) 2008, 2009, 2010 David Kelley
+ * Copyright (c) 2009 Steve Lewis
  * Copyright (c) 2016 The Lemon Man
  * Copyright (c) 2021, 2022 Jeffrey H. Johnson <trnsz@pobox.com>
  *

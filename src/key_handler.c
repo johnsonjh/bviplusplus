@@ -2,7 +2,9 @@
  * Handle key presses and other user input
  *
  * Copyright (c) 2008, 2009, 2010 David Kelley
+ * Copyright (c) 2009 Steve Lewis
  * Copyright (c) 2016 The Lemon Man
+ * Copyright (c) 2021 Sergei Trofimovich
  * Copyright (c) 2021, 2022 Jeffrey H. Johnson <trnsz@pobox.com>
  *
  * This file is part of bviplusplus.
@@ -289,7 +291,7 @@ file_browser(const char *dir, char *fname, int name_len)
                       wattron(fb, A_STANDOUT);
                     }
 
-                  mvwprintw(fb, j, 1, eps[i]->d_name);
+                  mvwprintw(fb, j, 1, "%s", eps[i]->d_name);
                   wattroff(fb, A_STANDOUT);
                 }
 
@@ -566,7 +568,7 @@ do_search(int c, cursor_t cursor)
       prompt[0] = c;
       prompt[1] = 0;
       werase(window_list[WINDOW_STATUS]);
-      mvwprintw(window_list[WINDOW_STATUS], 0, 0, prompt);
+      mvwprintw(window_list[WINDOW_STATUS], 0, 0, "%s", prompt);
       wrefresh(window_list[WINDOW_STATUS]);
       c = mgetch();
       while (c != '/' && c != '\\' && c != ESC)

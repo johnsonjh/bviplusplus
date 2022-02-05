@@ -2,7 +2,9 @@
  * Functions for reading command line input, similar to realine
  *
  * Copyright (c) 2008, 2009, 2010 David Kelley
+ * Copyright (c) 2009 Steve Lewis
  * Copyright (c) 2016 The Lemon Man
+ * Copyright (c) 2021 Sergei Trofimovich
  * Copyright (c) 2021, 2022 Jeffrey H. Johnson <trnsz@pobox.com>
  *
  * This file is part of bviplusplus.
@@ -76,7 +78,7 @@ creadline(const char *prompt, WINDOW *w, int y, int x, cmd_hist_t *history)
   cmd_item_t tmp_cmd;
   char *cmd;
 
-  mvwprintw(w, y, x, prompt);
+  mvwprintw(w, y, x, "%s", prompt);
   x = x + strlen(prompt) - 1;
 
   entry_hist_index = history->hist_index;
