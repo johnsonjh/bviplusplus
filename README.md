@@ -16,7 +16,7 @@ derived from [**`bviplus`**](https://sourceforge.net/p/bviplus)
 
 ### ***`bviplusplus`*** ancestors
 
-* [**`bvi`**](https://github.com/buergmann/bvi), the *original* **`bvi`**
+* [**`bvi`**](https://github.com/buergmann/bvi), the original **`bvi`**
   hex editor by [*Gerhard Bürgmann*](https://github.com/buergmann)
 * [**`bviplus`**](https://sourceforge.net/p/bviplus) by *David Kelley* and
   *Steve Lewis*, based on **`bvi`**
