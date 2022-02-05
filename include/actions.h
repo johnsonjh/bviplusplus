@@ -1,36 +1,33 @@
-/*************************************************************
+/*
+ * Defines, structures, and function prototypes related to program actions
  *
- * File:        actions.h
- * Author:      David Kelley
- * Description: Defines, structures, and function prototypes
- *              related to program actions
+ * Copyright (c) 2008, 2009, 2010 David Kelley
+ * Copyright (c) 2016 The Lemon Man
+ * Copyright (c) 2022 Jeffrey H. Johnson <trnsz@pobox.com>
  *
- * Copyright (C) 2009 David Kelley
+ * This file is part of bviplusplus.
  *
- * This file is part of bviplus.
- *
- * Bviplus is free software: you can redistribute it and/or modify
+ * Bviplusplus is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Bviplus is distributed in the hope that it will be useful,
+ * Bviplusplus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with bviplus.  If not, see <http://www.gnu.org/licenses/>.
- *
- *************************************************************/
+ * along with bviplusplus.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include "virt_file.h"
 #include "display.h"
+#include "virt_file.h"
 
 #ifndef __ACTIONS_H__
-#define __ACTIONS_H__
+# define __ACTIONS_H__
 
-#define INVALID_ADDR -1
+# define INVALID_ADDR -1
 
 typedef enum action_code_e
 {
@@ -39,8 +36,7 @@ typedef enum action_code_e
   E_INVALID,
 } action_code_t;
 
-
-void          run_external(void);
+void run_external(void);
 action_code_t action_cursor_move_up(int count, cursor_t cursor);
 action_code_t action_cursor_move_down(int count, cursor_t cursor);
 action_code_t action_cursor_move_left(int count, cursor_t cursor);
@@ -55,7 +51,9 @@ action_code_t action_jump_to(off_t jump_addr, cursor_t cursor);
 action_code_t action_align_top(void);
 action_code_t action_align_middle(void);
 action_code_t action_align_bottom(void);
-action_code_t action_delete(int count, off_t end_addr); /* delete from cursor to end_addr (end_addr can be INVALID_ADDR) */
+action_code_t
+action_delete(int count, off_t end_addr);  /* delete from cursor to end_addr
+                                           *  (end_addr can be INVALID_ADDR) */
 action_code_t action_insert_before(int count, char *buf, int len);
 action_code_t action_insert_after(int count, char *buf, int len);
 action_code_t action_set_yank_register(int c);
@@ -63,7 +61,10 @@ action_code_t action_paste_before(int count);
 action_code_t action_paste_after(int count);
 action_code_t action_init_yank(void);
 action_code_t action_clean_yank(void);
-action_code_t action_yank(int count, off_t end_addr, BOOL move_cursor); /* yank from cursor to end_addr (end_addr can be INVALID_ADDR) */
+action_code_t
+action_yank(int count, off_t end_addr,
+            BOOL move_cursor);  /* yank from cursor to end_addr (end_addr can
+                                 * be INVALID_ADDR) */
 action_code_t action_append(void);
 action_code_t action_replace(int count, char *buf, int buf_size);
 action_code_t action_discard_changes(void);
@@ -78,7 +79,8 @@ action_code_t action_visual_select_on(void);
 action_code_t action_visual_select_off(void);
 action_code_t action_visual_select_toggle(void);
 action_code_t action_move_cursor_prev_search(cursor_t cursor);
-action_code_t  action_move_cursor_next_search(cursor_t cursor, BOOL advance_if_current_match);
+action_code_t action_move_cursor_next_search(cursor_t cursor,
+                                             BOOL     advance_if_current_match);
 action_code_t action_do_search(int s, char *cmd, cursor_t cursor,
                                search_direction_t direction);
 action_code_t action_search_highlight(void);

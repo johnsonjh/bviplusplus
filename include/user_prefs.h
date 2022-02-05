@@ -1,36 +1,33 @@
-/*************************************************************
+/*
+ * Defines/structures/prototypes related to user preferences
  *
- * File:        user_prefs.h
- * Author:      David Kelley
- * Description: Defines, structures, and function prototypes
- *              related to user preferences
+ * Copyright (c) 2008, 2009, 2010 David Kelley
+ * Copyright (c) 2016 The Lemon Man
+ * Copyright (c) 2022 Jeffrey H. Johnson <trnsz@pobox.com>
  *
- * Copyright (C) 2009 David Kelley
+ * This file is part of bviplusplus.
  *
- * This file is part of bviplus.
- *
- * Bviplus is free software: you can redistribute it and/or modify
+ * Bviplusplus is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Bviplus is distributed in the hope that it will be useful,
+ * Bviplusplus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with bviplus.  If not, see <http://www.gnu.org/licenses/>.
- *
- *************************************************************/
+ * along with bviplusplus.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include "virt_file.h"
 #include "actions.h"
+#include "virt_file.h"
 
 #ifndef __USER_PREFS_H__
-#define __USER_PREFS_H__
+# define __USER_PREFS_H__
 
-#define MAX_GRP 16
+# define MAX_GRP 16
 
 typedef enum
 {
@@ -70,4 +67,3 @@ action_code_t set_pref(const char *option, const char *value);
 void read_rc_file(void);
 
 #endif /* __USER_PREFS_H__ */
-

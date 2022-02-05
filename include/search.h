@@ -1,38 +1,35 @@
-/*************************************************************
+/*
+ * Defines/structures/prototypes related to searching
  *
- * File:        search.h
- * Author:      David Kelley
- * Description: Defines, structures, and function prototypes
- *              related to searching
+ * Copyright (c) 2008, 2009, 2010 David Kelley
+ * Copyright (c) 2016 The Lemon Man
+ * Copyright (c) 2022 Jeffrey H. Johnson <trnsz@pobox.com>
  *
- * Copyright (C) 2009 David Kelley
+ * This file is part of bviplusplus.
  *
- * This file is part of bviplus.
- *
- * Bviplus is free software: you can redistribute it and/or modify
+ * Bviplusplus is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Bviplus is distributed in the hope that it will be useful,
+ * Bviplusplus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with bviplus.  If not, see <http://www.gnu.org/licenses/>.
- *
- *************************************************************/
+ * along with bviplusplus.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "virt_file.h"
 
 #ifndef __SEARCH_H__
-#define __SEARCH_H__
+# define __SEARCH_H__
 
-#define MAX_SEARCHES 8
-#define MAX_RANGE_COUNT 256
-#define MAX_SEARCH_PAT_LEN 256
-#define LONG_SEARCH_BUF_SIZE (1024*1024*2) /* 2MB */
+# define MAX_SEARCHES              8
+# define MAX_RANGE_COUNT         256
+# define MAX_SEARCH_PAT_LEN      256
+# define LONG_SEARCH_BUF_SIZE ( 1024 * 1024 * 2 )
 
 typedef enum
 {
@@ -116,7 +113,8 @@ void buf_search(search_aid_t *search_aid);
 void set_search_term(char *pattern);
 void search_init(void);
 void search_cleanup(void);
-void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid, search_direction_t direction);
+void fill_search_buf(off_t addr, int display_size, search_aid_t *search_aid,
+                     search_direction_t direction);
 void free_search_buf(search_aid_t *search_aid);
 
 #endif /* __SEARCH_H__ */

@@ -1,23 +1,24 @@
+# Copyright (c) 2008, 2009, 2010 David Kelley
+# Copyright (c) 2016 The Lemon Man
+# Copyright (c) 2022 Jeffrey H. Johnson <trnsz@pobox.com>
 #
-# Copyright (C) 2009 David Kelley
+# This file is part of bviplusplis.
 #
-# This file is part of bviplus.
-#
-# Bviplus is free software: you can redistribute it and/or modify
+# Bviplusplus is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Bviplus is distributed in the hope that it will be useful,
+# Bviplusplus is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with bviplus.  If not, see <http://www.gnu.org/licenses/>.
+# along with bviplusplus.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-TARGET := bviplus
+TARGET := bviplusplus
 PREFIX ?= /usr/local
 
 OBJS :=
@@ -50,13 +51,19 @@ endif
 DEBUG ?= 0
 ifeq "$(DEBUG)" "0"
 EXTRA_CFLAGS += -O2
+LDFLAGS += -Wl,--gc-sections
 else
-EXTRA_CFLAGS += -O0 -g
+EXTRA_CFLAGS += -O0 -g3 -ggdb -DDEBUG
+LDFLAGS += -s -Wl,--gc-sections
 endif
 
-EXTRA_CFLAGS += $(CFLAGS)
-EXTRA_CFLAGS += -Wall -D_FILE_OFFSET_BITS=64
+EXTRA_CFLAGS += -Iinclude $(CFLAGS)
+EXTRA_CFLAGS += -Wall -pthread -D_FILE_OFFSET_BITS=64 \
+		-Wno-stringop-overflow -Wno-unused-but-set-variable \
+		-fdata-sections -ffunction-sections \
+		-flto -Wl,--gc-sections
 
+VPATH := src
 OBJDIR := objs
 BUILD_OBJS := $(addprefix $(OBJDIR)/,$(OBJS))
 
@@ -73,10 +80,11 @@ SILENT := @
 
 .PHONY: all mkobjdir clean install
 
-# Build all the prereqs and generate dependencies (-MMD)
+# Build all the prereqs and generate dependencies (-MMD -MP)
 $(OBJDIR)/%.o: %.c
-	$(SHORT) "CC $<"
-	$(QUIET)$(CC) $(EXTRA_CFLAGS) $(addprefix -I, $(INCLUDES)) -MMD -c $< -o $@
+	$(SHORT) "$(CC) $<"
+	$(QUIET)$(CC) $(EXTRA_CFLAGS) $(addprefix -I, $(INCLUDES)) -MMD -MP \
+		-c $< -o $@
 
 # Produce our binary
 all: mkobjdir $(TARGET)
@@ -85,11 +93,12 @@ mkobjdir:
 	$(QUIET)$(MKDIR) $(OBJDIR)
 
 $(TARGET): $(BUILD_OBJS)
-	$(SHORT) "LD $@"
-	$(QUIET)$(CC) $(EXTRA_CFLAGS) $^ $(addprefix -l,$(LIBS)) -o $@
+	$(SHORT) "$(CC) $@"
+	$(QUIET)$(CC) $(EXTRA_CFLAGS) $^ $(addprefix -l,$(LIBS)) -o $@ $(LDFLAGS)
 
 clean:
-	rm -rf $(OBJDIR) $(TARGET)
+	rm -rf "$(OBJDIR)"
+	rm -rf "$(TARGET)"
 
 distclean: clean
 
@@ -98,4 +107,3 @@ install: $(TARGET)
 
 # Include dependencies
 -include $(BUILD_OBJS:.o=.d)
-
