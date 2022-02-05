@@ -2,7 +2,7 @@
 
 ## Overview
 
-***`bviplusplus`*** (**`bvi++`**), is an *ncurses*-based hex editor
+***`bviplusplus`*** (**`bvi++`**) is an *ncurses*-based hex editor
 (forked from [**`bviplus`**](https://sourceforge.net/p/bviplus))
 
 ## Links
@@ -14,7 +14,7 @@
 * [**`bviplus`**](https://github.com/baranovskiykonstantin/bviplus) by
   [*Baranovskiy Konstantin*](https://github.com/baranovskiykonstantin),
   another enhanced fork of **`bviplus`**, likely more featured than this
-  version, *for now*
+  version *for now*
 
 ## Alternatives
 
